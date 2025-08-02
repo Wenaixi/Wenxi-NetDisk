@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Wenxi网盘",
     description="企业级网盘解决方案",
-    version="1.0.0",
+    version="1.0.2",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
@@ -62,7 +62,7 @@ async def root():
     """根路径欢迎信息"""
     return {
         "message": "欢迎使用Wenxi网盘",
-        "version": "1.0.0",
+        "version": "1.0.2",
         "author": "Wenxi",
         "status": "运行正常"
     }
