@@ -42,7 +42,7 @@ React + Vite + TailwindCSS + Lucide图标库
 ### 🎯 GitHub安装（推荐）
 ```bash
 # 克隆项目
-git clone https://github.com/wenxi/netdisk.git
+git clone https://github.com/Wenaixi/Wenxi-NetDisk.git
 cd netdisk
 
 # 一键启动
@@ -60,7 +60,7 @@ docker-compose up -d
 ### 🏃 手动安装
 ```bash
 # 1. 克隆项目
-git clone https://github.com/wenxi/netdisk.git
+git clone https://github.com/Wenaixi/Wenxi-NetDisk.git
 cd netdisk
 
 # 2. 启动后端
