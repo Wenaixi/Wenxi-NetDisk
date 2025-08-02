@@ -255,6 +255,7 @@ frontend/build/
 frontend/.vite/
 frontend/.cache/
 frontend/.temp/
+GITHUB_SETUP.md
 
 # Logs
 logs/
