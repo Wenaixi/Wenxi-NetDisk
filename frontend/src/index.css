@@ -1,0 +1,48 @@
+/**
+ * Wenxi网盘 - 全局样式文件
+ * 作者：Wenxi
+ * 功能：导入Tailwind CSS基础样式、组件样式和工具类
+ * 说明：此文件作为应用的全局样式入口，包含Tailwind的所有功能
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * 自定义全局样式
+ * 用于覆盖或补充Tailwind的默认样式
+ */
+@layer base {
+  html {
+    font-family: Inter, system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+/**
+ * 自定义组件样式
+ * 定义项目中可复用的组件样式
+ */
+@layer components {
+  .btn-primary {
+    @apply bg-primary-500 hover:bg-primary-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+  }
+}
+
+/**
+ * 自定义工具类
+ * 定义项目中使用的工具类
+ */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
