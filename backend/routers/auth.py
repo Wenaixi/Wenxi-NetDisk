@@ -84,7 +84,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    """获取当前用户"""
+    """获取当前用户 - Wenxi JWT验证增强版"""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="无法验证凭据",
@@ -92,21 +92,49 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     )
     
     try:
+        # 验证JWT令牌
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
+            logger.warning("JWT令牌缺少sub字段")
             raise credentials_exception
-    except InvalidTokenError:
+            
+        # 检查令牌是否过期
+        exp = payload.get("exp")
+        if exp is None:
+            logger.warning("JWT令牌缺少exp字段")
+            raise credentials_exception
+            
+        # 检查过期时间
+        if datetime.fromtimestamp(exp, tz=timezone.utc) < datetime.now(timezone.utc):
+            logger.warning(f"JWT令牌已过期: {datetime.fromtimestamp(exp, tz=timezone.utc)}")
+            raise credentials_exception
+            
+    except jwt.ExpiredSignatureError as e:
+        logger.warning(f"JWT令牌签名过期: {e}")
+        raise credentials_exception
+    except jwt.DecodeError as e:
+        logger.warning(f"JWT令牌解码失败: {e}")
+        raise credentials_exception
+    except jwt.InvalidTokenError as e:
+        logger.warning(f"JWT令牌无效: {e}")
+        raise credentials_exception
+    except Exception as e:
+        logger.error(f"JWT验证未知错误: {e}")
         raise credentials_exception
     
+    # 验证用户存在
     user = db.query(User).filter(User.username == username).first()
     if user is None:
+        logger.warning(f"JWT令牌中的用户不存在: {username}")
         raise credentials_exception
+        
+    logger.debug(f"JWT验证成功: {username}")
     return user
 
 
 async def get_current_user_from_token(token: str, db: Session = Depends(get_db)):
-    """通过token字符串获取当前用户（用于iframe下载）"""
+    """通过token字符串获取当前用户（用于iframe下载）- Wenxi增强版"""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="无效的认证令牌",
@@ -117,16 +145,44 @@ async def get_current_user_from_token(token: str, db: Session = Depends(get_db))
         if token.startswith('Bearer '):
             token = token[7:]
             
+        # 验证JWT令牌
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
+            logger.warning("iframe下载：JWT令牌缺少sub字段")
             raise credentials_exception
-    except InvalidTokenError:
+            
+        # 检查令牌是否过期
+        exp = payload.get("exp")
+        if exp is None:
+            logger.warning("iframe下载：JWT令牌缺少exp字段")
+            raise credentials_exception
+            
+        # 检查过期时间
+        if datetime.fromtimestamp(exp, tz=timezone.utc) < datetime.now(timezone.utc):
+            logger.warning(f"iframe下载：JWT令牌已过期: {datetime.fromtimestamp(exp, tz=timezone.utc)}")
+            raise credentials_exception
+            
+    except jwt.ExpiredSignatureError as e:
+        logger.warning(f"iframe下载：JWT令牌签名过期: {e}")
+        raise credentials_exception
+    except jwt.DecodeError as e:
+        logger.warning(f"iframe下载：JWT令牌解码失败: {e}")
+        raise credentials_exception
+    except jwt.InvalidTokenError as e:
+        logger.warning(f"iframe下载：JWT令牌无效: {e}")
+        raise credentials_exception
+    except Exception as e:
+        logger.error(f"iframe下载：JWT验证未知错误: {e}")
         raise credentials_exception
     
+    # 验证用户存在
     user = db.query(User).filter(User.username == username).first()
     if user is None:
+        logger.warning(f"iframe下载：JWT令牌中的用户不存在: {username}")
         raise credentials_exception
+        
+    logger.debug(f"iframe下载：JWT验证成功: {username}")
     return user
 
 
@@ -184,10 +240,16 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # 创建访问令牌
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    # 创建访问令牌 - Wenxi支持记住我功能
+    remember_me = form_data.client_id == "remember_me"
+    if remember_me:
+        access_token_expires = timedelta(hours=72)  # 记住我：72小时
+        logger.info(f"用户 {user.username} 使用记住我功能登录")
+    else:
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)  # 默认：30分钟
+        
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user.username, "remember_me": remember_me}, expires_delta=access_token_expires
     )
     
     logger.info(f"用户登录成功: {user.username}")

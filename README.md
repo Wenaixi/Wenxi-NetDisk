@@ -4,7 +4,7 @@
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-teal.svg)](https://fastapi.tiangolo.com)
 [![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://react.dev)
-[![Downloads](https://img.shields.io/github/downloads/wenxi/netdisk/total.svg)](https://github.com/wenxi/netdisk/releases)
+[![Downloads](https://img.shields.io/github/downloads/Wenaixi/Wenxi-NetDisk/total.svg)](https://github.com/Wenaixi/Wenxi-NetDisk/releases)
 
 > *"不是最快的网盘，但一定是最懂你的网盘"* - by Wenxi
 
@@ -54,14 +54,14 @@ cd netdisk
 # 使用Docker Compose一键启动
 docker-compose up -d
 
-# 访问 http://localhost:3000
+# 访问 http://localhost:5173
 ```
 
 ### 🏃 手动安装
 ```bash
 # 1. 克隆项目
 git clone https://github.com/Wenaixi/Wenxi-NetDisk.git
-cd netdisk
+cd Wenxi-NetDisk
 
 # 2. 启动后端
 cd backend

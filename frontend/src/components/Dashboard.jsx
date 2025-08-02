@@ -48,8 +48,12 @@ export default function Dashboard() {
       
       // Wenxi - 否则从后端获取
       console.log('Wenxi - 开始获取文件列表...');
-      const response = await axios.get('/api/files/list', {
-        params: searchQuery ? { search: searchQuery } : {}
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:3008/api/files/list', {
+        params: searchQuery ? { search: searchQuery } : {},
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       console.log('Wenxi - 文件列表获取成功:', response.data);
       

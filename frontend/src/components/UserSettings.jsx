@@ -157,9 +157,14 @@ export default function UserSettings({ isOpen, onClose, currentUser, onUserUpdat
     setSuccess('');
 
     try {
-      await axios.put('/api/auth/update-password', {
+      const token = localStorage.getItem('token');
+      await axios.put('http://localhost:3008/api/auth/update-password', {
         old_password: oldPassword,
         new_password: newPassword
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       setSuccess('密码修改成功，请重新登录');
       setOldPassword('');

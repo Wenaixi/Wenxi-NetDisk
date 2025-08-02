@@ -7,6 +7,24 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
+// 配置axios实例
+const api = axios.create({
+  baseURL: 'http://localhost:3008', // 直接连接后端
+  timeout: 10000,
+});
+
+// 配置请求拦截器
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -24,24 +42,63 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    console.log('Wenxi - 页面刷新，检查token:', token ? '存在' : '不存在');
+    
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       fetchUser();
     } else {
+      console.log('Wenxi - 没有找到token，设置为未认证');
       setLoading(false);
     }
   }, []);
 
-  const fetchUser = async () => {
+  const fetchUser = async (retryCount = 0) => {
+    const maxRetries = 2;
+    const baseDelay = 1000; // 1秒基础延迟
+    
     try {
-      const response = await axios.get('/api/auth/me');
+      console.log('Wenxi - 开始验证用户身份...');
+      const response = await api.get('/api/auth/me', {
+        timeout: 5000, // 5秒超时
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      });
+      console.log('Wenxi - 用户身份验证成功:', response.data);
       setUser(response.data);
       setIsAuthenticated(true);
     } catch (error) {
-      localStorage.removeItem('token');
-      delete axios.defaults.headers.common['Authorization'];
+      console.error('Wenxi - 用户身份验证失败:', {
+        status: error.response?.status,
+        message: error.message,
+        response: error.response?.data,
+        code: error.code,
+        isNetworkError: !error.response
+      });
+      
+      // 网络错误或CORS问题：重试机制
+      if (!error.response && retryCount < maxRetries) {
+        const delay = baseDelay * Math.pow(2, retryCount); // 指数退避
+        console.log(`Wenxi - 网络错误，${delay}ms后重试(${retryCount + 1}/${maxRetries})`);
+        
+        setTimeout(() => {
+          fetchUser(retryCount + 1);
+        }, delay);
+        return; // 不执行finally的setLoading(false)
+      }
+      
+      // 只有明确认证失败(401)或重试耗尽才清除token
+      if (error.response?.status === 401 || retryCount >= maxRetries) {
+        console.log('Wenxi - 认证失败或重试耗尽，清除token');
+        localStorage.removeItem('token');
+        delete axios.defaults.headers.common['Authorization'];
+      } else {
+        console.log('Wenxi - 临时错误，保留token');
+      }
     } finally {
-      setLoading(false);
+      if (retryCount === 0 || retryCount >= maxRetries) {
+        setLoading(false);
+      }
     }
   };
 
@@ -56,7 +113,7 @@ export const AuthProvider = ({ children }) => {
         formData.append('client_id', 'remember_me');
       }
 
-      const response = await axios.post('/api/auth/login', formData, {
+      const response = await api.post('/api/auth/login', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -100,7 +157,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (username, email, password) => {
     try {
-      const response = await axios.post('/api/auth/register', {
+      const response = await api.post('/api/auth/register', {
         username,
         email,
         password,
@@ -117,7 +174,6 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
     setUser(null);
     setIsAuthenticated(false);
   };
