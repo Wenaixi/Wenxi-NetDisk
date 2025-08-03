@@ -240,21 +240,23 @@ Thumbs.db:encryptable
 *.old
 *.orig
 
-# Wenxi NetDisk specific
-uploads/
+# Wenxi NetDisk specific - Dynamic paths based on WENXI_FILE_STORAGE_PATH env var
 *.db
 *.sqlite
 *.sqlite3
 test.db
 test_*.db
-backend/uploads/
-backend/temp_chunks/
+uploads/
 temp_chunks/
 frontend/dist/
 frontend/build/
 frontend/.vite/
 frontend/.cache/
 frontend/.temp/
+
+# Allow any directory named uploads or temp_chunks regardless of location
+**/uploads/
+**/temp_chunks/
 GITHUB_SETUP.md
 
 # Logs
@@ -272,3 +274,72 @@ runtime/
 # Static files
 static/
 media/
+# Wenxi NetDisk specific - Auto-generated based on environment variables
+*.db
+*.sqlite
+*.sqlite3
+test.db
+test_*.db
+temp_chunks/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/.cache/
+frontend/.temp/
+
+# Allow any directory named uploads or temp_chunks regardless of location
+**/uploads/
+**/temp_chunks/
+
+# Dynamic storage paths based on WENXI_FILE_STORAGE_PATH
+# Current storage path: ./uploads
+# Absolute path: F:\《000》\stick\Wenxi-Network-Disk\uploads
+
+# Additional Wenxi NetDisk specific ignores
+*.session
+*.session-journal
+.cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.coverage.*
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Security sensitive files
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# Development specific
+.env.development
+.env.production
+.env.staging
+
+# IDE and editor specific
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+*.backup
+*.orig
+*.rej
+*.sublime-*
+*.code-workspace
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini

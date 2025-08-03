@@ -48,6 +48,7 @@ if exist "requirements.txt" (
 
 REM Initialize database
 echo Initializing database...
+cd /d %~dp0\..\backend
 python -c "from database import init_db; init_db()" 2>nul
 if errorlevel 1 (
     echo Warning: Database initialization failed, continuing anyway...

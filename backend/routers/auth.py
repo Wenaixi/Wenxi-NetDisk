@@ -21,10 +21,15 @@ from models import User, File as FileModel
 import os
 
 
-# JWT配置
-SECRET_KEY = "wenxi-super-secret-key-change-in-production"
+# JWT配置 - 仅使用环境变量，无硬编码默认值
+SECRET_KEY = os.environ.get("WENXI_JWT_SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("环境变量 WENXI_JWT_SECRET_KEY 未设置")
+
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("WENXI_JWT_EXPIRE_MINUTES"))
+if not os.environ.get("WENXI_JWT_EXPIRE_MINUTES"):
+    raise ValueError("环境变量 WENXI_JWT_EXPIRE_MINUTES 未设置")
 
 # 密码加密
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

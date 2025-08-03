@@ -21,8 +21,11 @@ class WenxiLogger:
     
     def _setup_logger(self):
         """配置日志格式和级别"""
-        # 从环境变量获取日志级别
-        log_level = os.getenv("WENXI_LOG_LEVEL", "INFO").upper()
+        # 仅使用环境变量，无硬编码默认值
+        log_level = os.getenv("WENXI_LOG_LEVEL")
+        if not log_level:
+            raise ValueError("环境变量 WENXI_LOG_LEVEL 未设置")
+        log_level = log_level.upper()
         level_map = {
             "DEBUG": logging.DEBUG,
             "INFO": logging.INFO,

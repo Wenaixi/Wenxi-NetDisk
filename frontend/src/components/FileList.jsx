@@ -17,22 +17,30 @@ export default function FileList({ files, onRefresh, formatFileSize }) {
     
     try {
       const token = localStorage.getItem('token');
-      const downloadUrl = `/api/files/download/${file.id}`;
-      const fullDownloadUrl = `${window.location.origin}${downloadUrl}?token=${token}&download=1`;
       
-      // Wenxi优化：使用window.open直接下载，避免iframe被拦截
-      const newWindow = window.open(fullDownloadUrl, '_blank');
-      
-      // 如果弹窗被拦截，尝试直接下载
-      if (!newWindow) {
-        const link = document.createElement('a');
-        link.href = fullDownloadUrl;
-        link.download = file.original_filename;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+      // Wenxi修改：获取分享链接，然后跳转到分享链接
+      const response = await fetch(`/api/files/${file.id}/share`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          alert('登录已过期，请重新登录');
+          window.location.href = '/login';
+          return;
+        }
+        throw new Error('获取分享链接失败');
       }
+
+      const data = await response.json();
+      const shareUrl = `${window.location.origin}${data.share_url}`;
+      
+      // Wenxi优化：直接跳转到分享链接页面
+      window.location.href = shareUrl;
       
     } catch (error) {
       console.error('Wenxi - 文件下载错误:', error);

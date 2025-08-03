@@ -50,6 +50,8 @@ app.add_middleware(
 
 # 挂载静态文件
 uploads_path = os.path.join(os.path.dirname(__file__), "uploads")
+# 确保上传目录存在
+os.makedirs(uploads_path, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
 
 # 注册路由

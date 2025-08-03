@@ -127,13 +127,19 @@ async def upload_file(
         # 性能监控
         logger.info(f"Wenxi - 开始高性能文件上传: {file.filename}")
         
-        # 生成唯一文件名
-        file_extension = os.path.splitext(file.filename)[1]
-        unique_filename = f"{uuid.uuid4().hex}{file_extension}"
+        # 生成唯一文件名（不带扩展名，统一加密格式）
+        unique_filename = uuid.uuid4().hex  # 仅使用UUID作为文件名，不带扩展名
         
-        # 确保上传目录存在
-        upload_dir = os.path.join(os.path.dirname(__file__), "..", "uploads")
-        os.makedirs(upload_dir, exist_ok=True)
+        # 使用统一路径管理工具获取文件存储路径
+        from utils.file_paths import get_file_storage_path, ensure_directory_exists
+        upload_dir = get_file_storage_path()
+        upload_dir = ensure_directory_exists(upload_dir)
+        logger.info(f"Wenxi - 确保上传目录存在: {upload_dir}")
+        
+        # 验证目录权限
+        if not os.access(upload_dir, os.W_OK):
+            logger.error(f"Wenxi - 上传目录无写权限: {upload_dir}")
+            raise HTTPException(status_code=500, detail="上传目录权限不足")
         
         file_path = os.path.join(upload_dir, unique_filename)
         
@@ -142,7 +148,10 @@ async def upload_file(
         chunk_count = 0
         buffer_size = BUFFER_SIZE  # 16MB缓冲区，零拷贝传输
         
-        async with aiofiles.open(file_path, 'wb') as buffer:
+        # 创建临时文件用于原始数据
+        temp_path = file_path + ".tmp"
+        
+        async with aiofiles.open(temp_path, 'wb') as buffer:
             while True:
                 chunk = await file.read(buffer_size)
                 if not chunk:
@@ -159,7 +168,7 @@ async def upload_file(
         
         # 计算文件校验和（使用线程池避免阻塞）
         loop = asyncio.get_event_loop()
-        checksum = await loop.run_in_executor(executor, calculate_file_hash, file_path)
+        checksum = await loop.run_in_executor(executor, calculate_file_hash, temp_path)
         
         # 保存到数据库
         db_file = FileModel(
@@ -176,6 +185,19 @@ async def upload_file(
         db.add(db_file)
         db.commit()
         db.refresh(db_file)
+        
+        # 加密文件
+        from utils.encryption import encrypt_file
+        encrypt_success = encrypt_file(temp_path, file_path, user_id=current_user.id, file_id=db_file.id)
+        
+        # 删除临时文件
+        os.remove(temp_path)
+        
+        if not encrypt_success:
+            # 如果加密失败，删除数据库记录
+            db.delete(db_file)
+            db.commit()
+            raise HTTPException(status_code=500, detail="文件加密失败")
         
         # 计算性能指标
         upload_time = (datetime.now() - start_time).total_seconds()
@@ -231,9 +253,10 @@ async def upload_chunk(
     - 内存优化，减少单次占用
     """
     try:
-        # 创建临时分块目录
-        temp_dir = os.path.join(os.path.dirname(__file__), "..", "temp_chunks", file_hash)
-        os.makedirs(temp_dir, exist_ok=True)
+        # 使用统一路径管理工具获取临时分块路径
+        from utils.file_paths import get_temp_chunks_path, ensure_directory_exists
+        temp_dir = os.path.join(get_temp_chunks_path(), file_hash)
+        temp_dir = ensure_directory_exists(temp_dir)
         
         chunk_path = os.path.join(temp_dir, f"chunk_{chunk_index}")
         
@@ -267,7 +290,8 @@ async def check_upload_status(
     功能：断点续传，检查已上传的分块
     """
     try:
-        temp_dir = os.path.join(os.path.dirname(__file__), "..", "temp_chunks", file_hash)
+        from utils.file_paths import get_temp_chunks_path
+        temp_dir = os.path.join(get_temp_chunks_path(), file_hash)
         
         if not os.path.exists(temp_dir):
             return {"uploaded_chunks": []}
@@ -304,9 +328,9 @@ async def merge_chunks(
     try:
         start_time = datetime.now()
         
-        temp_dir = os.path.join(os.path.dirname(__file__), "..", "temp_chunks", file_hash)
-        upload_dir = os.path.join(os.path.dirname(__file__), "..", "uploads")
-        os.makedirs(upload_dir, exist_ok=True)
+        from utils.file_paths import get_file_storage_path, get_temp_chunks_path, ensure_directory_exists
+        temp_dir = os.path.join(get_temp_chunks_path(), file_hash)
+        upload_dir = ensure_directory_exists(get_file_storage_path())
         
         # 检查所有分块是否都存在
         for i in range(total_chunks):
@@ -314,9 +338,8 @@ async def merge_chunks(
             if not os.path.exists(chunk_path):
                 raise HTTPException(status_code=400, detail="分块不完整")
         
-        # 生成最终文件名
-        file_extension = os.path.splitext(file_name)[1]
-        unique_filename = f"{uuid.uuid4().hex}{file_extension}"
+        # 生成最终文件名（不带扩展名，统一加密格式）
+        unique_filename = uuid.uuid4().hex  # 仅使用UUID作为文件名，不带扩展名
         final_path = os.path.join(upload_dir, unique_filename)
         
         # 合并分块
@@ -350,6 +373,24 @@ async def merge_chunks(
         db.add(db_file)
         db.commit()
         db.refresh(db_file)
+        
+        # 加密文件，使用正确的文件ID
+        encrypted_path = final_path + ".encrypted"
+        from utils.encryption import encrypt_file
+        encrypt_success = encrypt_file(
+            final_path,
+            encrypted_path,
+            user_id=current_user.id,
+            file_id=db_file.id
+        )
+        
+        if encrypt_success:
+            os.remove(final_path)
+            os.rename(encrypted_path, final_path)
+        else:
+            db.delete(db_file)
+            db.commit()
+            raise HTTPException(status_code=500, detail="文件加密失败")
         
         # 计算性能指标
         upload_time = (datetime.now() - start_time).total_seconds()
@@ -412,7 +453,8 @@ async def download_file(
     file_id: int,
     token: Optional[str] = None,
     db: Session = Depends(get_db),
-    range: Optional[str] = None
+    range: Optional[str] = None,
+    background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     """
     Wenxi - 文件下载接口
@@ -483,14 +525,46 @@ async def download_file(
         logger.info(f"Wenxi - 尝试下载文件: {file.original_filename}, 路径: {file_path}")
         if not os.path.exists(file_path):
             logger.error(f"Wenxi - 文件不存在: {file_path}")
-            raise HTTPException(status_code=404, detail="文件不存在")
+            logger.error(f"Wenxi - 文件ID: {file_id}, 用户ID: {current_user.id}")
+            raise HTTPException(status_code=404, detail=f"文件不存在: {file.original_filename}")
         
-        # 使用FileResponse实现零拷贝传输
-        # 处理中文文件名编码问题
+        # 创建临时解密文件
+        temp_decrypt_path = file_path + ".decrypt"
+        
+        # 检查文件大小
+        file_size = os.path.getsize(file_path)
+        logger.info(f"Wenxi - 文件大小: {file_size} bytes")
+        
+        # 解密文件
+        from utils.encryption import decrypt_file
+        decrypt_success = decrypt_file(file_path, temp_decrypt_path, user_id=file.owner_id, file_id=file.id)
+        
+        if not decrypt_success:
+            if os.path.exists(temp_decrypt_path):
+                os.remove(temp_decrypt_path)
+            logger.error(f"Wenxi - 文件解密失败 - 文件ID: {file_id}, 用户ID: {file.owner_id}, 文件路径: {file_path}")
+            raise HTTPException(status_code=500, detail=f"文件解密失败: {file.original_filename}")
+        
+        # 验证解密文件
+        if not os.path.exists(temp_decrypt_path):
+            logger.error(f"Wenxi - 解密文件未创建: {temp_decrypt_path}")
+            raise HTTPException(status_code=500, detail="解密文件创建失败")
+        
+        # 使用临时解密文件进行传输
         from urllib.parse import quote
         encoded_filename = quote(file.original_filename, encoding='utf-8')
-        return FileResponse(
-            path=file_path,
+        
+        def cleanup_temp_file():
+            """清理临时解密文件"""
+            try:
+                if os.path.exists(temp_decrypt_path):
+                    os.remove(temp_decrypt_path)
+            except Exception as e:
+                logger.warning(f"清理临时解密文件失败: {e}")
+        
+        # 创建自定义响应以支持清理
+        response = FileResponse(
+            path=temp_decrypt_path,
             filename=file.original_filename,
             media_type=file.mime_type or "application/octet-stream",
             headers={
@@ -498,6 +572,10 @@ async def download_file(
                 "Content-Disposition": f'attachment; filename*=UTF-8\'\'{encoded_filename}'
             }
         )
+        
+        # 设置清理回调
+        background_tasks.add_task(cleanup_temp_file)
+        return response
         
     except HTTPException:
         raise
@@ -511,7 +589,8 @@ async def download_file(
 @router.get("/shared/{share_token}")
 async def access_shared_file(
     share_token: str,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    background_tasks: BackgroundTasks = BackgroundTasks()
 ):
     """通过分享令牌访问文件"""
     try:
@@ -531,12 +610,33 @@ async def access_shared_file(
             logger.error(f"Wenxi - 分享文件不存在: {file_path}")
             raise HTTPException(status_code=404, detail="文件不存在")
         
+        # 创建临时解密文件
+        temp_decrypt_path = file_path + ".decrypt"
+        
+        # 解密文件
+        from utils.encryption import decrypt_file
+        decrypt_success = decrypt_file(file_path, temp_decrypt_path, user_id=file.owner_id, file_id=file.id)
+        
+        if not decrypt_success:
+            if os.path.exists(temp_decrypt_path):
+                os.remove(temp_decrypt_path)
+            raise HTTPException(status_code=500, detail="文件解密失败")
+        
         logger.info(f"通过分享链接访问文件: {file.original_filename}")
         
         from urllib.parse import quote
         encoded_filename = quote(file.original_filename, encoding='utf-8')
-        return FileResponse(
-            path=file_path,
+        
+        def cleanup_temp_file():
+            """清理临时解密文件"""
+            try:
+                if os.path.exists(temp_decrypt_path):
+                    os.remove(temp_decrypt_path)
+            except Exception as e:
+                logger.warning(f"清理临时解密文件失败: {e}")
+        
+        response = FileResponse(
+            path=temp_decrypt_path,
             filename=file.original_filename,
             media_type=file.mime_type or "application/octet-stream",
             headers={
@@ -544,6 +644,9 @@ async def access_shared_file(
                 "Content-Disposition": f'attachment; filename*=UTF-8\'\'{encoded_filename}'
             }
         )
+        
+        background_tasks.add_task(cleanup_temp_file)
+        return response
         
     except HTTPException:
         raise
