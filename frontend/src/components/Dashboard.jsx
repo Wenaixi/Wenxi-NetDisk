@@ -315,7 +315,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
           <div className="text-center text-xs text-gray-500 space-y-1">
             <p>
-              本项目已在 <a href="https://github.com/Wenaixi/Wenxi-Network-Disk" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">GitHub</a> 用 <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">MIT协议</a> 全面开源
+              本项目已在 <a href="https://github.com/Wenaixi/Wenxi-NetDisk/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">GitHub</a> 用 <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">MIT协议</a> 全面开源
             </p>
             <p>
               作者：<span className="font-semibold">Wenxi</span> | 版本号：<span className="font-semibold">v1.1.1</span>

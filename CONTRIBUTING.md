@@ -34,8 +34,8 @@
 ### 快速开始
 ```bash
 # 克隆项目
-git clone https://github.com/Wenaixi/Wenxi-Network-Disk.git
-cd Wenxi-Network-Disk
+git clone https://github.com/Wenaixi/Wenxi-NetDisk.git
+cd Wenxi-NetDisk
 ./scripts/quick_start.bat
 ```
 
@@ -122,8 +122,8 @@ Closes #123
 ## 📞 联系方式
 
 - 📧 邮箱：121645025@qq.com
-- 🐛 Issues：[GitHub Issues](https://github.com/Wenaixi/Wenxi-Network-Disk/issues)
-- 💬 Discussions：[GitHub Discussions](https://github.com/Wenaixi/Wenxi-Network-Disk/discussions)
+- 🐛 Issues：[GitHub Issues](https://github.com/Wenaixi/Wenxi-NetDisk/issues)
+- 💬 Discussions：[GitHub Discussions](https://github.com/Wenaixi/Wenxi-NetDisk/discussions)
 
 ## 🙏 致谢
 

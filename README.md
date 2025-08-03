@@ -59,8 +59,8 @@ Axios → HTTP客户端
 
 #### 1. 克隆项目
 ```bash
-git clone https://github.com/Wenaixi/Wenxi-Network-Disk.git
-cd Wenxi-Network-Disk
+git clone https://github.com/Wenaixi/Wenxi-NetDisk.git
+cd Wenxi-NetDisk
 ```
 
 #### 2. 配置环境变量
@@ -262,7 +262,7 @@ python main.py --env=production
 ### 📧 联系方式
 - **作者**: Wenxi
 - **邮箱**: 121645025@qq.com
-- **GitHub**: [Wenaixi/Wenxi-Network-Disk](https://github.com/Wenaixi/Wenxi-Network-Disk)
+- **GitHub**: [Wenaixi/Wenxi-NetDisk](https://github.com/Wenaixi/Wenxi-NetDisk)
 
 ### 🌟 贡献指南
 1. **Fork** 项目
@@ -274,7 +274,7 @@ python main.py --env=production
 ### 🏆 贡献者
 感谢每一位为Wenxi网盘做出贡献的朋友！
 
-[![Contributors](https://contrib.rocks/image?repo=Wenaixi/Wenxi-Network-Disk)](https://github.com/Wenaixi/Wenxi-Network-Disk/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=Wenaixi/Wenxi-NetDisk)](https://github.com/Wenaixi/Wenxi-NetDisk/graphs/contributors)
 
 ## 📄 许可证
 
