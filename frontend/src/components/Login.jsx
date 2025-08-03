@@ -211,8 +211,8 @@ export default function Login() {
 
         {/* 底部开源信息 - Wenxi网盘开源声明 */}
         <footer className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t border-gray-200">
-          <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-            <div className="text-center text-xs text-gray-500 space-y-1">
+          <div className="max-w-7xl mx-auto py-1 px-4 sm:px-6 lg:px-8">
+            <div className="text-center text-[7px] text-gray-500 leading-none">
               <p>
                 本项目已在 <a href="https://github.com/Wenaixi/Wenxi-NetDisk/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">GitHub</a> 用 <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">MIT协议</a> 全面开源
               </p>

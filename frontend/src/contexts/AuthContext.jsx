@@ -7,9 +7,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
+// 导入API配置工具
+import { getBaseURL } from '../utils/apiConfig';
+
 // 配置axios实例
 const api = axios.create({
-  baseURL: 'http://localhost:3008', // 直接连接后端
+  baseURL: getBaseURL(),
   timeout: 10000,
 });
 

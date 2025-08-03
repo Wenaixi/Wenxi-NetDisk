@@ -49,7 +49,12 @@ export default function Dashboard() {
       // Wenxi - 否则从后端获取
       console.log('Wenxi - 开始获取文件列表...');
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3008/api/files/list', {
+      import('../utils/apiConfig').then(({ getBaseURL }) => {
+        // 动态导入避免循环依赖
+      });
+      
+      const { getBaseURL } = await import('../utils/apiConfig');
+      const response = await axios.get(`${getBaseURL()}/api/files/list`, {
         params: searchQuery ? { search: searchQuery } : {},
         headers: {
           'Authorization': `Bearer ${token}`
@@ -311,9 +316,9 @@ export default function Dashboard() {
       </main>
 
       {/* 底部开源信息 - Wenxi网盘开源声明 */}
-      <footer className="bg-white border-t border-gray-200 mt-12">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <div className="text-center text-xs text-gray-500 space-y-1">
+      <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+        <div className="max-w-7xl mx-auto py-1 px-4 sm:px-6 lg:px-8">
+          <div className="text-center text-[7px] text-gray-500 leading-none">
             <p>
               本项目已在 <a href="https://github.com/Wenaixi/Wenxi-NetDisk/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">GitHub</a> 用 <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">MIT协议</a> 全面开源
             </p>

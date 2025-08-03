@@ -158,7 +158,9 @@ export default function UserSettings({ isOpen, onClose, currentUser, onUserUpdat
 
     try {
       const token = localStorage.getItem('token');
-      await axios.put('http://localhost:3008/api/auth/update-password', {
+      const { getBaseURL } = await import('../utils/apiConfig');
+      
+      await axios.put(`${getBaseURL()}/api/auth/update-password`, {
         old_password: oldPassword,
         new_password: newPassword
       }, {
