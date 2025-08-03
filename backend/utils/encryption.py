@@ -9,6 +9,8 @@ Wenxi网盘 - 超强兼容性文件加密模块 v2.0
 import os
 import struct
 import logging
+from pathlib import Path
+from dotenv import load_dotenv
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.hazmat.primitives import hashes
@@ -17,6 +19,10 @@ from cryptography.hazmat.backends import default_backend
 import secrets
 
 from logger import logger
+
+# 从根目录加载环境变量
+root_dir = Path(__file__).parent.parent.parent
+load_dotenv(root_dir / ".env")
 
 # 超强兼容性加密配置 - 仅使用环境变量，无硬编码默认值
 ENCRYPTION_KEY = os.environ.get("WENXI_ENCRYPTION_KEY")

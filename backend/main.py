@@ -5,13 +5,19 @@ Wenxi网盘 - FastAPI主应用
 """
 
 import os
+from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
 
 from logger import logger
 from routers import auth, files
+
+# 从根目录加载环境变量
+root_dir = Path(__file__).parent.parent
+load_dotenv(root_dir / ".env")
 
 
 @asynccontextmanager

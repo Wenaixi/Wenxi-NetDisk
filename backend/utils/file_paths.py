@@ -6,6 +6,11 @@ Wenxi网盘 - 文件路径管理工具
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+# 从根目录加载环境变量
+root_dir = Path(__file__).parent.parent.parent
+load_dotenv(root_dir / ".env")
 
 def get_file_storage_path():
     """

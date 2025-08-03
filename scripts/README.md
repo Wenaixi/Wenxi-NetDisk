@@ -1,61 +1,38 @@
-# Wenxi Network Disk - Database Management Scripts
+# 脚本说明文档
 
-Author: Wenxi
+作者：Wenxi
 
-This directory contains database management scripts for Wenxi Network Disk.
+## 🎯 脚本列表
 
-## Script Descriptions
+### `quick_start.bat` - 一键启动
+一键启动前后端服务，自动检测端口、安装依赖、初始化数据库
 
-### `init_db.bat`
-**Function:** Initialize a new database and clear all existing user data and stored files.
+### `init_db.bat` - 重置文件数据
+清空所有用户文件和文件元数据，保留用户账户，用于文件系统重置
 
-**Warning:** This script will:
-- Delete all existing user accounts
-- Delete all stored files
-- Reset the entire database to a clean state
+### `force_init_db.bat` - 强制初始化
+彻底删除所有数据（用户、文件、数据库），完全重置系统到初始状态
 
-**Usage:**
-1. Run the script: `scripts\init_db.bat`
-2. When prompted, type `YES` to confirm the operation
-3. Any other input will cancel the operation
+### `get_storage_paths.py` - 路径配置
+动态获取和配置文件存储路径，支持自定义存储位置
 
-### `force_init_db.bat`
-**Function:** Force complete reset of the database system, deleting ALL data including user accounts and stored files.
+### `update_gitignore.py` - 版本控制
+自动更新.gitignore文件，确保临时文件和敏感数据不被提交到Git
 
-**Warning:** This script is more destructive than `init_db.bat` and will:
-- **PERMANENTLY DELETE** all user accounts
-- **PERMANENTLY DELETE** all stored files
-- **COMPLETELY RESET** the entire system
-- **IRREVERSIBLE** operation - data cannot be recovered
-
-**Usage:**
-1. Run the script: `scripts\force_init_db.bat`
-2. When prompted, type `YES` to confirm the operation
-3. Any other input will cancel the operation
-
-## Safety Features
-
-Both scripts include mandatory confirmation:
-- **YES** (case-insensitive) - Proceed with operation
-- **Any other input** - Cancel operation safely
-
-## Requirements
-
-- Python 3.8+ installed and in PATH
-- All dependencies listed in `requirements.txt`
-- Windows PowerShell or Command Prompt
-
-## Emergency Recovery
-
-If you accidentally run these scripts:
-1. **STOP** the operation immediately by closing the terminal
-2. **DO NOT** restart the application
-3. **CHECK** if any backup files exist in the project directory
-4. **CONTACT** system administrator for data recovery assistance
-
-## Testing
-
-Run the confirmation script tests:
+## ⚡ 使用方法
 ```bash
-python -m pytest tests/test_confirmation_scripts.py -v
+# 一键启动（推荐）
+./scripts/quick_start.bat
+
+# 重置文件数据
+./scripts/init_db.bat
+
+# 强制重置系统
+./scripts/force_init_db.bat
 ```
+
+## 🔧 系统要求
+- Python 3.8+
+- Node.js 16+
+- Windows PowerShell/命令提示符
+- 所有依赖包（requirements.txt）

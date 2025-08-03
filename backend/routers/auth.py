@@ -6,6 +6,7 @@ Wenxi网盘 - 用户认证模块
 
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -14,11 +15,16 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 import jwt
 from jwt.exceptions import InvalidTokenError
+from dotenv import load_dotenv
 
 from logger import logger
 from database import get_db
 from models import User, File as FileModel
 import os
+
+# 从根目录加载环境变量
+root_dir = Path(__file__).parent.parent.parent
+load_dotenv(root_dir / ".env")
 
 
 # JWT配置 - 仅使用环境变量，无硬编码默认值
