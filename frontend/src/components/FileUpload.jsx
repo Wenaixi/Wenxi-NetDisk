@@ -237,7 +237,8 @@ export default function FileUpload({ onClose, onSuccess }) {
     ));
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (e) => {
+    if (e) e.preventDefault(); // Wenxi：阻止默认行为防止页面刷新
     if (files.length === 0) return;
 
     setUploading(true);
@@ -301,7 +302,10 @@ export default function FileUpload({ onClose, onSuccess }) {
             multiple
             accept="*/*"
             className="hidden"
-            onChange={(e) => handleFileSelect(e.target.files)}
+            onChange={(e) => {
+              e.preventDefault(); // Wenxi：防止移动端选择文件后刷新
+              handleFileSelect(e.target.files);
+            }}
           />
         </div>
 
@@ -360,11 +364,11 @@ export default function FileUpload({ onClose, onSuccess }) {
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
           >
             取消
-          </button>
-          <button
-            onClick={handleUpload}
+          </button>          <button
+            onClick={(e) => handleUpload(e)}
             disabled={files.length === 0 || uploading}
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50"
+            type="button"  // Wenxi：明确指定按钮类型防止表单提交
           >
             {uploading ? '上传中...' : '开始上传'}
           </button>
