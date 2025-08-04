@@ -31,14 +31,16 @@ if database_url.startswith('sqlite:///.'):
     # 确保使用正确的路径分隔符
     db_relative_path = db_relative_path.replace('/', os.sep)
     db_path = os.path.join(backend_dir, db_relative_path)
-    DATABASE_URL = f"sqlite:///{db_path.replace('\\\\', '/').replace('\\\\', '/')}"
+    normalized_path = db_path.replace('\\', '/')
+    DATABASE_URL = f"sqlite:///{normalized_path}"
 elif database_url.startswith('sqlite:///'):
     # 绝对路径格式: sqlite:///absolute/path/to/file.db
     DATABASE_URL = database_url
 else:
     # 默认使用backend目录
     db_path = os.path.join(backend_dir, 'wenxi_netdisk.db')
-    DATABASE_URL = f"sqlite:///{db_path.replace('\\\\', '/').replace('\\\\', '/')}"
+    normalized_path = db_path.replace('\\', '/')
+    DATABASE_URL = f"sqlite:///{normalized_path}"
 
 # 记录实际使用的数据库路径
 logger.info(f"Wenxi - 数据库路径: {DATABASE_URL}")
