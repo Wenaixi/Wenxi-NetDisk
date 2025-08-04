@@ -1,4 +1,4 @@
-# 🚀 Wenxi网盘 v1.1.1 - 企业级云存储解决方案
+# 🚀 Wenxi网盘 v1.1.2 - 企业级云存储解决方案
 
 [![MIT许可证](https://img.shields.io/badge/许可证-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)

@@ -323,7 +323,7 @@ export default function Dashboard() {
               本项目已在 <a href="https://github.com/Wenaixi/Wenxi-NetDisk/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">GitHub</a> 用 <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">MIT协议</a> 全面开源
             </p>
             <p>
-              作者：<span className="font-semibold">Wenxi</span> | 版本号：<span className="font-semibold">v1.1.1</span>
+              作者：<span className="font-semibold">Wenxi</span> | 版本号：<span className="font-semibold">v1.1.2</span>
             </p>
             <p>
               本项目将会在未来不断优化改进，为您提供更好的体验

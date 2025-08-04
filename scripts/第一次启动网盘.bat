@@ -35,7 +35,7 @@ echo Current directory: %CURRENT_DIR%
 
 REM Check Python installation
 echo.
-echo [1/5] Checking Python environment...
+echo [1/6] Checking Python environment...
 python --version >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] Python is not installed or not in PATH
@@ -50,7 +50,7 @@ echo [SUCCESS] Python version: %PYTHON_VERSION%
 
 REM Check Node.js installation
 echo.
-echo [2/5] Checking Node.js environment...
+echo [2/6] Checking Node.js environment...
 node --version >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] Node.js is not installed or not in PATH
@@ -65,7 +65,7 @@ echo [SUCCESS] Node.js version: %NODE_VERSION%
 
 REM Check pip installation
 echo.
-echo [3/5] Checking pip environment...
+echo [3/6] Checking pip environment...
 python -m pip --version >nul 2>&1
 if errorlevel 1 (
     echo [ERROR] pip is not installed
@@ -76,7 +76,7 @@ echo [SUCCESS] pip is available
 
 REM Choose pip source
 echo.
-echo [4/5] Configuring pip source...
+echo [4/6] Configuring pip source...
 echo Please select a pip mirror for faster downloads:
 echo 1. Alibaba Cloud (https://mirrors.aliyun.com/pypi/simple/) [Recommended]
 echo 2. Tsinghua University (https://pypi.tuna.tsinghua.edu.cn/simple)
@@ -94,7 +94,24 @@ echo Selected pip source: %PIP_INDEX_URL%
 
 REM Install Python dependencies
 echo.
-echo [5/5] Installing Python dependencies...
+echo [5/6] Installing Python dependencies...
+
+REM Install root dependencies
+cd /d "%~dp0\.."
+if exist "requirements.txt" (
+    echo Installing root dependencies...
+    python -m pip install -i %PIP_INDEX_URL% -r requirements.txt --upgrade
+    if errorlevel 1 (
+        echo [ERROR] Failed to install root dependencies
+        pause
+        exit /b 1
+    )
+    echo [SUCCESS] Root dependencies installed
+) else (
+    echo [WARNING] root/requirements.txt not found
+)
+
+REM Install backend dependencies
 cd /d "%~dp0\..\backend"
 if exist "requirements.txt" (
     echo Installing backend dependencies...
@@ -111,7 +128,7 @@ if exist "requirements.txt" (
 
 REM Install Node.js dependencies
 echo.
-echo Installing Node.js dependencies...
+echo [6/6] Installing Node.js dependencies...
 cd /d "%~dp0\..\frontend"
 if exist "package.json" (
     echo Installing frontend dependencies...
