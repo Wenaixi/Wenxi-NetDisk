@@ -24,6 +24,7 @@ from logger import logger
 from database import get_db
 from models import File as FileModel, User
 from routers.auth import get_current_user
+from search.service import search_service
 
 
 router = APIRouter()
@@ -185,6 +186,12 @@ async def upload_file(
         db.add(db_file)
         db.commit()
         db.refresh(db_file)
+        
+        # 添加到搜索索引（异步执行，不阻塞响应）
+        try:
+            asyncio.create_task(search_service.index_file(db_file.id, db))
+        except Exception as e:
+            logger.warning(f"Wenxi - 异步索引文件失败: {e}")
         
         # 加密文件
         from utils.encryption import encrypt_file
@@ -387,6 +394,12 @@ async def merge_chunks(
         if encrypt_success:
             os.remove(final_path)
             os.rename(encrypted_path, final_path)
+            
+            # 添加到搜索索引（异步执行）
+            try:
+                asyncio.create_task(search_service.index_file(db_file.id, db))
+            except Exception as e:
+                logger.warning(f"Wenxi - 异步索引分块上传文件失败: {e}")
         else:
             db.delete(db_file)
             db.commit()
@@ -676,6 +689,12 @@ async def delete_file(
         file_path = os.path.abspath(file_path)
         if os.path.exists(file_path):
             os.remove(file_path)
+        
+        # 从搜索索引中移除（异步执行）
+        try:
+            asyncio.create_task(search_service.remove_file_index(file_id))
+        except Exception as e:
+            logger.warning(f"Wenxi - 异步移除文件索引失败: {e}")
         
         # 删除数据库记录
         db.delete(file)

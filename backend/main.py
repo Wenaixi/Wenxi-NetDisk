@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 
 from logger import logger
 from routers import auth, files, versions
+from search import routes as search_routes
 from middleware.security import setup_security_middleware, performance_monitor
 from fastapi import Depends
 
@@ -74,6 +75,7 @@ app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
 app.include_router(auth.router, prefix="/api/auth", tags=["认证"])
 app.include_router(files.router, prefix="/api/files", tags=["文件管理"])
 app.include_router(versions.router, prefix="/api/versions", tags=["文件版本控制"])
+app.include_router(search_routes.router, prefix="/api", tags=["智能搜索"])
 
 # 设置安全中间件
 setup_security_middleware(app, redis_client)
@@ -93,7 +95,8 @@ async def root():
             "文件加密",
             "版本控制",
             "安全中间件",
-            "性能监控"
+            "性能监控",
+            "智能全文搜索"
         ]
     }
 
