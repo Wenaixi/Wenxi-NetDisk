@@ -54,3 +54,7 @@ class File(Base):
     # 额外信息
     description = Column(Text, nullable=True)
     checksum = Column(String(64), nullable=True)  # 文件校验和
+    
+    # 版本控制
+    versions = relationship("FileVersion", back_populates="file", 
+                           order_by="FileVersion.version_number.desc()")

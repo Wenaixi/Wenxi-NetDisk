@@ -688,37 +688,6 @@ async def delete_file(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Wenxi - 文件删除失败: {e}")
-        raise HTTPException(status_code=500, detail="文件删除失败")
-
-
-@router.post("/upload/chunk", response_model=ChunkUploadResponse)
-async def upload_chunk(
-    upload_id: str = Form(...),
-    chunk_index: int = Form(...),
-    total_chunks: int = Form(...),
-    chunk: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Wenxi - 分片上传接口
-    功能：支持大文件分片上传，断点续传
-    性能优势：
-    - 分片并发上传，提高速度
-    - 断点续传，避免重复上传
-    - 内存优化，减少单次占用
-    """
-    try:
-        start_time = datetime.now()
-        
-        # 创建分片临时目录
-        temp_dir = os.path.join(os.path.dirname(__file__), "..", "uploads", "temp", upload_id)
-        os.makedirs(temp_dir, exist_ok=True)
-        
-        # 保存分片
-        chunk_path = os.path.join(temp_dir, f"chunk_{chunk_index}")
-        async with aiofiles.open(chunk_path, 'wb') as f:
             content = await chunk.read()
             await f.write(content)
         
