@@ -1,16 +1,41 @@
 /**
  * Wenxi网盘 - 文件列表组件
  * 作者：Wenxi
- * 功能：展示用户文件列表，支持排序、搜索、批量操作
+ * 功能：展示用户文件列表，支持排序、搜索、批量操作、媒体预览
  */
 
 import React, { useState } from 'react';
-import { Download, Trash2, Share2, Copy, Check } from 'lucide-react';
+import { Download, Trash2, Share2, Copy, Check, Eye, FileImage, FileVideo, FileAudio, FileText, File } from 'lucide-react';
+import { isPreviewable, getFileExtension } from './MediaPreview';
 
-export default function FileList({ files, onRefresh, formatFileSize }) {
+export default function FileList({ files, onRefresh, formatFileSize, onPreview }) {
   const [copiedId, setCopiedId] = useState(null);
 
   const [downloadingId, setDownloadingId] = useState(null);
+
+  // 获取文件类型图标
+  const getFileIcon = (file) => {
+    const previewInfo = isPreviewable(file);
+    const ext = getFileExtension(file.original_filename);
+    
+    if (!previewInfo.canPreview) {
+      return <span className="text-sm font-medium text-gray-600">{ext.toUpperCase()}</span>;
+    }
+
+    const iconClass = "h-5 w-5";
+    switch (previewInfo.type) {
+      case 'image':
+        return <FileImage className={`${iconClass} text-purple-500`} />;
+      case 'video':
+        return <FileVideo className={`${iconClass} text-red-500`} />;
+      case 'audio':
+        return <FileAudio className={`${iconClass} text-green-500`} />;
+      case 'pdf':
+        return <FileText className={`${iconClass} text-orange-500`} />;
+      default:
+        return <File className={`${iconClass} text-gray-500`} />;
+    }
+  };
 
   const handleDownload = async (file) => {
     setDownloadingId(file.id);
@@ -117,6 +142,12 @@ export default function FileList({ files, onRefresh, formatFileSize }) {
     return new Date(dateString).toLocaleString('zh-CN');
   };
 
+  const handlePreview = (file, index) => {
+    if (onPreview) {
+      onPreview(file, index);
+    }
+  };
+
   if (files.length === 0) {
     return (
       <div className="text-center py-12">
@@ -134,33 +165,51 @@ export default function FileList({ files, onRefresh, formatFileSize }) {
   return (
     <div className="bg-white shadow overflow-hidden sm:rounded-md">
       <ul className="divide-y divide-gray-200">
-        {files.map((file) => (
-          <li key={file.id} className="px-4 py-4 sm:px-6">
+        {files.map((file, index) => {
+          const previewInfo = isPreviewable(file);
+          return (
+          <li key={file.id} className="px-4 py-4 sm:px-6 hover:bg-gray-50 transition-colors duration-150">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-600">
-                        {file.original_filename.split('.').pop()?.toUpperCase()}
-                      </span>
+                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center border border-gray-200 shadow-sm">
+                      {getFileIcon(file)}
                     </div>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {file.original_filename}
-                    </p>
+                  <div className="ml-4 flex-1 min-w-0">
+                    <button 
+                      onClick={() => handlePreview(file, index)}
+                      className={`text-sm font-medium truncate text-left transition-colors ${
+                        previewInfo.canPreview 
+                          ? 'text-blue-600 hover:text-blue-800 cursor-pointer' 
+                          : 'text-gray-900 cursor-default'
+                      }`}
+                      title={previewInfo.canPreview ? '点击预览' : file.original_filename}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        {file.original_filename}
+                        {previewInfo.canPreview && (
+                          <Eye className="h-3.5 w-3.5 text-blue-400 inline-block opacity-0 group-hover:opacity-100 transition-opacity" />
+                        )}
+                      </span>
+                    </button>
                     <p className="text-sm text-gray-500">
                       {formatFileSize(file.file_size)} • {formatDate(file.created_at)}
+                      {previewInfo.canPreview && (
+                        <span className="ml-2 text-xs text-blue-500 font-medium">
+                          可预览
+                        </span>
+                      )}
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="ml-4 flex-shrink-0 flex space-x-2">
+              <div className="ml-4 flex-shrink-0 flex space-x-1">
                 <button
                   onClick={() => handleDownload(file)}
                   disabled={downloadingId === file.id}
-                  className={`p-2 text-gray-400 hover:text-gray-600 ${downloadingId === file.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 ${downloadingId === file.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                   title={downloadingId === file.id ? '下载中...' : '下载'}
                 >
                   {downloadingId === file.id ? (
@@ -174,7 +223,7 @@ export default function FileList({ files, onRefresh, formatFileSize }) {
                 </button>
                 <button
                   onClick={() => handleShare(file)}
-                  className="p-2 text-gray-400 hover:text-gray-600"
+                  className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
                   title="分享"
                 >
                   {copiedId === file.id ? (
@@ -185,7 +234,7 @@ export default function FileList({ files, onRefresh, formatFileSize }) {
                 </button>
                 <button
                   onClick={() => handleDelete(file.id)}
-                  className="p-2 text-gray-400 hover:text-red-600"
+                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
                   title="删除"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -193,7 +242,8 @@ export default function FileList({ files, onRefresh, formatFileSize }) {
               </div>
             </div>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </div>
   );

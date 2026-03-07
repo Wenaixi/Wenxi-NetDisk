@@ -10,6 +10,8 @@ import FileUpload from './FileUpload';
 import FileList from './FileList';
 import SmartSearch, { SearchResults } from './SmartSearch';
 import UserSettings from './UserSettings';
+import MediaPreview, { isPreviewable } from './MediaPreview';
+import ThemeToggle from './ThemeToggle';
 import { UploadCloud, LogOut, User, HardDrive, Settings } from 'lucide-react';
 import axios from 'axios';
 
@@ -24,6 +26,14 @@ export default function Dashboard() {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState(''); // Wenxi - 当前搜索词
+
+  // Wenxi - 媒体预览状态
+  const [previewState, setPreviewState] = useState({
+    isOpen: false,
+    currentFile: null,
+    currentIndex: 0,
+    previewableFiles: []
+  });
 
   const fetchFiles = async () => {
     try {
@@ -219,21 +229,60 @@ export default function Dashboard() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // Wenxi - 处理文件预览
+  const handlePreview = (file, index) => {
+    const previewInfo = isPreviewable(file);
+    if (!previewInfo.canPreview) {
+      return; // 不可预览的文件不执行操作
+    }
+
+    // 获取所有可预览的文件列表
+    const currentFiles = searchResults.length > 0 ? searchResults : files;
+    const previewableFiles = currentFiles.filter(f => isPreviewable(f).canPreview);
+    
+    // 找到当前文件在可预览列表中的索引
+    const previewIndex = previewableFiles.findIndex(f => f.id === file.id);
+
+    setPreviewState({
+      isOpen: true,
+      currentFile: file,
+      currentIndex: previewIndex >= 0 ? previewIndex : 0,
+      previewableFiles: previewableFiles
+    });
+  };
+
+  // Wenxi - 关闭预览
+  const handleClosePreview = () => {
+    setPreviewState(prev => ({ ...prev, isOpen: false }));
+  };
+
+  // Wenxi - 导航到指定预览文件
+  const handleNavigatePreview = (index) => {
+    if (index >= 0 && index < previewState.previewableFiles.length) {
+      setPreviewState(prev => ({
+        ...prev,
+        currentIndex: index,
+        currentFile: prev.previewableFiles[index]
+      }));
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 transition-colors duration-300">
       {/* 顶部导航 */}
-      <nav className="bg-white shadow-sm border-b">
+      <nav className="bg-white dark:bg-slate-900 shadow-sm border-b border-gray-200 dark:border-slate-800 transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <UploadCloud className="h-8 w-8 text-blue-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">Wenxi网盘</span>
+              <UploadCloud className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+              <span className="ml-2 text-xl font-bold text-gray-900 dark:text-white">Wenxi网盘</span>
             </div>
             
             <div className="flex items-center space-x-4">
+              <ThemeToggle variant="button" size="md" />
               <button
                 onClick={() => setShowSettings(true)}
-                className="flex items-center text-sm text-gray-600 hover:text-gray-800 cursor-pointer"
+                className="flex items-center text-sm text-gray-600 hover:text-gray-800 dark:text-slate-300 dark:hover:text-slate-100 cursor-pointer transition-colors duration-200"
               >
                 <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold mr-2">
                   {user?.username?.charAt(0)?.toUpperCase() || 'U'}
@@ -243,7 +292,7 @@ export default function Dashboard() {
               </button>
               <button
                 onClick={logout}
-                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 hover:text-gray-700 focus:outline-none"
+                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200 focus:outline-none transition-colors duration-200"
               >
                 <LogOut className="h-4 w-4 mr-1" />
                 退出
@@ -258,43 +307,43 @@ export default function Dashboard() {
         {/* 统计卡片 */}
         <div className="px-4 py-6 sm:px-0">
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="bg-white dark:bg-slate-900 overflow-hidden shadow rounded-lg border border-gray-200 dark:border-slate-800 transition-colors duration-300">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <UploadCloud className="h-6 w-6 text-gray-400" />
+                    <UploadCloud className="h-6 w-6 text-gray-400 dark:text-slate-500" />
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">文件总数</dt>
-                      <dd className="text-lg font-medium text-gray-900">{files.length}</dd>
+                      <dt className="text-sm font-medium text-gray-500 dark:text-slate-400 truncate">文件总数</dt>
+                      <dd className="text-lg font-medium text-gray-900 dark:text-white">{files.length}</dd>
                     </dl>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="bg-white dark:bg-slate-900 overflow-hidden shadow rounded-lg border border-gray-200 dark:border-slate-800 transition-colors duration-300">
               <div className="p-5">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <HardDrive className="h-6 w-6 text-gray-400" />
+                    <HardDrive className="h-6 w-6 text-gray-400 dark:text-slate-500" />
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">已用空间</dt>
-                      <dd className="text-lg font-medium text-gray-900">{formatFileSize(calculateTotalSize())}</dd>
+                      <dt className="text-sm font-medium text-gray-500 dark:text-slate-400 truncate">已用空间</dt>
+                      <dd className="text-lg font-medium text-gray-900 dark:text-white">{formatFileSize(calculateTotalSize())}</dd>
                     </dl>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="bg-white dark:bg-slate-900 overflow-hidden shadow rounded-lg border border-gray-200 dark:border-slate-800 transition-colors duration-300">
               <div className="p-5">
                 <button
                   onClick={() => setShowUpload(true)}
-                  className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
                 >
                   <UploadCloud className="h-5 w-5 mr-2" /> 上传文件
                 </button>
@@ -305,7 +354,7 @@ export default function Dashboard() {
 
         {/* 智能搜索功能 - Wenxi全文搜索 */}
         <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white shadow rounded-lg p-4 mb-6">
+          <div className="bg-white dark:bg-slate-900 shadow rounded-lg p-4 mb-6 border border-gray-200 dark:border-slate-800 transition-colors duration-300">
             <SmartSearch 
               onSearchResults={handleSearchResults}
               onClearSearch={handleClearSearch}
@@ -318,12 +367,12 @@ export default function Dashboard() {
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">加载中...</p>
+              <p className="mt-4 text-gray-600 dark:text-slate-400">加载中...</p>
             </div>
           ) : searchResults.length > 0 || isSearching ? (
             <>
               {searchQuery && (
-                <div className="mb-4 text-sm text-gray-600">
+                <div className="mb-4 text-sm text-gray-600 dark:text-slate-400">
                   搜索 "{searchQuery}" 的结果: {searchResults.length} 个文件
                 </div>
               )}
@@ -337,10 +386,11 @@ export default function Dashboard() {
               />
             </>
           ) : (
-            <FileList 
-              files={files} 
+            <FileList
+              files={files}
               onRefresh={() => fetchFiles()}
               formatFileSize={formatFileSize}
+              onPreview={handlePreview}
             />
           )}
         </div>
@@ -362,14 +412,24 @@ export default function Dashboard() {
             onUserUpdate={setUser}
           />
         )}
+
+        {/* Wenxi - 媒体预览弹窗 */}
+        <MediaPreview
+          file={previewState.currentFile}
+          files={previewState.previewableFiles}
+          currentIndex={previewState.currentIndex}
+          isOpen={previewState.isOpen}
+          onClose={handleClosePreview}
+          onNavigate={handleNavigatePreview}
+        />
       </main>
 
       {/* 底部开源信息 - Wenxi网盘开源声明 */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+      <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-slate-800 z-50 transition-colors duration-300">
         <div className="max-w-7xl mx-auto py-1 px-4 sm:px-6 lg:px-8">
-          <div className="text-center text-[7px] text-gray-500 leading-none">
+          <div className="text-center text-[7px] text-gray-500 dark:text-slate-500 leading-none">
             <p>
-              本项目已在 <a href="https://github.com/Wenaixi/Wenxi-NetDisk/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">GitHub</a> 用 <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">MIT协议</a> 全面开源
+              本项目已在 <a href="https://github.com/Wenaixi/Wenxi-NetDisk/" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">GitHub</a> 用 <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">MIT协议</a> 全面开源
             </p>
             <p>
               作者：<span className="font-semibold">Wenxi</span> | 版本号：<span className="font-semibold">v1.1.2</span>
@@ -378,7 +438,7 @@ export default function Dashboard() {
               本项目将会在未来不断优化改进，为您提供更好的体验
             </p>
             <p>
-              联系方式：<a href="mailto:121645025@qq.com" className="text-blue-600 hover:text-blue-800">121645025@qq.com</a>
+              联系方式：<a href="mailto:121645025@qq.com" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">121645025@qq.com</a>
             </p>
           </div>
         </div>

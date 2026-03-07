@@ -21,6 +21,11 @@
   body {
     @apply bg-gray-50 text-gray-900;
   }
+
+  /* Dark mode base styles */
+  html.dark body {
+    @apply bg-slate-950 text-slate-100;
+  }
 }
 
 /**
@@ -34,6 +39,11 @@
   
   .card {
     @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6;
+  }
+
+  /* Dark mode card style */
+  html.dark .card {
+    @apply bg-slate-900 border-slate-700;
   }
 }
 
