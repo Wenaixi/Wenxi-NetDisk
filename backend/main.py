@@ -13,7 +13,17 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
 from logger import logger
-from routers import auth, files
+from routers import auth, files, versions
+from middleware.security import setup_security_middleware, performance_monitor
+from fastapi import Depends
+
+# 尝试导入redis用于限流
+try:
+    import redis.asyncio as redis
+    redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+except Exception:
+    redis_client = None
+    logger.warning("Redis连接失败，限流功能将不可用")
 
 # 从根目录加载环境变量
 root_dir = Path(__file__).parent.parent
@@ -38,8 +48,8 @@ async def lifespan(app: FastAPI):
 # 创建FastAPI应用
 app = FastAPI(
     title="Wenxi网盘",
-    description="企业级网盘解决方案",
-    version="1.1.2",
+    description="企业级网盘解决方案 - 支持文件版本控制、安全中间件、性能监控",
+    version="1.2.0",
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
@@ -63,6 +73,10 @@ app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
 # 注册路由
 app.include_router(auth.router, prefix="/api/auth", tags=["认证"])
 app.include_router(files.router, prefix="/api/files", tags=["文件管理"])
+app.include_router(versions.router, prefix="/api/versions", tags=["文件版本控制"])
+
+# 设置安全中间件
+setup_security_middleware(app, redis_client)
 
 
 @app.get("/")
@@ -70,16 +84,42 @@ async def root():
     """根路径欢迎信息"""
     return {
         "message": "欢迎使用Wenxi网盘",
-        "version": "1.1.2",
+        "version": "1.2.0",
         "author": "Wenxi",
-        "status": "运行正常"
+        "status": "运行正常",
+        "features": [
+            "文件上传下载",
+            "分片上传",
+            "文件加密",
+            "版本控制",
+            "安全中间件",
+            "性能监控"
+        ]
     }
 
 
 @app.get("/health")
 async def health_check():
     """健康检查接口"""
-    return {"status": "healthy", "timestamp": "2025-08-02T13:51:00"}
+    import datetime
+    return {
+        "status": "healthy",
+        "timestamp": datetime.datetime.utcnow().isoformat(),
+        "version": "1.2.0"
+    }
+
+
+@app.get("/metrics")
+async def get_metrics(current_user = Depends(auth.get_current_user)):
+    """获取系统性能指标"""
+    stats = performance_monitor.get_stats()
+    return {
+        "performance": stats,
+        "system": {
+            "version": "1.2.0",
+            "status": "healthy"
+        }
+    }
 
 
 if __name__ == "__main__":
