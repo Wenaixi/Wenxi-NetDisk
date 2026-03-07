@@ -8,6 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import FileUpload from './FileUpload';
 import FileList from './FileList';
+import SmartSearch, { SearchResults } from './SmartSearch';
 import UserSettings from './UserSettings';
 import { UploadCloud, LogOut, User, HardDrive, Settings } from 'lucide-react';
 import axios from 'axios';
@@ -21,51 +22,23 @@ export default function Dashboard() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [allFiles, setAllFiles] = useState([]); // Wenxi - 本地文件缓存
-  const [isSearching, setIsSearching] = useState(false); // Wenxi - 搜索状态
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(''); // Wenxi - 当前搜索词
 
-  // Wenxi - 前端本地搜索优化
-  const performLocalSearch = (query, fileList) => {
-    if (!query.trim()) return fileList;
-    
-    const searchTerm = query.toLowerCase();
-    return fileList.filter(file => 
-      file.original_filename.toLowerCase().includes(searchTerm) ||
-      file.filename.toLowerCase().includes(searchTerm)
-    );
-  };
-
-  const fetchFiles = async (searchQuery = '') => {
+  const fetchFiles = async () => {
     try {
-      // Wenxi - 如果有本地缓存且搜索词不为空，优先使用本地搜索
-      if (allFiles.length > 0 && searchQuery) {
-        setIsSearching(true);
-        const localResults = performLocalSearch(searchQuery, allFiles);
-        setFiles(localResults);
-        setIsSearching(false);
-        return;
-      }
-      
-      // Wenxi - 否则从后端获取
       console.log('Wenxi - 开始获取文件列表...');
       const token = localStorage.getItem('token');
-      import('../utils/apiConfig').then(({ getBaseURL }) => {
-        // 动态导入避免循环依赖
-      });
       
       const { getBaseURL } = await import('../utils/apiConfig');
       const response = await axios.get(`${getBaseURL()}/api/files/list`, {
-        params: searchQuery ? { search: searchQuery } : {},
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
       console.log('Wenxi - 文件列表获取成功:', response.data);
       
-      // Wenxi - 更新本地缓存
-      setAllFiles(response.data);
       setFiles(response.data);
-      setSearchResults(response.data);
     } catch (error) {
       console.error('Wenxi - 获取文件列表失败:', error);
       if (error.response?.status === 401) {
@@ -74,7 +47,6 @@ export default function Dashboard() {
       }
     } finally {
       setLoading(false);
-      setIsSearching(false);
     }
   };
 
@@ -88,13 +60,118 @@ export default function Dashboard() {
     }
   }, [user]);
 
-  const handleUploadSuccess = () => {
+  const handleUploadSuccess = () =>> {
     setShowUpload(false);
-    fetchFiles(searchTerm);
+    fetchFiles();
   };
 
-  // Wenxi - 防抖定时器引用
-  const [searchTimeout, setSearchTimeout] = useState(null);
+  // Wenxi - 处理智能搜索结果
+  const handleSearchResults = (results) => {
+    setSearchResults(results.results || []);
+    setIsSearching(false);
+    setSearchQuery(results.query || '');
+  };
+
+  // Wenxi - 清除搜索
+  const handleClearSearch = () => {
+    setSearchResults([]);
+    setIsSearching(false);
+    setSearchQuery('');
+    fetchFiles();
+  };
+
+  const handleDownload = async (file) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/files/${file.id}/share`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          alert('登录已过期，请重新登录');
+          window.location.href = '/login';
+          return;
+        }
+        throw new Error('获取分享链接失败');
+      }
+
+      const data = await response.json();
+      const shareUrl = `${window.location.origin}${data.share_url}`;
+      window.location.href = shareUrl;
+      
+    } catch (error) {
+      console.error('Wenxi - 文件下载错误:', error);
+      alert('下载失败，请重试');
+    }
+  };
+
+  const handleShare = async (file) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/files/${file.id}/share`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          alert('登录已过期，请重新登录');
+          window.location.href = '/login';
+          return;
+        }
+        throw new Error('分享失败');
+      }
+
+      const data = await response.json();
+      const shareUrl = `${window.location.origin}${data.share_url}`;
+      
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        alert('分享链接已复制到剪贴板');
+      } catch (clipboardError) {
+        prompt('分享链接已生成，请复制：', shareUrl);
+      }
+    } catch (error) {
+      console.error('Wenxi - 文件分享错误:', error);
+      alert('分享失败，请重试');
+    }
+  };
+
+  const handleDelete = async (fileId) => {
+    if (!confirm('确定要删除这个文件吗？')) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/files/${fileId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        // 从搜索结果中移除
+        setSearchResults(prev => prev.filter(f => f.id !== fileId));
+        fetchFiles();
+      } else if (response.status === 401) {
+        alert('登录已过期，请重新登录');
+        window.location.href = '/login';
+      } else {
+        alert('删除失败，请重试');
+      }
+    } catch (error) {
+      console.error('Wenxi - 删除文件错误:', error);
+      alert('删除失败，请检查网络连接');
+    }
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -226,73 +303,45 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 搜索功能 - Wenxi实时搜索优化 */}
+        {/* 智能搜索功能 - Wenxi全文搜索 */}
         <div className="px-4 py-6 sm:px-0">
           <div className="bg-white shadow rounded-lg p-4 mb-6">
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  placeholder="搜索"
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                  className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                />
-                <svg className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              {searchTerm && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchTerm('');
-                    fetchFiles();
-                  }}
-                  className="px-4 py-2 text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none transition-colors duration-200"
-                >
-                  清除
-                </button>
-              )}
-            </div>
-            {searchTerm && (
-              <div className="mt-2 text-xs text-gray-500 flex items-center">
-                {isSearching ? (
-                  <>
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
-                    正在搜索...
-                  </>
-                ) : (
-                  <>
-                    <div className="h-3 w-3 bg-green-500 rounded-full mr-2"></div>
-                    本地搜索完成: {files.length} 个结果
-                  </>
-                )}
-              </div>
-            )}
+            <SmartSearch 
+              onSearchResults={handleSearchResults}
+              onClearSearch={handleClearSearch}
+            />
           </div>
         </div>
 
-        {/* 文件列表 */}
+        {/* 文件列表或搜索结果 */}
         <div className="px-4 py-6 sm:px-0">
           {loading ? (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
               <p className="mt-4 text-gray-600">加载中...</p>
             </div>
-          ) : (
+          ) : searchResults.length > 0 || isSearching ? (
             <>
-              {searchTerm && (
+              {searchQuery && (
                 <div className="mb-4 text-sm text-gray-600">
-                  搜索 "{searchTerm}" 的结果: {files.length} 个文件
+                  搜索 "{searchQuery}" 的结果: {searchResults.length} 个文件
                 </div>
               )}
-              <FileList 
-                files={files} 
-                onRefresh={() => fetchFiles(searchTerm)}
+              <SearchResults 
+                results={searchResults}
+                onDownload={handleDownload}
+                onShare={handleShare}
+                onDelete={handleDelete}
                 formatFileSize={formatFileSize}
+                searchQuery={searchQuery}
               />
             </>
+          ) : (
+            <FileList 
+              files={files} 
+              onRefresh={() => fetchFiles()}
+              formatFileSize={formatFileSize}
+            />
           )}
         </div>
 

@@ -16,3 +16,5 @@ pytest-asyncio==0.21.1
 httpx==0.25.2
 python-magic==0.4.27
 cryptography==42.0.8
+# 智能全文搜索
+whoosh==2.7.4
