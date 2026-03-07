@@ -12,7 +12,15 @@ import SmartSearch, { SearchResults } from './SmartSearch';
 import UserSettings from './UserSettings';
 import MediaPreview, { isPreviewable } from './MediaPreview';
 import ThemeToggle from './ThemeToggle';
-import { UploadCloud, LogOut, User, HardDrive, Settings } from 'lucide-react';
+import { 
+  FolderSidebar, 
+  Breadcrumb, 
+  CreateFolderDialog, 
+  RenameFolderDialog,
+  MoveFolderDialog,
+  FolderGrid 
+} from './FolderView';
+import { UploadCloud, LogOut, User, HardDrive, Settings, Folder } from 'lucide-react';
 import axios from 'axios';
 
 export default function Dashboard() {
@@ -26,6 +34,16 @@ export default function Dashboard() {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState(''); // Wenxi - 当前搜索词
+
+  const [currentFolderId, setCurrentFolderId] = useState(null);
+  const [folderTree, setFolderTree] = useState([]);
+  const [currentFolderInfo, setCurrentFolderInfo] = useState(null);
+  const [breadcrumbs, setBreadcrumbs] = useState([]);
+  const [subfolders, setSubfolders] = useState([]);
+  const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const [showRenameFolder, setShowRenameFolder] = useState(false);
+  const [showMoveFolder, setShowMoveFolder] = useState(false);
+  const [selectedFolder, setSelectedFolder] = useState(null);
 
   // Wenxi - 媒体预览状态
   const [previewState, setPreviewState] = useState({
@@ -376,11 +394,12 @@ export default function Dashboard() {
                   搜索 "{searchQuery}" 的结果: {searchResults.length} 个文件
                 </div>
               )}
-              <SearchResults 
+              <SearchResults
                 results={searchResults}
                 onDownload={handleDownload}
                 onShare={handleShare}
                 onDelete={handleDelete}
+                onPreview={handlePreview}
                 formatFileSize={formatFileSize}
                 searchQuery={searchQuery}
               />

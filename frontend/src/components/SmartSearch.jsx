@@ -5,7 +5,8 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Filter, X, FileText, FileImage, FileVideo, FileAudio, FileCode, FileArchive, FileSpreadsheet, FilePresentation } from 'lucide-react';
+import { Search, Filter, X, FileText, FileImage, FileVideo, FileAudio, FileCode, FileArchive, FileSpreadsheet, FilePresentation, Eye } from 'lucide-react';
+import { isPreviewable } from './MediaPreview';
 
 // 文件类型图标映射
 const fileTypeIcons = {
@@ -275,7 +276,7 @@ function debounce(func, wait) {
 }
 
 // 搜索结果展示组件
-export function SearchResults({ results, onDownload, onShare, onDelete, formatFileSize, searchQuery }) {
+export function SearchResults({ results, onDownload, onShare, onDelete, onPreview, formatFileSize, searchQuery }) {
   const highlightText = (text) => {
     if (!searchQuery || !text) return text;
     
@@ -306,8 +307,9 @@ export function SearchResults({ results, onDownload, onShare, onDelete, formatFi
   return (
     <div className="bg-white shadow overflow-hidden sm:rounded-md">
       <ul className="divide-y divide-gray-200">
-        {results.map((file) => {
+        {results.map((file, index) => {
           const Icon = getFileIcon(file.file_type);
+          const previewInfo = isPreviewable(file);
           return (
             <li key={file.id} className="px-4 py-4 sm:px-6 hover:bg-gray-50 transition-colors">
               <div className="flex items-center justify-between">
@@ -325,9 +327,17 @@ export function SearchResults({ results, onDownload, onShare, onDelete, formatFi
                       </div>
                     </div>
                     <div className="ml-4 flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <button
+                        onClick={() => previewInfo.canPreview && onPreview && onPreview(file, index)}
+                        className={`text-sm font-medium truncate text-left transition-colors ${
+                          previewInfo.canPreview
+                            ? 'text-blue-600 hover:text-blue-800 cursor-pointer'
+                            : 'text-gray-900 cursor-default'
+                        }`}
+                        title={previewInfo.canPreview ? '点击预览' : file.original_filename}
+                      >
                         {highlightText(file.original_filename)}
-                      </p>
+                      </button>
                       <div className="flex items-center mt-1 space-x-3 text-xs text-gray-500">
                         <span>{formatFileSize(file.file_size)}</span>
                         <span>•</span>
@@ -337,6 +347,15 @@ export function SearchResults({ results, onDownload, onShare, onDelete, formatFi
                             <span>•</span>
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
                               {fileTypeLabels[file.file_type] || file.file_type}
+                            </span>
+                          </>
+                        )}
+                        {previewInfo.canPreview && (
+                          <>
+                            <span>•</span>
+                            <span className="inline-flex items-center text-xs text-blue-500 font-medium">
+                              <Eye className="h-3 w-3 mr-0.5" />
+                              可预览
                             </span>
                           </>
                         )}

@@ -37,6 +37,11 @@ class User(Base):
     # 关联文件
     files = relationship("File", back_populates="owner")
 
+    # 关联文件夹
+    folders = relationship(
+        "Folder", back_populates="user", cascade="all, delete-orphan"
+    )
+
     def has_permission(self, permission: int) -> bool:
         """检查用户是否拥有指定权限"""
         return bool(self.permissions & permission)
@@ -101,3 +106,61 @@ class File(Base):
     is_deleted = Column(Boolean, default=False)  # 软删除标记
     deleted_at = Column(DateTime, nullable=True)  # 删除时间
     original_path = Column(String(500), nullable=True)  # 恢复时使用的原始路径
+
+    # 文件夹关联
+    folder_id = Column(Integer, ForeignKey("folders.id"), nullable=True, index=True)
+    folder = relationship("Folder", back_populates="files")
+
+
+class Folder(Base):
+    """文件夹模型 - 支持嵌套结构"""
+
+    __tablename__ = "folders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+
+    # 关联用户
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    user = relationship("User", back_populates="folders")
+
+    # 嵌套文件夹支持
+    parent_id = Column(Integer, ForeignKey("folders.id"), nullable=True, index=True)
+    parent = relationship("Folder", remote_side=[id], back_populates="children")
+    children = relationship(
+        "Folder", back_populates="parent", cascade="all, delete-orphan"
+    )
+
+    # 关联文件
+    files = relationship("File", back_populates="folder")
+
+    # 时间戳
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    def get_full_path(self) -> str:
+        """获取文件夹完整路径"""
+        if self.parent:
+            return f"{self.parent.get_full_path()}/{self.name}"
+        return self.name
+
+    def to_dict(self, include_children=False):
+        """转换为字典格式"""
+        result = {
+            "id": self.id,
+            "name": self.name,
+            "parent_id": self.parent_id,
+            "user_id": self.user_id,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "full_path": self.get_full_path(),
+        }
+        if include_children:
+            result["children"] = [
+                child.to_dict(include_children=True) for child in self.children
+            ]
+        return result

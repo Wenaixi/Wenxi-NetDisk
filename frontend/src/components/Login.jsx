@@ -214,11 +214,11 @@ export default function Login() {
         </form>
 
         {/* 底部开源信息 - Wenxi网盘开源声明 */}
-        <footer className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t border-gray-200">
+        <footer className="absolute bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-t border-gray-200 dark:border-slate-800 transition-colors duration-300">
           <div className="max-w-7xl mx-auto py-1 px-4 sm:px-6 lg:px-8">
-            <div className="text-center text-[7px] text-gray-500 leading-none">
+            <div className="text-center text-[7px] text-gray-500 dark:text-slate-500 leading-none">
               <p>
-                本项目已在 <a href="https://github.com/Wenaixi/Wenxi-NetDisk/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">GitHub</a> 用 <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800">MIT协议</a> 全面开源
+                本项目已在 <a href="https://github.com/Wenaixi/Wenxi-NetDisk/" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">GitHub</a> 用 <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">MIT协议</a> 全面开源
               </p>
               <p>
                 作者：<span className="font-semibold">Wenxi</span> | 版本号：<span className="font-semibold">v1.1.2</span>
@@ -227,7 +227,7 @@ export default function Login() {
                 本项目将会在未来不断优化改进，为您提供更好的体验
               </p>
               <p>
-                联系方式：<a href="mailto:121645025@qq.com" className="text-blue-600 hover:text-blue-800">121645025@qq.com</a>
+                联系方式：<a href="mailto:121645025@qq.com" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">121645025@qq.com</a>
               </p>
             </div>
           </div>

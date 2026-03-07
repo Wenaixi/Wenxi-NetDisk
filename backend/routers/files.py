@@ -463,16 +463,24 @@ async def list_files(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
     search: Optional[str] = None,
+    folder_id: Optional[int] = None,
 ):
     """
     Wenxi - 获取用户文件列表（不包含已删除文件）
-    功能：获取活跃文件列表，支持搜索功能
+    功能：获取活跃文件列表，支持搜索功能和文件夹过滤
     """
     try:
         query = db.query(FileModel).filter(
             FileModel.owner_id == current_user.id,
             FileModel.is_deleted == False,  # 排除已删除文件
         )
+
+        # 按文件夹过滤
+        if folder_id is not None:
+            query = query.filter(FileModel.folder_id == folder_id)
+        else:
+            # 默认只显示根目录文件（folder_id为None）
+            query = query.filter(FileModel.folder_id == None)
 
         # Wenxi - 添加搜索功能
         if search:

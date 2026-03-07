@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
 from logger import logger
-from routers import auth, files, versions, trash
+from routers import auth, files, versions, trash, folders
 from search import routes as search_routes
 from middleware.security import setup_security_middleware, performance_monitor
 from fastapi import Depends
@@ -75,6 +75,7 @@ app.mount("/uploads", StaticFiles(directory=uploads_path), name="uploads")
 # 注册路由
 app.include_router(auth.router, prefix="/api/auth", tags=["认证"])
 app.include_router(files.router, prefix="/api/files", tags=["文件管理"])
+app.include_router(folders.router, prefix="/api/folders", tags=["文件夹管理"])
 app.include_router(versions.router, prefix="/api/versions", tags=["文件版本控制"])
 app.include_router(search_routes.router, prefix="/api", tags=["智能搜索"])
 app.include_router(trash.router, prefix="/api/trash", tags=["垃圾桶"])
@@ -126,7 +127,7 @@ async def get_metrics(current_user=Depends(auth.get_current_user)):
 if __name__ == "__main__":
     import uvicorn
 
-    port = int(os.getenv("PORT", 3008))
+    port = int(os.getenv("PORT", 8088))
     logger.info(f"🌐 服务器将在端口 {port} 启动")
 
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True, log_level="info")

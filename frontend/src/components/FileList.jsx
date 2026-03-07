@@ -151,29 +151,29 @@ export default function FileList({ files, onRefresh, formatFileSize, onPreview }
   if (files.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="mx-auto h-12 w-12 text-gray-400">
+        <div className="mx-auto h-12 w-12 text-gray-400 dark:text-slate-600">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
           </svg>
         </div>
-        <h3 className="mt-2 text-sm font-medium text-gray-900">没有文件</h3>
-        <p className="mt-1 text-sm text-gray-500">开始上传您的第一个文件</p>
+        <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">没有文件</h3>
+        <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">开始上传您的第一个文件</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-md">
-      <ul className="divide-y divide-gray-200">
+    <div className="bg-white dark:bg-slate-900 shadow overflow-hidden sm:rounded-md border border-gray-200 dark:border-slate-800 transition-colors duration-300">
+      <ul className="divide-y divide-gray-200 dark:divide-slate-800">
         {files.map((file, index) => {
           const previewInfo = isPreviewable(file);
           return (
-          <li key={file.id} className="px-4 py-4 sm:px-6 hover:bg-gray-50 transition-colors duration-150">
+          <li key={file.id} className="px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors duration-150">
             <div className="flex items-center justify-between">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center border border-gray-200 shadow-sm">
+                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center border border-gray-200 dark:border-slate-700 shadow-sm transition-colors duration-200">
                       {getFileIcon(file)}
                     </div>
                   </div>
@@ -182,8 +182,8 @@ export default function FileList({ files, onRefresh, formatFileSize, onPreview }
                       onClick={() => handlePreview(file, index)}
                       className={`text-sm font-medium truncate text-left transition-colors ${
                         previewInfo.canPreview 
-                          ? 'text-blue-600 hover:text-blue-800 cursor-pointer' 
-                          : 'text-gray-900 cursor-default'
+                          ? 'text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer' 
+                          : 'text-gray-900 dark:text-slate-200 cursor-default'
                       }`}
                       title={previewInfo.canPreview ? '点击预览' : file.original_filename}
                     >
@@ -194,10 +194,10 @@ export default function FileList({ files, onRefresh, formatFileSize, onPreview }
                         )}
                       </span>
                     </button>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 dark:text-slate-400">
                       {formatFileSize(file.file_size)} • {formatDate(file.created_at)}
                       {previewInfo.canPreview && (
-                        <span className="ml-2 text-xs text-blue-500 font-medium">
+                        <span className="ml-2 text-xs text-blue-500 dark:text-blue-400 font-medium">
                           可预览
                         </span>
                       )}
@@ -209,7 +209,7 @@ export default function FileList({ files, onRefresh, formatFileSize, onPreview }
                 <button
                   onClick={() => handleDownload(file)}
                   disabled={downloadingId === file.id}
-                  className={`p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 ${downloadingId === file.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`p-2 text-gray-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200 ${downloadingId === file.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                   title={downloadingId === file.id ? '下载中...' : '下载'}
                 >
                   {downloadingId === file.id ? (
@@ -223,18 +223,18 @@ export default function FileList({ files, onRefresh, formatFileSize, onPreview }
                 </button>
                 <button
                   onClick={() => handleShare(file)}
-                  className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
+                  className="p-2 text-gray-400 dark:text-slate-500 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all duration-200"
                   title="分享"
                 >
                   {copiedId === file.id ? (
-                    <Check className="h-4 w-4 text-green-600" />
+                    <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
                   ) : (
                     <Share2 className="h-4 w-4" />
                   )}
                 </button>
                 <button
                   onClick={() => handleDelete(file.id)}
-                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                  className="p-2 text-gray-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
                   title="删除"
                 >
                   <Trash2 className="h-4 w-4" />
