@@ -300,7 +300,7 @@
         <template #footer>
           <div class="flex justify-end gap-2">
             <n-button @click="showMoveModal = false">取消</n-button>
-            <n-button type="primary" :loading="isMoving" @click="confirmBatchMove">移动</n-button>
+            <n-button type="primary" :loading="isMoving" @click="confirmMove">移动</n-button>
           </div>
         </template>
       </n-card>
@@ -555,7 +555,7 @@ async function openBatchMoveModal() {
   showMoveModal.value = true
 }
 
-async function confirmBatchMove() {
+async function confirmMove() {
   isMoving.value = true
 
   try {
