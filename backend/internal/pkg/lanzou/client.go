@@ -1,6 +1,7 @@
 package lanzou
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -91,15 +92,16 @@ func (c *Client) Task5(folderId int, pg int) (*Task5Response, error) {
 		"vei":       {"e11ad"}, // 固定值
 	}
 
-	data, err := c.postForm("douupload.php", body)
+	data, err := c.postForm("doupload.php", body)
 	if err != nil {
 		return nil, err
 	}
 
-	// 简化解析，实际项目需要更完善的JSON解析
 	resp := &Task5Response{}
-	_ = string(data) // 实际应解析JSON
-	resp.Zt = 1      // 假设成功
+	if err := json.Unmarshal(data, resp); err != nil {
+		resp.Zt = -1
+		resp.Info = string(data)
+	}
 	return resp, nil
 }
 
@@ -110,13 +112,16 @@ func (c *Client) Task47(folderId int) (*Task47Response, error) {
 		"folder_id": {strconv.Itoa(folderId)},
 	}
 
-	_, err := c.postForm("doupload.php", body)
+	data, err := c.postForm("douupload.php", body)
 	if err != nil {
 		return nil, err
 	}
 
 	resp := &Task47Response{}
-	resp.Zt = 1
+	if err := json.Unmarshal(data, resp); err != nil {
+		resp.Zt = -1
+		resp.Info = string(data)
+	}
 	return resp, nil
 }
 
@@ -128,19 +133,22 @@ func (c *Client) Task2(parentId int, name string) (*Task2Response, error) {
 	name = regexp.MustCompile(`[ ()]`).ReplaceAllString(name, "_")
 
 	body := url.Values{
-		"task":             {"2"},
-		"parent_id":        {strconv.Itoa(parentId)},
-		"folder_name":      {name},
+		"task":               {"2"},
+		"parent_id":          {strconv.Itoa(parentId)},
+		"folder_name":        {name},
 		"folder_description": {""},
 	}
 
-	_, err := c.postForm("doupload.php", body)
+	data, err := c.postForm("douupload.php", body)
 	if err != nil {
 		return nil, err
 	}
 
 	resp := &Task2Response{}
-	resp.Zt = 1
+	if err := json.Unmarshal(data, resp); err != nil {
+		resp.Zt = -1
+		resp.Info = string(data)
+	}
 	return resp, nil
 }
 
@@ -151,14 +159,16 @@ func (c *Client) Task6(fileId int) (*DeleteResponse, error) {
 		"file_id": {strconv.Itoa(fileId)},
 	}
 
-	data, err := c.postForm("doupload.php", body)
+	data, err := c.postForm("douupload.php", body)
 	if err != nil {
 		return nil, err
 	}
 
 	resp := &DeleteResponse{}
-	_ = data
-	resp.Zt = 1
+	if err := json.Unmarshal(data, resp); err != nil {
+		resp.Zt = -1
+		resp.Info = string(data)
+	}
 	return resp, nil
 }
 
@@ -175,8 +185,10 @@ func (c *Client) Task46(folderId int) (*DeleteResponse, error) {
 	}
 
 	resp := &DeleteResponse{}
-	_ = data
-	resp.Zt = 1
+	if err := json.Unmarshal(data, resp); err != nil {
+		resp.Zt = -1
+		resp.Info = string(data)
+	}
 	return resp, nil
 }
 
@@ -188,42 +200,25 @@ func (c *Client) Task14(fileId int, name string) (*RenameResponse, error) {
 		"name":    {name},
 	}
 
-	data, err := c.postForm("doupload.php", body)
+	data, err := c.postForm("douupload.php", body)
 	if err != nil {
 		return nil, err
 	}
 
 	resp := &RenameResponse{}
-	_ = data
-	resp.Zt = 1
+	if err := json.Unmarshal(data, resp); err != nil {
+		resp.Zt = -1
+		resp.Info = string(data)
+	}
 	return resp, nil
 }
 
 // Task15 移动文件
 func (c *Client) Task15(fileId, targetFolderId int) (*MoveResponse, error) {
 	body := url.Values{
-		"task":       {"15"},
-		"file_id":    {strconv.Itoa(fileId)},
-		"folder_id":  {strconv.Itoa(targetFolderId)},
-	}
-
-	data, err := c.postForm("doupload.php", body)
-	if err != nil {
-		return nil, err
-	}
-
-	resp := &MoveResponse{}
-	_ = data
-	resp.Zt = 1
-	return resp, nil
-}
-
-// Task48 移动文件夹
-func (c *Client) Task48(folderId, targetFolderId int) (*MoveResponse, error) {
-	body := url.Values{
-		"task":       {"48"},
-		"folder_id":  {strconv.Itoa(folderId)},
-		"target_id":  {strconv.Itoa(targetFolderId)},
+		"task":      {"15"},
+		"file_id":   {strconv.Itoa(fileId)},
+		"folder_id": {strconv.Itoa(targetFolderId)},
 	}
 
 	data, err := c.postForm("douupload.php", body)
@@ -232,8 +227,31 @@ func (c *Client) Task48(folderId, targetFolderId int) (*MoveResponse, error) {
 	}
 
 	resp := &MoveResponse{}
-	_ = data
-	resp.Zt = 1
+	if err := json.Unmarshal(data, resp); err != nil {
+		resp.Zt = -1
+		resp.Info = string(data)
+	}
+	return resp, nil
+}
+
+// Task48 移动文件夹
+func (c *Client) Task48(folderId, targetFolderId int) (*MoveResponse, error) {
+	body := url.Values{
+		"task":      {"48"},
+		"folder_id": {strconv.Itoa(folderId)},
+		"target_id": {strconv.Itoa(targetFolderId)},
+	}
+
+	data, err := c.postForm("douupload.php", body)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &MoveResponse{}
+	if err := json.Unmarshal(data, resp); err != nil {
+		resp.Zt = -1
+		resp.Info = string(data)
+	}
 	return resp, nil
 }
 
@@ -244,13 +262,15 @@ func (c *Client) Task22(fileId int) (map[string]interface{}, error) {
 		"file_id": {strconv.Itoa(fileId)},
 	}
 
-	data, err := c.postForm("doupload.php", body)
+	data, err := c.postForm("douupload.php", body)
 	if err != nil {
 		return nil, err
 	}
 
-	result := make(map[string]interface{})
-	_ = data // 简化
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -261,37 +281,42 @@ func (c *Client) Task18(folderId int) (map[string]interface{}, error) {
 		"folder_id": {strconv.Itoa(folderId)},
 	}
 
-	data, err := c.postForm("doupload.php", body)
+	data, err := c.postForm("douupload.php", body)
 	if err != nil {
 		return nil, err
 	}
 
-	result := make(map[string]interface{})
-	_ = data // 简化
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
 // Task39 创建分享链接
+// minutes: 有效期(分钟)，0表示永久
 func (c *Client) Task39(fileId int, minutes int) (*ShareResponse, error) {
 	body := url.Values{
 		"task":     {"39"},
 		"file_id":  {strconv.Itoa(fileId)},
-		"anc会把空格和括号替换掉":     {strconv.Itoa(minutes)}, // 0表示永久
+		"onetime":  {strconv.Itoa(minutes)},
 	}
 
-	data, err := c.postForm("doupload.php", body)
+	data, err := c.postForm("douupload.php", body)
 	if err != nil {
 		return nil, err
 	}
 
 	resp := &ShareResponse{}
-	_ = data
-	resp.Zt = 1
+	if err := json.Unmarshal(data, resp); err != nil {
+		resp.Zt = -1
+		resp.Info = string(data)
+	}
 	return resp, nil
 }
 
 // GetDownloadURL 获取文件下载直链
-// url: 蓝奏云分享链接，如 https://wws.lanzous.com/xxxxx
+// shareURL: 蓝奏云分享链接，如 https://wws.lanzous.com/xxxxx
 // pwd: 密码（如果有）
 func (c *Client) GetDownloadURL(shareURL, pwd string) (string, string, error) {
 	// 解析分享页面
