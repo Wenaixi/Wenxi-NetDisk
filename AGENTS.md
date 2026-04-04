@@ -32,6 +32,34 @@
 
 ## 开发历史
 
+### 2026-04-05 - Handler层全面测试 + FileHandler增强
+
+**ShareHandler测试 (12个用例):**
+- CreateShare/DeleteShare: 无效ID/非数字/浮点/负数
+- ValidateShare: 无效JSON
+- CreateShareViaBody: 无效JSON/空Body
+
+**ShareParseHandler测试 (6个用例):**
+- ParseShare/GetShareDownloadURL/ValidateShareURL: 空Body/无效JSON
+
+**UploadHandler测试 (11个用例):**
+- ListVersions: 无效/非数字/浮点/负数ID
+- RestoreVersion: file_id/version_id各种非法格式
+- GetUploadURL: 无效JSON
+
+**FileHandler增强测试 (19个用例):**
+- GetFile/DeleteFile: 无效/非数字/浮点/负数ID (table-driven)
+- MoveFile: 无效/浮点/负数/无效JSON
+- UpdateFileDescription: 无效/浮点/无效JSON
+- RenameFile: 无效/浮点/无效JSON/缺少name
+
+**LanZouHandler增强测试 (9个用例):**
+- GetFileURL: 无效/浮点/负数ID
+- CompleteUpload: 浮点/负数session_id
+- UploadStatus: 浮点/负数session_id
+
+**总测试数: 640 (387 Go + 253 Vue) 全部通过**
+
 ### 2026-04-05 - ShareParse组件测试 + 测试系统全面完善
 
 **ShareParse组件测试:**
@@ -593,11 +621,11 @@ references/lanzouyun-disk/
 
 **测试统计更新: 449 (222 Go + 227 Vue) 全部通过**
 
-**总测试数: 449 (222 Go + 227 Vue) 全部通过**
+**总测试数: 640 (387 Go + 253 Vue) 全部通过**
 
 ## 测试统计
 
-### Go后端 (376 tests)
+### Go后端 (387 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | pkg/crypto | 5 | ✅ |
@@ -616,7 +644,7 @@ references/lanzouyun-disk/
 | service/file_version | 18 | ✅ |
 | repository | 10 | ⏭️ (skip CGO) |
 | handlers/auth | 8 | ✅ |
-| handlers/file | 10 | ✅ |
+| handlers/file | 19 | ✅ |
 | handlers/folder | 21 | ✅ |
 | handlers/recycle | 11 | ✅ |
 | handlers/download | 6 | ✅ |

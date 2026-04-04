@@ -167,4 +167,98 @@ func TestLanZouHandler_GetFileURL_Validation(t *testing.T) {
 			t.Errorf("expected status 400, got %d", w.Code)
 		}
 	})
+
+	t.Run("should fail with floating point file id", func(t *testing.T) {
+		r := setupTestRouterWithUser()
+		handler := &LanZouHandler{}
+		r.GET("/lanzou/files/12.5/url", handler.GetFileURL)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/lanzou/files/12.5/url", nil)
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("expected status 400, got %d", w.Code)
+		}
+	})
+
+	t.Run("should fail with negative file id", func(t *testing.T) {
+		r := setupTestRouterWithUser()
+		handler := &LanZouHandler{}
+		r.GET("/lanzou/files/-1/url", handler.GetFileURL)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/lanzou/files/-1/url", nil)
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("expected status 400, got %d", w.Code)
+		}
+	})
+}
+
+// TestLanZouHandler_CompleteUpload_MoreValidation 测试完成上传更多验证
+func TestLanZouHandler_CompleteUpload_MoreValidation(t *testing.T) {
+	t.Run("should fail with floating point session id", func(t *testing.T) {
+		r := setupTestRouterWithUser()
+		handler := &LanZouHandler{}
+		r.POST("/lanzou/upload/complete/12.5", handler.CompleteUpload)
+
+		w := httptest.NewRecorder()
+		body := `{}`
+		req := httptest.NewRequest("POST", "/lanzou/upload/complete/12.5", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("expected status 400, got %d", w.Code)
+		}
+	})
+
+	t.Run("should fail with negative session id", func(t *testing.T) {
+		r := setupTestRouterWithUser()
+		handler := &LanZouHandler{}
+		r.POST("/lanzou/upload/complete/-1", handler.CompleteUpload)
+
+		w := httptest.NewRecorder()
+		body := `{}`
+		req := httptest.NewRequest("POST", "/lanzou/upload/complete/-1", strings.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("expected status 400, got %d", w.Code)
+		}
+	})
+}
+
+// TestLanZouHandler_UploadStatus_MoreValidation 测试上传状态更多验证
+func TestLanZouHandler_UploadStatus_MoreValidation(t *testing.T) {
+	t.Run("should fail with floating point session id", func(t *testing.T) {
+		r := setupTestRouterWithUser()
+		handler := &LanZouHandler{}
+		r.GET("/lanzou/upload/status/12.5", handler.UploadStatus)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/lanzou/upload/status/12.5", nil)
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("expected status 400, got %d", w.Code)
+		}
+	})
+
+	t.Run("should fail with negative session id", func(t *testing.T) {
+		r := setupTestRouterWithUser()
+		handler := &LanZouHandler{}
+		r.GET("/lanzou/upload/status/-1", handler.UploadStatus)
+
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/lanzou/upload/status/-1", nil)
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("expected status 400, got %d", w.Code)
+		}
+	})
 }
