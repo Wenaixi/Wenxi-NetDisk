@@ -233,7 +233,7 @@ upload_sessions (id, user_id, file_name, file_size, file_hash,
 - [x] Go单元测试 - pkg (crypto, jwt, response) 全部通过
 - [x] Go repository测试 - 框架完成 (CGO需在Linux/CI环境运行)
 - [ ] Go service层测试
-- [ ] Vue单元测试
+- [x] Vue单元测试 - Pinia stores 全部通过 (20个测试)
 - [ ] 蓝奏云API集成
 - [ ] 客户端加密实现
 - [ ] 断点续传完善
@@ -245,6 +245,8 @@ upload_sessions (id, user_id, file_name, file_size, file_hash,
 
 | Commit | 描述 |
 |--------|------|
+| b152313 | test: 添加Vue前端Pinia Store单元测试 (Vitest) |
+| 18f6923 | docs: 更新AGENTS.md - Phase 6测试进度至40% |
 | 0601bb4 | test: 添加repository层单元测试框架 (gorm+sqlite) |
 | 2d17588 | docs: 全面完善AGENTS.md、Design.md、Requirement.md |
 | 02e1447 | chore: 完善.gitignore配置 |
@@ -258,4 +260,4 @@ upload_sessions (id, user_id, file_name, file_size, file_hash,
 ---
 
 **最后更新**: 2026-04-04
-**状态**: Phase 3 (~70%), Phase 6 测试系统进行中 (~40%)
+**状态**: Phase 3 (~70%), Phase 6 测试系统进行中 (~60%)
