@@ -1,215 +1,64 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+# ===========================================
+# Wenxi Cloud Disk - .gitignore
+# ===========================================
 
-# C extensions
+# Go
+# Build output
+*.exe
+*.exe~
+*.dll
 *.so
+*.dylib
+server.exe
+backend/server.exe
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+# Test binary
+*.test
 
-# PyInstaller
-*.manifest
-*.spec
+# Output of go coverage
+*.out
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+# Go workspace file
+go.work
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
+# Dependencies
+vendor/
 
-# Translations
-*.mo
-*.pot
+# Database files (local development)
+*.db
+*.sqlite
+*.sqlite3
+data/*.db
+data/*.sqlite
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask stuff:
-instance/
-.webassets-cache
-
-# Scrapy stuff:
-.scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
-target/
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# IPython
-profile_default/
-ipython_config.py
-
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# PEP 582
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
+# Environment files
 .env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+.env.local
+.env.*.local
 
-# Spyder project settings
-.spyderproject
-.spyproject
+# Logs
+*.log
+logs/
 
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# Node.js
+# Node.js (frontend)
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
+.pnpm-debug.log*
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
+# Frontend build outputs
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/.cache/
+frontend/.temp/
+frontend/node_modules/
 
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-
-# nyc test coverage
-.nyc_output
-
-# Grunt intermediate storage
-.grunt
-
-# Bower dependency directory
-bower_components
-
-# Dependency directories
-jspm_packages/
-
-# TypeScript v1 declaration files
-typings/
-
-# TypeScript cache
-*.tsbuildinfo
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Microbundle cache
-.rpt2_cache/
-.rts2_cache_cjs/
-.rts2_cache_es/
-.rts2_cache_umd/
-
-# Optional REPL history
-.node_repl_history
-
-# Output of 'npm pack'
+# Build artifacts
+dist/
+build/
 *.tgz
-
-# Yarn Integrity file
-.yarn-integrity
-
-# dotenv environment variables file
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# parcel-bundler cache
-.cache
-.parcel-cache
-
-# Next.js build output
-.next
-
-# Nuxt.js build / generate output
-.nuxt
-dist
-
-# Gatsby files
-.cache/
-public
-
-# Storybook build outputs
-.out
-.storybook-out
-
-# Temporary folders
-tmp/
-temp/
-.tmp/
-.temp/
-*.tmp
-*.temp
 
 # Editor directories and files
 .vscode/
@@ -233,80 +82,6 @@ temp/
 ehthumbs.db
 Thumbs.db
 desktop.ini
-Thumbs.db:encryptable
-[Tt]humbs.db
-*.tmp
-*.log
-*.old
-*.orig
-
-# Wenxi NetDisk specific - Dynamic paths based on WENXI_FILE_STORAGE_PATH env var
-*.db
-*.sqlite
-*.sqlite3
-test.db
-test_*.db
-uploads/
-temp_chunks/
-frontend/dist/
-frontend/build/
-frontend/.vite/
-frontend/.cache/
-frontend/.temp/
-
-# Allow any directory named uploads or temp_chunks regardless of location
-**/uploads/
-**/temp_chunks/
-GITHUB_SETUP.md
-
-# Logs
-logs/
-*.log
-*.log.*
-app.log
-access.log
-error.log
-debug.log
-
-# Runtime data
-runtime/
-
-# Static files
-static/
-media/
-# Wenxi NetDisk specific - Auto-generated based on environment variables
-*.db
-*.sqlite
-*.sqlite3
-test.db
-test_*.db
-temp_chunks/
-frontend/dist/
-frontend/build/
-frontend/.vite/
-frontend/.cache/
-frontend/.temp/
-
-# Allow any directory named uploads or temp_chunks regardless of location
-**/uploads/
-**/temp_chunks/
-
-# Dynamic storage paths based on WENXI_FILE_STORAGE_PATH
-# Current storage path: ./uploads
-# Absolute path: F:\《000》\stick\Wenxi-Network-Disk\uploads
-
-# Additional Wenxi NetDisk specific ignores
-*.session
-*.session-journal
-.cache/
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.coverage.*
-.mypy_cache/
-.dmypy.json
-dmypy.json
 
 # Security sensitive files
 *.pem
@@ -316,30 +91,42 @@ dmypy.json
 *.p12
 *.pfx
 
-# Development specific
-.env.development
-.env.production
-.env.staging
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+.tmp/
+.temp/
 
-# IDE and editor specific
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-*.bak
-*.backup
-*.orig
-*.rej
-*.sublime-*
-*.code-workspace
+# TypeScript
+*.tsbuildinfo
 
-# OS specific
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-desktop.ini
+# Optional npm cache
+.npm
+.yarn-integrity
+
+# Optional eslint cache
+.eslintcache
+
+# Test coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Cargo (Rust)
+target/
+.cargo/config.toml
+
+# Temporary test databases
+test.db
+test_*.db
+
+# Backend data directory
+backend/data/
+
+# Upload directories
+uploads/
+temp_chunks/
+**/uploads/
+**/temp_chunks/
