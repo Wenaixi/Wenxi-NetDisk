@@ -345,16 +345,20 @@ async function batchDelete() {
 
   try {
     const ids = [...selectedItems.value]
+    let deletedCount = 0
     for (const id of ids) {
       // 判断是文件还是文件夹
       const isFile = fileStore.files.some(f => f.id === id)
+      const isFolder = fileStore.folders.some(f => f.id === id)
       if (isFile) {
         await fileStore.deleteFile(id)
-      } else {
+        deletedCount++
+      } else if (isFolder) {
         await fileStore.deleteFolder(id)
+        deletedCount++
       }
     }
-    message.success(`成功删除 ${ids.length} 个项目`)
+    message.success(`成功删除 ${deletedCount} 个项目`)
     selectedItems.value = []
     selectMode.value = false
     fileStore.fetchFiles(fileStore.currentFolder)
