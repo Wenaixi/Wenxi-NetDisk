@@ -230,8 +230,9 @@ upload_sessions (id, user_id, file_name, file_size, file_hash,
 - [x] Go后端验证 (API测试通过)
 - [x] Vue前端基础 (登录/注册/仪表盘)
 - [x] Vue前端构建
-- [ ] Go单元测试 (Phase 6)
-- [ ] Vue单元测试 (Phase 6)
+- [x] Go单元测试 (Phase 6) - crypto, jwt, response 全部通过
+- [ ] Go service/repository 测试
+- [ ] Vue单元测试
 - [ ] 蓝奏云API集成
 - [ ] 客户端加密实现
 - [ ] 断点续传完善
@@ -247,6 +248,7 @@ upload_sessions (id, user_id, file_name, file_size, file_hash,
 | 611413d | chore: 清理旧代码和无关文件 |
 | a109844 | feat: 完成Vue 3前端基础框架搭建 |
 | b7912d4 | docs: 更新任务进度 - Phase 3 Vue前端搭建进行中 |
+| 2ff5176 | test: 添加后端单元测试 (crypto, jwt, response) |
 
 ---
 
