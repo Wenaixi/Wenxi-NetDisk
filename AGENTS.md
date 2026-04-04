@@ -315,7 +315,7 @@ references/lanzouyun-disk/
 - [x] 蓝奏云service扩展 (IsConnected, GetClient)
 - [x] 上传service (初始化/分块/断点续传/完成)
 - [x] 分享功能增强 (分享列表API/过期检查)
-- [ ] 下载解密集成
+- [x] 下载解密集成 (DownloadService + API)
 
 ---
 
@@ -323,6 +323,7 @@ references/lanzouyun-disk/
 
 | Commit | 描述 |
 |--------|------|
+| d468056 | feat: 实现DownloadService下载服务和单元测试 |
 | 278c177 | feat: 增强分享功能 - 分享列表API与过期检查 |
 | 864cb9e | feat: 实现FolderService完整功能及单元测试 |
 | 3b5f0f3 | docs: 更新AGENTS.md和Task.md - FolderService完成 |
@@ -354,7 +355,7 @@ references/lanzouyun-disk/
 
 ## 测试统计
 
-### Go后端 (101 tests)
+### Go后端 (107 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | pkg/crypto | 5 | ✅ |
@@ -367,6 +368,7 @@ references/lanzouyun-disk/
 | service/lanzou | 9 | ✅ |
 | service/upload | 6 | ✅ |
 | service/share | 21 | ✅ |
+| service/download | 5 | ✅ |
 | repository | 10 | ⏭️ (skip CGO) |
 
 ### Vue前端 (29 tests)
@@ -377,7 +379,7 @@ references/lanzouyun-disk/
 | upload store | 5 | ✅ |
 | crypto utils | 4 | ✅ |
 
-**总测试数: 130 (101 Go + 29 Vue) 全部通过**
+**总测试数: 136 (107 Go + 29 Vue) 全部通过**
 
 ## 关键架构决策记录
 
