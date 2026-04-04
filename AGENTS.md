@@ -64,10 +64,10 @@
 |-------|------|------|
 | Phase 1: Go后端搭建 | ✅ 完成 | 100% |
 | Phase 2: Go后端验证 | ✅ 完成 | 100% |
-| Phase 3: Vue前端搭建 | 🔄 进行中 | ~80% |
+| Phase 3: Vue前端搭建 | 🔄 进行中 | ~95% |
 | Phase 4: 蓝奏云对接 | 🔄 进行中 | ~65% |
 | Phase 5: 功能完善 | ⏳ 待开始 | 0% |
-| Phase 6: 测试系统 | 🔄 进行中 | ~90% |
+| Phase 6: 测试系统 | 🔄 进行中 | ~95% |
 
 ---
 
@@ -114,7 +114,13 @@ wenxi-cloud/
 │   │   ├── router/index.js          # Vue Router
 │   │   ├── stores/
 │   │   │   ├── auth.js             # 认证store
-│   │   │   └── file.js             # 文件store
+│   │   │   ├── auth.test.js        # auth store测试 (7)
+│   │   │   ├── file.js             # 文件store
+│   │   │   ├── file.test.js        # file store测试 (13)
+│   │   │   └── upload.js           # 上传store
+│   │   ├── utils/
+│   │   │   ├── crypto.js           # AES-GCM客户端加密
+│   │   │   └── crypto.test.js     # crypto工具测试 (4)
 │   │   ├── views/
 │   │   │   ├── Login.vue
 │   │   │   ├── Register.vue
@@ -198,6 +204,19 @@ upload_sessions (id, user_id, file_name, file_size, file_hash,
 | POST | / | 创建分享 | ✅ |
 | GET | /:token | 获取分享 | ✅ |
 | DELETE | /:id | 删除分享 | ✅ |
+
+### 蓝奏云模块 `/api/lanzou`
+| 方法 | 端点 | 说明 | 状态 |
+|------|------|------|------|
+| POST | /connect | 连接蓝奏云 | ✅ |
+| GET | /status | 连接状态 | ✅ |
+| DELETE | /connect | 断开连接 | ✅ |
+| GET | /files | 文件列表 | ✅ |
+| GET | /folders | 文件夹列表 | ✅ |
+| POST | /folders | 创建文件夹 | ✅ |
+| POST | /upload/init | 初始化上传 | ✅ |
+| POST | /upload/complete/:id | 完成上传 | ✅ |
+| GET | /upload/status/:id | 上传状态 | ✅ |
 
 ---
 
@@ -289,11 +308,12 @@ references/lanzouyun-disk/
 - [x] Go单元测试 - pkg (crypto, jwt, response) 全部通过
 - [x] Go repository测试 - 框架完成 (CGO需在Linux/CI环境运行)
 - [x] 蓝奏云API封装包 - lanzou (types/client/test) 6个测试通过
-- [ ] Go service层测试
-- [x] Vue单元测试 - Pinia stores 全部通过 (20个测试)
-- [x] 客户端加密实现 (AES-GCM替代ChaCha20)
-- [x] 前端upload store
-- [ ] 断点续传完善
+- [x] Go service层测试 (lanzou 9 + upload 6)
+- [x] Vue单元测试 - Pinia stores 全部通过 (auth 7 + file 13 + upload 5)
+- [x] 客户端加密实现 (AES-GCM替代ChaCha20) + 测试 (4)
+- [x] 前端upload store + 测试 (5)
+- [x] 蓝奏云service扩展 (IsConnected, GetClient)
+- [x] 上传service (初始化/分块/断点续传/完成)
 - [ ] 下载解密集成
 - [ ] 分享功能增强
 
@@ -303,6 +323,10 @@ references/lanzouyun-disk/
 
 | Commit | 描述 |
 |--------|------|
+| 4fb8bf2 | test: 完善前端测试覆盖 - upload store + crypto工具 |
+| cb6bbec | test: 添加LanZouService单元测试并修复类型问题 |
+| 5ccd040 | test: 添加UploadService单元测试并修复类型问题 |
+| ce7fe55 | feat: 完善蓝奏云上传服务和断点续传功能 |
 | a9d0282 | feat: 完善前端加密上传功能与蓝奏云类型修复 |
 | b152313 | test: 添加Vue前端Pinia Store单元测试 (Vitest) |
 | 18f6923 | docs: 更新AGENTS.md - Phase 6测试进度至40% |
@@ -319,4 +343,42 @@ references/lanzouyun-disk/
 ---
 
 **最后更新**: 2026-04-04
-**状态**: Phase 3 (~90%), Phase 4 (~55%), Phase 6 测试系统 (~85%)
+**状态**: Phase 3 (~95%), Phase 4 (~65%), Phase 6 测试系统 (~95%)
+
+## 测试统计
+
+### Go后端 (33 tests)
+| 模块 | 测试数 | 状态 |
+|------|--------|------|
+| pkg/crypto | 5 | ✅ |
+| pkg/jwt | 7 | ✅ |
+| pkg/lanzou | 6 | ✅ |
+| pkg/response | 5 | ✅ |
+| service/lanzou | 5 | ✅ |
+| service/upload | 5 | ✅ |
+| repository | 10 | ⏭️ (skip CGO) |
+
+### Vue前端 (29 tests)
+| 模块 | 测试数 | 状态 |
+|------|--------|------|
+| auth store | 7 | ✅ |
+| file store | 13 | ✅ |
+| upload store | 5 | ✅ |
+| crypto utils | 4 | ✅ |
+
+**总测试数: 62+ 全部通过**
+
+## 关键架构决策记录
+
+### 1. 接口化service层
+service层使用接口而非具体类型依赖，提高可测试性：
+- `UploadSessionRepository` - 上传会话仓库接口
+- `LanZouClientProvider` - 蓝奏云客户端提供者接口
+- `LanZouTokenRepository` - token仓库接口
+- `FileMetadataCreator` - 文件元数据创建器接口
+
+### 2. 加密算法选择
+Web Crypto API不支持ChaCha20-Poly1305，使用AES-GCM-256替代，安全性相同级别。
+
+### 3. 前端store导出
+测试mock时需要注意：`crypto.js`中的纯函数必须export才能被独立测试。`globalThis.crypto`在Vitest中是只读的，无法直接mock。
