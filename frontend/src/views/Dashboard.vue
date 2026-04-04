@@ -1,30 +1,6 @@
 <template>
   <div class="min-h-screen bg-[#0f0f0f]">
-    <header class="bg-[#1a1a1a] px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <h1 class="text-xl font-bold text-white">文希云盘</h1>
-        <nav class="flex items-center gap-2 ml-8">
-          <n-button text @click="fileStore.navigateToRoot()">首页</n-button>
-          <n-breadcrumb>
-            <n-breadcrumb-item v-for="(crumb, idx) in fileStore.breadcrumbs" :key="crumb.id">
-              <n-button text @click="navigateToBreadcrumb(idx)">{{ crumb.name }}</n-button>
-            </n-breadcrumb-item>
-          </n-breadcrumb>
-        </nav>
-        <nav class="flex items-center gap-2 ml-4">
-          <n-button text @click="$router.push('/dashboard')" type="primary">本地文件</n-button>
-          <n-button text @click="$router.push('/lanzou')">蓝奏云</n-button>
-        </nav>
-      </div>
-      <div class="flex items-center gap-4">
-        <n-dropdown :options="userMenuOptions" @select="handleUserMenu">
-          <n-button text class="text-gray-300">
-            {{ authStore.user?.email }}
-            <n-icon><component :is="ChevronDown" /></n-icon>
-          </n-button>
-        </n-dropdown>
-      </div>
-    </header>
+    <AppHeader />
 
     <main class="p-6">
       <div class="flex items-center justify-between mb-6">
@@ -174,16 +150,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted, h } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useFileStore } from '../stores/file'
 import { useUploadStore } from '../stores/upload'
 import { encryptFile, generateEncryptionKey } from '../utils/crypto'
 import { fileAPI } from '../api'
-import { NIcon, useMessage } from 'naive-ui'
+import { useMessage } from 'naive-ui'
+import AppHeader from '../components/AppHeader.vue'
 import {
-  ChevronDown, ArrowBack, CloudUpload, Refresh, Folder, Create, Document, LogOutOutline, Close
+  ArrowBack, CloudUpload, Refresh, Folder, Create, Document, Close
 } from '@vicons/ionicons5'
 
 const router = useRouter()
@@ -198,17 +175,6 @@ const showFileMenu = ref(false)
 const newFolderName = ref('')
 const selectedFile = ref(null)
 const selectedFileItem = ref(null)
-
-const userMenuOptions = [
-  { label: '退出登录', key: 'logout', icon: () => h(NIcon, null, { default: () => h(LogOutOutline) }) }
-]
-
-function handleUserMenu(key) {
-  if (key === 'logout') {
-    authStore.logout()
-    router.push('/login')
-  }
-}
 
 function navigateToBreadcrumb(idx) {
   const crumb = fileStore.breadcrumbs[idx]

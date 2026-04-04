@@ -1,19 +1,6 @@
 <template>
   <div class="min-h-screen bg-[#0f0f0f]">
-    <header class="bg-[#1a1a1a] px-6 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <h1 class="text-xl font-bold text-white">文希云盘</h1>
-        <nav class="flex items-center gap-2 ml-8">
-          <n-button text @click="$router.push('/dashboard')">本地文件</n-button>
-          <n-button text @click="$router.push('/lanzou')" type="primary">蓝奏云</n-button>
-        </nav>
-      </div>
-      <div class="flex items-center gap-4">
-        <n-button text class="text-gray-300" @click="$router.push('/settings')">
-          {{ authStore.user?.email }}
-        </n-button>
-      </div>
-    </header>
+    <AppHeader />
 
     <main class="p-6">
       <div class="flex items-center justify-between mb-6">
@@ -119,6 +106,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { lanzouAPI } from '../api/lanzou'
 import { useMessage } from 'naive-ui'
+import AppHeader from '../components/AppHeader.vue'
 import {
   ArrowBack, Refresh, Folder, Document
 } from '@vicons/ionicons5'
