@@ -564,7 +564,7 @@ references/lanzouyun-disk/
 ---
 
 **最后更新**: 2026-04-05
-**状态**: Phase 6 ✅ 100%, 测试 344 全部通过 (202 Go + 142 Vue)
+**状态**: Phase 6 ✅ 100%, 测试 370 全部通过 (202 Go + 168 Vue)
 
 ## 测试统计
 
@@ -601,9 +601,9 @@ references/lanzouyun-disk/
 | shareParse store | 16 | ✅ |
 | crypto utils | 4 | ✅ |
 | fileSplit utils | 22 | ✅ |
-| **components** | **17** | ✅ |
+| **components** | **43** | ✅ |
 
-**总测试数: 344 (202 Go + 142 Vue) 全部通过**
+**总测试数: 370 (202 Go + 168 Vue) 全部通过**
 
 ## 关键架构决策记录
 
