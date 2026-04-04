@@ -564,17 +564,18 @@ references/lanzouyun-disk/
 ---
 
 **最后更新**: 2026-04-05
-**状态**: Phase 6 ✅ 100%, 测试 370 全部通过 (202 Go + 168 Vue)
+**状态**: Phase 6 ✅ 100%, 测试 380 全部通过 (212 Go + 168 Vue)
 
 ## 测试统计
 
-### Go后端 (202 tests)
+### Go后端 (212 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | pkg/crypto | 5 | ✅ |
 | pkg/jwt | 7 | ✅ |
 | pkg/lanzou | 6 | ✅ |
 | pkg/response | 5 | ✅ |
+| pkg/middleware | 10 | ✅ |
 | service/auth | 8 | ✅ |
 | service/file | 12 | ✅ |
 | service/folder | 22 | ✅ |
@@ -585,7 +586,7 @@ references/lanzouyun-disk/
 | service/recycle | 11 | ✅ |
 | service/file_version | 18 | ✅ |
 | repository | 10 | ⏭️ (skip CGO) |
-| **handlers** | **69** | ✅ |
+| handlers | 69 | ✅ |
 
 ### Vue前端 (142 tests)
 | 模块 | 测试数 | 状态 |
@@ -603,7 +604,26 @@ references/lanzouyun-disk/
 | fileSplit utils | 22 | ✅ |
 | **components** | **43** | ✅ |
 
-**总测试数: 370 (202 Go + 168 Vue) 全部通过**
+**总测试数: 380 (212 Go + 168 Vue) 全部通过**
+
+## 测试规范记录
+
+### Handler 测试策略
+- 验证输入验证层（ShouldBindJSON/strconv.ParseUint），service 层由独立测试覆盖
+- 使用 `setupTestRouterWithUser()` 中间件模拟已认证用户（`c.Set("user_id", uint(1))`）
+- 测试失败场景（400 Bad Request），不测试成功路径（需要完整 mock service）
+- response.go 使用 `msg` 字段而非 `message`
+
+### Vue 组件测试策略
+- Store 测试使用 `setActivePinia(createPinia())` + vi.mock store 模块
+- 页面/组件测试 mock naive-ui、vue-router、store 模块
+- Dashboard.vue 过大（800+行）依赖复杂，不推荐为其编写单元测试
+- 小型组件（FileDetailModal/AppHeader/Login/Register）适合测试覆盖
+
+### Go 测试环境
+- Go 安装在 "C:/Program Files/Go/bin/go.exe"
+- Windows 下需 `export PATH="/c/Program Files/Go/bin:$PATH"`
+- repository 测试使用 `CGO_ENABLED=1`，Windows 下 skip
 
 ## 关键架构决策记录
 

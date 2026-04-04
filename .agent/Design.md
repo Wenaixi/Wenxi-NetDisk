@@ -378,6 +378,7 @@ RecycleFolderRepo         - 回收站用文件夹仓库 (recycle_service)
 | service/recycle | 回收站操作 | 11 | go test |
 | service/file_version | 版本管理 | 18 | go test |
 
+| pkg/middleware | 中间件 (Auth) | 10 | go test + httptest |
 | handlers | Handler验证层 | 69 | go test + httptest |
 
 ### 前端测试
@@ -402,4 +403,4 @@ RecycleFolderRepo         - 回收站用文件夹仓库 (recycle_service)
 
 **文档版本**: 6.0.0
 **最后更新**: 2026-04-05
-**状态**: Phase 6 完成, 测试 370 全部通过 (202 Go + 168 Vue)
+**状态**: Phase 6 完成, 测试 380 全部通过 (212 Go + 168 Vue)
