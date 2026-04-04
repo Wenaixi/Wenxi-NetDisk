@@ -11,6 +11,10 @@
             </n-breadcrumb-item>
           </n-breadcrumb>
         </nav>
+        <nav class="flex items-center gap-2 ml-4">
+          <n-button text @click="$router.push('/dashboard')" type="primary">本地文件</n-button>
+          <n-button text @click="$router.push('/lanzou')">蓝奏云</n-button>
+        </nav>
       </div>
       <div class="flex items-center gap-4">
         <n-dropdown :options="userMenuOptions" @select="handleUserMenu">
