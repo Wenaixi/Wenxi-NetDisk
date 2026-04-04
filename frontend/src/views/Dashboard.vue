@@ -151,9 +151,69 @@
       <n-card :title="selectedFileItem.name" style="width: 400px;">
         <div class="space-y-2">
           <n-button block @click="downloadFile(selectedFileItem)">下载</n-button>
+          <n-button block type="info" @click="openShareModal">分享</n-button>
           <n-button block @click="deleteFile(selectedFileItem)">删除</n-button>
           <n-button block @click="showFileMenu = false">取消</n-button>
         </div>
+      </n-card>
+    </n-modal>
+
+    <n-modal v-model:show="showShareModal" :mask-closable="false">
+      <n-card title="分享文件" style="width: 450px;">
+        <div class="space-y-4">
+          <n-alert v-if="shareResult" type="success" :show-icon="false">
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <span class="text-gray-400">分享链接:</span>
+                <n-input :value="shareResult.url" readonly />
+                <n-button size="small" type="primary" @click="copyShareLink">复制</n-button>
+              </div>
+              <div v-if="shareResult.pwd" class="text-gray-400">
+                密码: <span class="text-white font-bold">{{ shareResult.pwd }}</span>
+              </div>
+              <div v-if="shareResult.expires_at" class="text-gray-400">
+                有效期至: {{ shareResult.expires_at }}
+              </div>
+            </div>
+          </n-alert>
+
+          <div v-else class="space-y-4">
+            <div>
+              <div class="text-gray-400 text-sm mb-2">链接有效期</div>
+              <n-select
+                v-model:value="shareExpires"
+                :options="expiresOptions"
+              />
+            </div>
+
+            <div>
+              <div class="text-gray-400 text-sm mb-2">访问密码 (可选)</div>
+              <n-input
+                v-model:value="sharePassword"
+                placeholder="留空则无需密码"
+                show-password-on="click"
+              />
+            </div>
+          </div>
+
+          <n-alert v-if="shareError" type="error" :show-icon="false">
+            {{ shareError }}
+          </n-alert>
+        </div>
+
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <n-button @click="closeShareModal">关闭</n-button>
+            <n-button
+              v-if="!shareResult"
+              type="primary"
+              :loading="isSharing"
+              @click="createShare"
+            >
+              创建分享
+            </n-button>
+          </div>
+        </template>
       </n-card>
     </n-modal>
   </div>
@@ -165,8 +225,9 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useFileStore } from '../stores/file'
 import { useUploadStore } from '../stores/upload'
+import { useShareStore } from '../stores/share'
 import { encryptFile, generateEncryptionKey } from '../utils/crypto'
-import { fileAPI } from '../api'
+import { fileAPI, shareAPI } from '../api'
 import { useMessage } from 'naive-ui'
 import AppHeader from '../components/AppHeader.vue'
 import {
@@ -177,14 +238,29 @@ const router = useRouter()
 const authStore = useAuthStore()
 const fileStore = useFileStore()
 const uploadStore = useUploadStore()
+const shareStore = useShareStore()
 const message = useMessage()
 
 const showNewFolderModal = ref(false)
 const showUploadModal = ref(false)
 const showFileMenu = ref(false)
+const showShareModal = ref(false)
 const newFolderName = ref('')
 const selectedFile = ref(null)
 const selectedFileItem = ref(null)
+
+// 分享相关
+const shareResult = ref(null)
+const shareError = ref(null)
+const sharePassword = ref('')
+const shareExpires = ref('7d')
+const isSharing = ref(false)
+const expiresOptions = [
+  { label: '1小时', value: '1h' },
+  { label: '1天', value: '1d' },
+  { label: '7天', value: '7d' },
+  { label: '永久', value: 'never' }
+]
 
 function navigateToBreadcrumb(idx) {
   const crumb = fileStore.breadcrumbs[idx]
@@ -278,6 +354,76 @@ async function deleteFile(file) {
 async function refresh() {
   await fileStore.fetchFiles(fileStore.currentFolder)
   message.success('刷新成功')
+}
+
+function openShareModal() {
+  showFileMenu.value = false
+  shareResult.value = null
+  shareError.value = null
+  sharePassword.value = ''
+  shareExpires.value = '7d'
+  showShareModal.value = true
+}
+
+function closeShareModal() {
+  if (isSharing.value) return
+  showShareModal.value = false
+  shareResult.value = null
+  shareError.value = null
+}
+
+async function createShare() {
+  if (!selectedFileItem.value) return
+  isSharing.value = true
+  shareError.value = null
+
+  try {
+    const options = {}
+    if (sharePassword.value) {
+      options.password = sharePassword.value
+    }
+    if (shareExpires.value !== 'never') {
+      const now = new Date()
+      let expiresAt = new Date(now)
+      switch (shareExpires.value) {
+        case '1h':
+          expiresAt.setHours(expiresAt.getHours() + 1)
+          break
+        case '1d':
+          expiresAt.setDate(expiresAt.getDate() + 1)
+          break
+        case '7d':
+          expiresAt.setDate(expiresAt.getDate() + 7)
+          break
+      }
+      options.expiresAt = expiresAt.toISOString()
+    }
+
+    const res = await shareAPI.create({
+      file_id: selectedFileItem.value.id,
+      ...options
+    })
+
+    shareResult.value = {
+      url: res.share_url,
+      pwd: res.share_pwd || null,
+      expires_at: res.expires_at || null
+    }
+  } catch (err) {
+    shareError.value = err.message || '创建分享失败'
+  } finally {
+    isSharing.value = false
+  }
+}
+
+async function copyShareLink() {
+  if (!shareResult.value?.url) return
+  try {
+    await navigator.clipboard.writeText(window.location.origin + shareResult.value.url)
+    message.success('链接已复制')
+  } catch {
+    message.error('复制失败')
+  }
 }
 
 function formatSize(bytes) {
