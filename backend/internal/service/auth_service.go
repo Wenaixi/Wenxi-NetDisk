@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/wenaixi/wenxi-cloud/backend/internal/model"
 	"github.com/wenaixi/wenxi-cloud/backend/internal/pkg/crypto"
@@ -61,8 +62,18 @@ func (s *AuthService) Register(username, email, password string) (*model.User, e
 	return user, nil
 }
 
-func (s *AuthService) Login(username, password string) (string, error) {
-	user, err := s.userRepo.FindByUsername(username)
+func (s *AuthService) Login(identifier, password string) (string, error) {
+	var user *model.User
+	var err error
+
+	// 尝试通过邮箱查找
+	if strings.Contains(identifier, "@") {
+		user, err = s.userRepo.FindByEmail(identifier)
+	} else {
+		// 尝试通过用户名查找
+		user, err = s.userRepo.FindByUsername(identifier)
+	}
+
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", errors.New("invalid credentials")

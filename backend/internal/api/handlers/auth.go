@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 	"github.com/wenaixi/wenxi-cloud/backend/internal/service"
 	"github.com/wenaixi/wenxi-cloud/backend/internal/pkg/response"
 	"github.com/gin-gonic/gin"
@@ -17,13 +18,18 @@ func NewAuthHandler(authSvc *service.AuthService) *AuthHandler {
 
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req struct {
-		Username string `json:"username" binding:"required,min=3,max=50"`
+		Username string `json:"username" binding:"omitempty,min=3,max=50"`
 		Email    string `json:"email" binding:"required,email"`
 		Password string `json:"password" binding:"required,min=6"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
+	}
+
+	// 如果未提供用户名，使用邮箱前缀作为用户名
+	if req.Username == "" {
+		req.Username = req.Email[:strings.Index(req.Email, "@")]
 	}
 
 	user, err := h.authSvc.Register(req.Username, req.Email, req.Password)
@@ -41,7 +47,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req struct {
-		Username string `json:"username" binding:"required"`
+		Email    string `json:"email"`
+		Username string `json:"username"`
 		Password string `json:"password" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -49,7 +56,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := h.authSvc.Login(req.Username, req.Password)
+	// 优先使用email，如果没有email则使用username
+	identifier := req.Email
+	if identifier == "" {
+		identifier = req.Username
+	}
+	if identifier == "" {
+		response.BadRequest(c, "email or username is required")
+		return
+	}
+
+	token, err := h.authSvc.Login(identifier, req.Password)
 	if err != nil {
 		response.Unauthorized(c, "invalid credentials")
 		return

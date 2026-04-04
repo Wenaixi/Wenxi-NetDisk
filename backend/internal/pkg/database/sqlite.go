@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/wenaixi/wenxi-cloud/backend/internal/model"
-	"gorm.io/driver/sqlite"
+	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -22,6 +22,7 @@ func InitDB(dbPath string) (*gorm.DB, error) {
 	// Open SQLite connection
 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
+		DisableForeignKeyConstraintWhenMigrating: true,
 	})
 	if err != nil {
 		return nil, err

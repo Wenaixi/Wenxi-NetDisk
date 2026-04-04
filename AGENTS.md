@@ -32,7 +32,18 @@
 
 ## 开发历史
 
-### 2026-04-04 - Phase 5 完成补充 (第二次提交)
+### 2026-04-04 - Phase 6 E2E测试框架搭建
+
+**Playwright E2E测试:**
+- 安装 @playwright/test 40个包
+- playwright.config.js: chromium channel, port:3000, webServer auto-start
+- e2e/auth.spec.js (4个测试用例: 注册/登录/错误密码/导航守卫)
+- e2e/file.spec.js (7个测试用例: 创建文件夹/上传/右键菜单/面包屑/批量选择/排序)
+- e2e/lanzou.spec.js (6个页面访问测试)
+- npm scripts: test:e2e, test:e2e:ui
+- 注意: Chromium浏览器下载失败(SSL问题),改用系统Chrome (channel: 'chrome')
+- 注意: 后端server.exe使用go-sqlite3 CGO版本,需确保有GCC环境
+- 待完成: E2E测试运行通过 (Chrome启动问题、后端服务需运行)
 
 **架构修复:**
 - 重构 sqlite.go: 改用 GORM + AutoMigrate，修复模块化架构 DB 初始化问题
