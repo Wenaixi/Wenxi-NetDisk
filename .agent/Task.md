@@ -168,13 +168,14 @@
 
 ---
 
-## Phase 6: 测试系统 ✅ (~95%)
+## Phase 6: 测试系统 ✅ (~98%)
 
 ### Task 6.1: 后端单元测试 ✅
 - [x] pkg/crypto 密码测试 (5)
 - [x] pkg/jwt JWT测试 (7)
-- [x] pkg/response 响应测试 (5)
+- [x] pkg/response 响应测试 (15)
 - [x] pkg/lanzou 蓝奏云测试 (6)
+- [x] pkg/middleware 中间件测试 (20)
 - [x] repository 层测试 (10, CGO skip on Windows)
 - [x] service/auth 测试 (8)
 - [x] service/file 测试 (12)
@@ -198,11 +199,29 @@
 - [x] Store 测试 - shareParse (16)
 - [x] Crypto 工具测试 (4)
 - [x] fileSplit 工具测试 (22)
-- [x] 组件测试 - FileDetailModal (17) ✅
-- [ ] 组件测试 - AppHeader (待实现)
-- [ ] 组件测试 - 其他组件 (待实现)
+- [x] 组件测试 - FileDetailModal (17)
+- [x] 组件测试 - AppHeader (8)
+- [x] 组件测试 - Login (8)
+- [x] 组件测试 - Register (10)
+- [x] 组件测试 - LanzouSettings (12)
+- [x] 组件测试 - RecycleBin (16)
+- [x] 组件测试 - Sync (16)
+- [x] 组件测试 - ShareParse (15)
+- [x] 组件测试 - LanZouBrowser (26)
 
-### Task 6.3: E2E 测试 🔄
+### Task 6.3: Handler层测试 ✅
+- [x] AuthHandler: Register/Login验证 (8)
+- [x] FileHandler: GetFile/DeleteFile/MoveFile/UpdateFileDescription/RenameFile/CreateFileMetadata (19)
+- [x] FolderHandler: GetFolder/DeleteFolder/UpdateFolder/MoveFolder/CreateFolder/ListFolders/UpdateFolderDescription (21)
+- [x] RecycleHandler: Restore/Delete/Clear/List (11)
+- [x] DownloadHandler: GetDownloadURL (6)
+- [x] LanZouHandler: Connect/CreateFolder/InitUpload/CompleteUpload/Status/CreateShare/GetFileURL (9)
+- [x] ShareHandler: CreateShare/GetShare/ValidateShare/DeleteShare/CreateShareViaBody (12)
+- [x] ShareParseHandler: ParseShare/GetShareDownloadURL/ValidateShareURL (6)
+- [x] UploadHandler: ListVersions/RestoreVersion/GetUploadURL (11)
+- [x] Handler响应格式验证 (1)
+
+### Task 6.4: E2E 测试 🔄
 - [x] Playwright 配置 (playwright.config.js)
 - [x] auth.spec.js (4个测试用例)
 - [x] file.spec.js (7个测试用例)
@@ -210,9 +229,9 @@
 - [ ] chromium 浏览器安装 (网络问题，SSL下载失败)
 - [ ] 关键流程测试 (待浏览器安装后运行)
 
-### Task 6.4: 测试环境规范化 🔄
-- [ ] Go 测试环境 (gorm+sqlite, mock)
-- [ ] 前端测试环境 (Vitest配置完善)
+### Task 6.5: 测试环境规范化 🔄
+- [x] Go 测试环境 (gorm+sqlite, mock) - Handler测试覆盖全面
+- [x] 前端测试环境 (Vitest配置完善) - Store/Component/View测试完善
 - [ ] CI/CD 测试流程
 
 ---
@@ -226,7 +245,7 @@
 | Phase 3: Vue 前端 | 5 | 5 | 100% |
 | Phase 4: 蓝奏云对接 | 3 | 3 | 100% |
 | Phase 5: 功能完善 | 7 | 7 | 100% |
-| Phase 6: 测试系统 | 4 | 3 | 95% |
+| Phase 6: 测试系统 | 5 | 4 | 98% |
 
 ---
 
@@ -236,9 +255,10 @@
 - [x] 后端 API 测试通过
 - [x] Vue 前端构建成功
 - [x] 零圆角设计严格执行
+- [x] 640个单元测试全部通过 (387 Go + 253 Vue)
 
 ---
 
-**文档版本**: 3.0.0
-**最后更新**: 2026-04-04
-**状态**: Phase 3 进行中
+**文档版本**: 3.1.0
+**最后更新**: 2026-04-05
+**状态**: Phase 6 测试系统接近完成
