@@ -68,6 +68,7 @@ wenxi-cloud/
 │   ├── src/
 │   │   ├── api/index.js            # axios封装+拦截器
 │   │   ├── api/lanzou.js           # 蓝奏云API封装
+│   │   ├── api/recycle.js          # 回收站API封装
 │   │   ├── router/index.js          # Vue Router+守卫
 │   │   ├── stores/
 │   │   │   ├── auth.js            # Pinia auth store
@@ -79,18 +80,31 @@ wenxi-cloud/
 │   │   │   ├── share.js           # Pinia share store
 │   │   │   ├── share.test.js     # share store测试 (5)
 │   │   │   ├── download.js       # Pinia download store
-│   │   │   └── download.test.js  # download store测试 (4)
+│   │   │   ├── download.test.js  # download store测试 (4)
+│   │   │   ├── shareParse.js     # Pinia shareParse store
+│   │   │   ├── shareParse.test.js # shareParse store测试 (16)
+│   │   │   ├── recycle.js        # Pinia recycle store
+│   │   │   ├── recycle.test.js   # recycle store测试 (15)
+│   │   │   ├── sync.js           # Pinia sync store
+│   │   │   ├── sync.test.js      # sync store测试 (11)
+│   │   │   └── fileDescription.test.js # fileDescription store测试 (4)
 │   │   ├── components/
-│   │   │   └── AppHeader.vue      # 通用页面头部组件
+│   │   │   ├── AppHeader.vue      # 通用页面头部组件
+│   │   │   └── FileDetailModal.vue # 文件详情弹窗
 │   │   ├── utils/
 │   │   │   ├── crypto.js         # 客户端加密(AES-GCM)
-│   │   │   └── crypto.test.js   # crypto工具测试 (4)
+│   │   │   ├── crypto.test.js   # crypto工具测试 (4)
+│   │   │   ├── fileSplit.js     # 文件分割/合并工具
+│   │   │   └── fileSplit.test.js # fileSplit工具测试 (22)
 │   │   ├── views/
 │   │   │   ├── Login.vue         # 登录页
 │   │   │   ├── Register.vue      # 注册页
 │   │   │   ├── Dashboard.vue     # 主面板(本地文件)
 │   │   │   ├── LanzouSettings.vue # 蓝奏云设置页
-│   │   │   └── LanZouBrowser.vue  # 蓝奏云浏览器
+│   │   │   ├── LanZouBrowser.vue  # 蓝奏云浏览器
+│   │   │   ├── RecycleBin.vue     # 回收站
+│   │   │   ├── ShareParse.vue     # 链接解析
+│   │   │   └── Sync.vue           # 同步资源
 │   │   ├── App.vue
 │   │   ├── main.js
 │   │   └── style.css             # Tailwind入口
@@ -329,6 +343,11 @@ LanZouTokenRepository     - 蓝奏云Token仓库 (lanzou_service)
 UploadSessionRepository   - 上传会话仓库 (upload_service)
 LanZouClientProvider      - 蓝奏云客户端提供者 (upload_service)
 FileMetadataCreator       - 文件元数据创建器 (upload_service)
+FileVersionRepository     - 文件版本仓库 (file_version_service)
+VersionFileRepository     - 版本用文件仓库 (file_version_service)
+RecycleBinRepository      - 回收站仓库 (recycle_service)
+RecycleFileRepo           - 回收站用文件仓库 (recycle_service)
+RecycleFolderRepo         - 回收站用文件夹仓库 (recycle_service)
 ```
 
 **影响**:
@@ -342,22 +361,42 @@ FileMetadataCreator       - 文件元数据创建器 (upload_service)
 
 ### 后端单元测试
 
-| 包 | 测试内容 | 框架 |
-|----|---------|------|
-| pkg/crypto | 密码哈希/验证 | testify |
-| pkg/jwt | Token生成/验证 | testify |
-| pkg/response | 响应结构 | testify |
+| 包 | 测试内容 | 测试数 | 框架 |
+|----|---------|--------|------|
+| pkg/crypto | 密码哈希/验证 | 5 | go test |
+| pkg/jwt | Token生成/验证 | 7 | go test |
+| pkg/response | 响应结构 | 5 | go test |
+| pkg/lanzou | 蓝奏云API解析 | 6 | go test |
+| repository | 数据访问层 | 10 | go test + gorm+sqlite |
+| service/auth | 注册/登录/验证 | 8 | go test |
+| service/file | 文件CRUD | 12 | go test |
+| service/folder | 文件夹CRUD/移动 | 22 | go test |
+| service/lanzou | 蓝奏云连接 | 9 | go test |
+| service/upload | 断点上传 | 6 | go test |
+| service/share | 分享管理 | 21 | go test |
+| service/download | 下载直链 | 5 | go test |
+| service/recycle | 回收站操作 | 11 | go test |
+| service/file_version | 版本管理 | 18 | go test |
 
-### 前端测试 (待实现)
+### 前端测试
 
-| 类型 | 工具 |
-|------|------|
-| 组件测试 | Vitest + @vue/test-utils |
-| Store测试 | Vitest |
-| E2E测试 | Playwright |
+| 类型 | 模块 | 测试数 | 状态 |
+|------|------|--------|------|
+| Store | auth | 7 | ✅ |
+| Store | file | 13 | ✅ |
+| Store | upload | 7 | ✅ |
+| Store | share | 10 | ✅ |
+| Store | download | 10 | ✅ |
+| Store | recycle | 15 | ✅ |
+| Store | sync | 11 | ✅ |
+| Store | fileDescription | 4 | ✅ |
+| Store | shareParse | 16 | ✅ |
+| Utils | crypto | 4 | ✅ |
+| Utils | fileSplit | 22 | ✅ |
+| E2E | Playwright | 15 | ⏭️ |
 
 ---
 
-**文档版本**: 5.0.0
-**最后更新**: 2026-04-04
-**状态**: Phase 6 测试进行中
+**文档版本**: 6.0.0
+**最后更新**: 2026-04-05
+**状态**: Phase 6 完成, 测试 271 全部通过 (133 Go + 138 Vue)
