@@ -35,6 +35,12 @@ const routes = [
     name: 'LanZouBrowser',
     component: () => import('../views/LanZouBrowser.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/recycle',
+    name: 'RecycleBin',
+    component: () => import('../views/RecycleBin.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

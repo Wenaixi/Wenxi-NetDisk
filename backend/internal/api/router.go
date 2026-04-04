@@ -27,6 +27,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	lanzouRepo := repository.NewLanZouTokenRepository(nil)
 	uploadRepo := repository.NewUploadSessionRepository(nil)
 	folderRepo := repository.NewFolderRepository(nil)
+	recycleRepo := repository.NewRecycleBinRepository(nil)
 
 	// Services
 	authSvc := service.NewAuthService(userRepo, jwtManager)
@@ -36,6 +37,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	lanzouSvc := service.NewLanZouService(lanzouRepo)
 	uploadSvc := service.NewUploadService(uploadRepo, lanzouSvc, fileSvc)
 	downloadSvc := service.NewDownloadService(fileSvc, lanzouSvc)
+	recycleSvc := service.NewRecycleBinService(recycleRepo, fileRepo, folderRepo)
 
 	// Handlers
 	authHandler := handlers.NewAuthHandler(authSvc)
@@ -44,6 +46,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	shareHandler := handlers.NewShareHandler(shareSvc)
 	lanzouHandler := handlers.NewLanZouHandler(lanzouSvc, uploadSvc)
 	downloadHandler := handlers.NewDownloadHandler(downloadSvc)
+	recycleHandler := handlers.NewRecycleHandler(recycleSvc)
 
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
@@ -87,10 +90,10 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 		// Share routes
 		shares := api.Group("/shares")
 		{
-			shares.GET("/:token", shareHandler.GetShare) // Public - get share by token
-			shares.POST("/:token/validate", shareHandler.ValidateShare) // Public - validate share password
-			shares.POST("", middleware.AuthRequired(jwtManager), shareHandler.CreateShareViaBody) // Protected - create share via body
-			shares.GET("", middleware.AuthRequired(jwtManager), shareHandler.ListShares) // Protected - list user's shares
+			shares.GET("/:token", shareHandler.GetShare)
+			shares.POST("/:token/validate", shareHandler.ValidateShare)
+			shares.POST("", middleware.AuthRequired(jwtManager), shareHandler.CreateShareViaBody)
+			shares.GET("", middleware.AuthRequired(jwtManager), shareHandler.ListShares)
 			shares.DELETE("/:id", middleware.AuthRequired(jwtManager), shareHandler.DeleteShare)
 		}
 
@@ -109,6 +112,16 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			lanzou.POST("/upload/init", lanzouHandler.InitializeUpload)
 			lanzou.POST("/upload/complete/:id", lanzouHandler.CompleteUpload)
 			lanzou.GET("/upload/status/:id", lanzouHandler.UploadStatus)
+		}
+
+		// Recycle bin routes (protected)
+		recycle := api.Group("/recycle")
+		recycle.Use(middleware.AuthRequired(jwtManager))
+		{
+			recycle.GET("", recycleHandler.List)
+			recycle.POST("/:id/restore", recycleHandler.Restore)
+			recycle.DELETE("/:id", recycleHandler.Delete)
+			recycle.DELETE("/clear", recycleHandler.Clear)
 		}
 	}
 

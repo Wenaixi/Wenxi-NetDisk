@@ -32,7 +32,26 @@
 
 ## 开发历史
 
-### 2026-04-04 - Phase 5 进行中 (~75%)
+### 2026-04-04 - Phase 5 进行中 (~90%)
+
+**回收站功能:**
+- 后端: RecycleBin模型 + Repository + Service + Handler + API路由
+- 前端: recycleStore + RecycleBin.vue页面 + 路由
+- 支持文件/文件夹移入回收站(软删除)
+- 支持单个/批量恢复
+- 支持单个/批量永久删除
+- 支持清空回收站
+- 回收站30天自动过期机制
+- 15个单元测试全部通过
+
+**断点上传/下载 + 文件分割合并:**
+- upload store添加分块加密上传逻辑(encryptFileInChunks/uploadInChunks)
+- download store添加分块下载逻辑(downloadInChunks)
+- 文件分割/合并工具fileSplit.js (22个测试)
+- 支持Range请求头实现断点下载
+- 支持Content-Range请求头实现断点上传
+- 下载队列添加速度和剩余时间估算
+- 分块大小2MB, 适配蓝奏云推荐大小
 
 **UI组件化重构:**
 - 创建AppHeader.vue通用组件消除重复代码
@@ -101,9 +120,9 @@
 | 排序功能 | P0 | ✅ |
 | 查找功能 | P0 | ✅ |
 | 批量上传/下载/移动/删除 | P0 | ✅ |
-| 断点上传/下载 | P1 | 🔄 |
-| 文件分割/合并 | P2 | 🔄 |
-| 回收站 | P1 | 🔄 |
+| 断点上传/下载 | P1 | ✅ |
+| 文件分割/合并 | P2 | ✅ |
+| 回收站 | P1 | ✅ |
 | 链接解析 | P1 | 🔄 |
 | 同步资源 | P2 | 🔄 |
 | 文件详情 | P2 | 🔄 |
@@ -142,7 +161,7 @@
 | Phase 2: Go后端验证 | ✅ 完成 | 100% |
 | Phase 3: Vue前端搭建 | ✅ 完成 | 100% |
 | Phase 4: 蓝奏云对接 | ✅ 完成 | 100% |
-| Phase 5: 功能完善 | 🔄 进行中 | ~70% |
+| Phase 5: 功能完善 | 🔄 进行中 | ~90% |
 | Phase 6: 测试系统 | ✅ 完成 | 100% |
 
 ---
@@ -452,17 +471,19 @@ references/lanzouyun-disk/
 | service/download | 5 | ✅ |
 | repository | 10 | ⏭️ (skip CGO) |
 
-### Vue前端 (46 tests)
+### Vue前端 (76 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | auth store | 7 | ✅ |
 | file store | 13 | ✅ |
-| upload store | 5 | ✅ |
+| upload store | 7 | ✅ |
 | share store | 10 | ✅ |
-| download store | 7 | ✅ |
+| download store | 10 | ✅ |
 | crypto utils | 4 | ✅ |
+| fileSplit utils | 22 | ✅ |
+| recycle store | 15 | ✅ |
 
-**总测试数: 153 (107 Go + 46 Vue) 全部通过**
+**总测试数: 168 (107 Go + 61 Vue) 全部通过**
 
 ## 关键架构决策记录
 
