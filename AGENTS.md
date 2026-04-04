@@ -230,8 +230,9 @@ upload_sessions (id, user_id, file_name, file_size, file_hash,
 - [x] Go后端验证 (API测试通过)
 - [x] Vue前端基础 (登录/注册/仪表盘)
 - [x] Vue前端构建
-- [x] Go单元测试 (Phase 6) - crypto, jwt, response 全部通过
-- [ ] Go service/repository 测试
+- [x] Go单元测试 - pkg (crypto, jwt, response) 全部通过
+- [x] Go repository测试 - 框架完成 (CGO需在Linux/CI环境运行)
+- [ ] Go service层测试
 - [ ] Vue单元测试
 - [ ] 蓝奏云API集成
 - [ ] 客户端加密实现
@@ -244,6 +245,8 @@ upload_sessions (id, user_id, file_name, file_size, file_hash,
 
 | Commit | 描述 |
 |--------|------|
+| 0601bb4 | test: 添加repository层单元测试框架 (gorm+sqlite) |
+| 2d17588 | docs: 全面完善AGENTS.md、Design.md、Requirement.md |
 | 02e1447 | chore: 完善.gitignore配置 |
 | bb7ff53 | docs: 更新AGENTS.md - 添加测试进度和提交历史 |
 | 2ff5176 | test: 添加后端单元测试 (crypto, jwt, response) |
@@ -255,4 +258,4 @@ upload_sessions (id, user_id, file_name, file_size, file_hash,
 ---
 
 **最后更新**: 2026-04-04
-**状态**: Phase 3 Vue前端搭建进行中 (~70%), Phase 6 测试系统进行中 (~30%)
+**状态**: Phase 3 (~70%), Phase 6 测试系统进行中 (~40%)
