@@ -99,7 +99,7 @@ func (c *Client) Task5(folderId int, pg int) (*Task5Response, error) {
 	// 简化解析，实际项目需要更完善的JSON解析
 	resp := &Task5Response{}
 	_ = string(data) // 实际应解析JSON
-	resp.zt = 1      // 假设成功
+	resp.Zt = 1      // 假设成功
 	return resp, nil
 }
 
@@ -116,7 +116,7 @@ func (c *Client) Task47(folderId int) (*Task47Response, error) {
 	}
 
 	resp := &Task47Response{}
-	resp.zt = 1
+	resp.Zt = 1
 	return resp, nil
 }
 
@@ -140,7 +140,7 @@ func (c *Client) Task2(parentId int, name string) (*Task2Response, error) {
 	}
 
 	resp := &Task2Response{}
-	resp.zt = 1
+	resp.Zt = 1
 	return resp, nil
 }
 
@@ -158,7 +158,7 @@ func (c *Client) Task6(fileId int) (*DeleteResponse, error) {
 
 	resp := &DeleteResponse{}
 	_ = data
-	resp.zt = 1
+	resp.Zt = 1
 	return resp, nil
 }
 
@@ -176,7 +176,7 @@ func (c *Client) Task46(folderId int) (*DeleteResponse, error) {
 
 	resp := &DeleteResponse{}
 	_ = data
-	resp.zt = 1
+	resp.Zt = 1
 	return resp, nil
 }
 
@@ -195,7 +195,7 @@ func (c *Client) Task14(fileId int, name string) (*RenameResponse, error) {
 
 	resp := &RenameResponse{}
 	_ = data
-	resp.zt = 1
+	resp.Zt = 1
 	return resp, nil
 }
 
@@ -214,7 +214,7 @@ func (c *Client) Task15(fileId, targetFolderId int) (*MoveResponse, error) {
 
 	resp := &MoveResponse{}
 	_ = data
-	resp.zt = 1
+	resp.Zt = 1
 	return resp, nil
 }
 
@@ -233,7 +233,7 @@ func (c *Client) Task48(folderId, targetFolderId int) (*MoveResponse, error) {
 
 	resp := &MoveResponse{}
 	_ = data
-	resp.zt = 1
+	resp.Zt = 1
 	return resp, nil
 }
 
@@ -286,7 +286,7 @@ func (c *Client) Task39(fileId int, minutes int) (*ShareResponse, error) {
 
 	resp := &ShareResponse{}
 	_ = data
-	resp.zt = 1
+	resp.Zt = 1
 	return resp, nil
 }
 

@@ -47,14 +47,14 @@ type FolderInfo struct {
 type Task5Response struct {
 	Info interface{} `json:"info"`
 	Text []FileInfo  `json:"text"`
-	zt   int         `json:"zt"` // 状态码
+	Zt   int         `json:"zt"` // 状态码
 }
 
 // Task47Response task=47 列出文件夹响应
 type Task47Response struct {
 	Info interface{} `json:"info"`
 	Text []FolderInfo `json:"text"`
-	zt   int         `json:"zt"`
+	Zt   int         `json:"zt"`
 }
 
 // Task2Response task=2 创建文件夹响应
@@ -64,7 +64,7 @@ type Task2Response struct {
 		ID   uint   `json:"folder_id"`
 		Name string `json:"folder_name"`
 	} `json:"text"`
-	zt int `json:"zt"`
+	Zt int `json:"zt"`
 }
 
 // UploadResponse 上传响应
@@ -79,30 +79,30 @@ type UploadResponse struct {
 		DownURL  string `json:"downurl"`
 		Filename string `json:"filename"`
 	} `json:"text"`
-	zt int `json:"zt"`
+	Zt int `json:"zt"`
 }
 
 // DeleteResponse 删除响应
 type DeleteResponse struct {
-	zt   int    `json:"zt"`
+	Zt   int    `json:"zt"`
 	Info string `json:"info"`
 }
 
 // RenameResponse 重命名响应
 type RenameResponse struct {
-	zt   int    `json:"zt"`
+	Zt   int    `json:"zt"`
 	Info string `json:"info"`
 }
 
 // MoveResponse 移动响应
 type MoveResponse struct {
-	zt   int    `json:"zt"`
+	Zt   int    `json:"zt"`
 	Info string `json:"info"`
 }
 
 // ShareResponse 分享响应
 type ShareResponse struct {
-	zt   int    `json:"zt"`
+	Zt   int    `json:"zt"`
 	Info string `json:"info"`
 	Text struct {
 		URL   string `json:"url"`   // 分享链接

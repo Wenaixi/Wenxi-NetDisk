@@ -40,7 +40,10 @@ export const fileAPI = {
   rename: (id, name) => api.put(`/files/${id}`, { name }),
   move: (id, folderId) => api.put(`/files/${id}/move`, { folder_id: folderId }),
   getVersions: (id) => api.get(`/files/${id}/versions`),
-  restoreVersion: (id, versionId) => api.post(`/files/${id}/versions/${versionId}/restore`)
+  restoreVersion: (id, versionId) => api.post(`/files/${id}/versions/${versionId}/restore`),
+  initializeUpload: (data) => api.post('/lanzou/upload/init', data),
+  completeUpload: (sessionId, data) => api.post(`/lanzou/upload/complete/${sessionId}`, data),
+  download: (id) => api.get(`/files/${id}/download`)
 }
 
 export const folderAPI = {
