@@ -323,6 +323,7 @@ references/lanzouyun-disk/
 
 | Commit | 描述 |
 |--------|------|
+| f51db43 | feat: 实现前端DownloadStore及单元测试 |
 | f62df4b | feat: 实现前端ShareStore及单元测试 |
 | d468056 | feat: 实现DownloadService下载服务和单元测试 |
 | 278c177 | feat: 增强分享功能 - 分享列表API与过期检查 |
@@ -372,16 +373,17 @@ references/lanzouyun-disk/
 | service/download | 5 | ✅ |
 | repository | 10 | ⏭️ (skip CGO) |
 
-### Vue前端 (39 tests)
+### Vue前端 (46 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | auth store | 7 | ✅ |
 | file store | 13 | ✅ |
 | upload store | 5 | ✅ |
 | share store | 10 | ✅ |
+| download store | 7 | ✅ |
 | crypto utils | 4 | ✅ |
 
-**总测试数: 146 (107 Go + 39 Vue) 全部通过**
+**总测试数: 153 (107 Go + 46 Vue) 全部通过**
 
 ## 关键架构决策记录
 
