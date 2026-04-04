@@ -378,7 +378,7 @@ RecycleFolderRepo         - 回收站用文件夹仓库 (recycle_service)
 | service/recycle | 回收站操作 | 11 | go test |
 | service/file_version | 版本管理 | 18 | go test |
 
-| handlers | Handler验证层 | 53 | go test + httptest |
+| handlers | Handler验证层 | 69 | go test + httptest |
 
 ### 前端测试
 

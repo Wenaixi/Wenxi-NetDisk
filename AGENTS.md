@@ -585,7 +585,7 @@ references/lanzouyun-disk/
 | service/recycle | 11 | ✅ |
 | service/file_version | 18 | ✅ |
 | repository | 10 | ⏭️ (skip CGO) |
-| **handlers** | **53** | ✅ |
+| **handlers** | **69** | ✅ |
 
 ### Vue前端 (138 tests)
 | 模块 | 测试数 | 状态 |
@@ -602,7 +602,7 @@ references/lanzouyun-disk/
 | crypto utils | 4 | ✅ |
 | fileSplit utils | 22 | ✅ |
 
-**总测试数: 324 (186 Go + 138 Vue) 全部通过**
+**总测试数: 340 (202 Go + 138 Vue) 全部通过**
 
 ## 关键架构决策记录
 
