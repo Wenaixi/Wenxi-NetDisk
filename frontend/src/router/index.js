@@ -23,6 +23,12 @@ const routes = [
     name: 'Dashboard',
     component: () => import('../views/Dashboard.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: () => import('../views/LanzouSettings.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
