@@ -475,7 +475,12 @@ function openRenameModal() {
 async function confirmRename() {
   if (!renameName.value.trim() || !selectedFileItem.value) return
   try {
-    await fileStore.renameFile(selectedFileItem.value.id, renameName.value)
+    // 判断是文件还是文件夹
+    if (selectedFileItem.value.size !== undefined) {
+      await fileStore.renameFile(selectedFileItem.value.id, renameName.value)
+    } else {
+      await fileStore.renameFolder(selectedFileItem.value.id, renameName.value)
+    }
     message.success('重命名成功')
     showRenameModal.value = false
     fileStore.fetchFiles(fileStore.currentFolder)
