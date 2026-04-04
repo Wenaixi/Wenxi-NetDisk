@@ -58,6 +58,7 @@ export const shareAPI = {
   create: (data) => api.post('/shares', data),
   list: () => api.get('/shares'),
   get: (token) => api.get(`/shares/${token}`),
+  validate: (token, password) => api.post(`/shares/${token}/validate`, { password }),
   delete: (id) => api.delete(`/shares/${id}`)
 }
 

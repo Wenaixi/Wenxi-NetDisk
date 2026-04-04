@@ -64,6 +64,31 @@ func (h *ShareHandler) GetShare(c *gin.Context) {
 	})
 }
 
+func (h *ShareHandler) ValidateShare(c *gin.Context) {
+	token := c.Param("token")
+
+	var req struct {
+		Password string `json:"password"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	valid, err := h.shareSvc.ValidatePassword(token, req.Password)
+	if err != nil {
+		response.NotFound(c, err.Error())
+		return
+	}
+
+	if !valid {
+		response.Error(c, http.StatusUnauthorized, "invalid password")
+		return
+	}
+
+	response.Success(c, gin.H{"valid": true})
+}
+
 func (h *ShareHandler) ListShares(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	uid := userID.(uint)
