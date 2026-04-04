@@ -32,16 +32,22 @@
 
 ## 开发历史
 
-### 2026-04-05 - Handler层单元测试完善
+### 2026-04-05 - 中间件+CORS日志测试 + Vue组件测试扩展
 
-**Handler验证层测试:**
-- 新增 auth_test.go (36个测试用例) - 注册/登录/分享/文件夹/上传/下载handler验证
-- 新增 file_test.go (17个测试用例) - 文件CRUD/重命名/移动handler验证
-- 测试策略: 验证输入验证层(ShouldBindJSON/strconv.ParseUint), service层由独立测试覆盖
-- 使用 setupTestRouterWithUser 中间件模拟已认证用户 (c.Set("user_id", uint(1)))
-- 修复响应格式字段: msg 不是 message (response.go 使用 "msg" 字段名)
-- 修复 folder.go UpdateFolderDescription 空 body 返回 400 (name和description都为空)
-- Handler测试总数: 53个, 全部通过
+**Middleware+CORS+Logger测试:**
+- 新增 middleware_test.go (10个测试用例) - Logger和CORS中间件验证
+- Logger测试: GET/POST/错误状态/路径日志输出
+- CORS测试: 跨域请求/OPTIONS预检/允许方法/凭证/请求头
+- Middleware测试总数: 20个 (10 Auth + 10 Logger/CORS)
+
+**Vue组件测试扩展:**
+- 新增 LanzouSettings.test.js (12个测试用例) - 蓝奏云设置页面
+- 测试覆盖: 连接状态显示/连接弹窗/cookie验证/连接断开/错误处理/加载状态
+- 使用 vi.hoisted() 解决 lanzouAPI mock 提升问题
+- 使用 Proxy mock 解决 @vicons/ionicons5 动态图标问题
+- 组件测试总计: AppHeader(8) + Login(8) + Register(10) + FileDetailModal(17) + LanzouSettings(12) = 55
+
+**测试统计更新: 402 (222 Go + 180 Vue) 全部通过**
 
 ### 2026-04-05 - 文件版本管理 + 缺失API补全
 
@@ -531,6 +537,10 @@ references/lanzouyun-disk/
 ---
 
 ## Git 提交历史
+
+| Commit | 描述 |
+|--------|------|
+| new | feat: 添加中间件+CORS+日志层单元测试 (20个) + LanzouSettings组件测试 (12个) |
 
 | Commit | 描述 |
 |--------|------|
