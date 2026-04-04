@@ -19,6 +19,10 @@ export const useFileStore = defineStore('file', () => {
       files.value = filesRes
       folders.value = foldersRes
       currentFolder.value = folderId
+    } catch (err) {
+      files.value = []
+      folders.value = []
+      throw err
     } finally {
       loading.value = false
     }
