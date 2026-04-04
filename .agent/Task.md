@@ -210,15 +210,19 @@
 - [x] 组件测试 - LanZouBrowser (26)
 
 ### Task 6.3: Handler层测试 ✅
-- [x] AuthHandler: Register/Login验证 (8)
-- [x] FileHandler: GetFile/DeleteFile/MoveFile/UpdateFileDescription/RenameFile/CreateFileMetadata (19)
-- [x] FolderHandler: GetFolder/DeleteFolder/UpdateFolder/MoveFolder/CreateFolder/ListFolders/UpdateFolderDescription (21)
-- [x] RecycleHandler: Restore/Delete/Clear/List (11)
-- [x] DownloadHandler: GetDownloadURL (6)
-- [x] LanZouHandler: Connect/CreateFolder/InitUpload/CompleteUpload/Status/CreateShare/GetFileURL (9)
-- [x] ShareHandler: CreateShare/GetShare/ValidateShare/DeleteShare/CreateShareViaBody (12)
-- [x] ShareParseHandler: ParseShare/GetShareDownloadURL/ValidateShareURL (6)
-- [x] UploadHandler: ListVersions/RestoreVersion/GetUploadURL (11)
+- [x] AuthHandler: Register/Login验证 (8) + GetCurrentUser成功路径 (+9)
+- [x] FileHandler: GetFile/DeleteFile/MoveFile/UpdateFileDescription/RenameFile/CreateFileMetadata (19+6)
+- [x] FolderHandler: GetFolder/DeleteFolder/UpdateFolder/MoveFolder/CreateFolder/ListFolders/UpdateFolderDescription (21+1)
+- [x] RecycleHandler: Restore/Delete/Clear/List (11+3)
+- [x] DownloadHandler: GetDownloadURL (6+2)
+- [x] LanZouHandler: Connect/CreateFolder/InitUpload/CompleteUpload/Status/CreateShare/GetFileURL (9+15)
+- [x] ShareHandler: CreateShare/GetShare/ValidateShare/DeleteShare/CreateShareViaBody/ListShares (12+4)
+- [x] ShareParseHandler: ParseShare/GetShareDownloadURL/ValidateShareURL (6+3)
+- [x] UploadHandler: ListVersions/RestoreVersion/GetUploadURL/UploadFile (11+2)
+- [x] Handler成功路径测试 (36用例, Mock架构)
+- [x] Handler额外测试 (20用例, File/Folder/Recycle/Share/Auth)
+- [x] Handler构造器测试 (9用例)
+- [x] guessMimeType测试 (16用例)
 - [x] Handler响应格式验证 (1)
 
 ### Task 6.4: E2E 测试 🔄
@@ -255,7 +259,7 @@
 - [x] 后端 API 测试通过
 - [x] Vue 前端构建成功
 - [x] 零圆角设计严格执行
-- [x] 640个单元测试全部通过 (387 Go + 253 Vue)
+- [x] 640个单元测试全部通过 (387 Go + 253 Vue) → 766个全部通过 (513 Go + 253 Vue)
 
 ---
 
