@@ -64,7 +64,7 @@
 |-------|------|------|
 | Phase 1: Go后端搭建 | ✅ 完成 | 100% |
 | Phase 2: Go后端验证 | ✅ 完成 | 100% |
-| Phase 3: Vue前端搭建 | 🔄 进行中 | ~70% |
+| Phase 3: Vue前端搭建 | 🔄 进行中 | ~80% |
 | Phase 4: 蓝奏云对接 | 🔄 进行中 | ~20% |
 | Phase 5: 功能完善 | ⏳ 待开始 | 0% |
 | Phase 6: 测试系统 | 🔄 进行中 | ~30% |
@@ -108,7 +108,9 @@ wenxi-cloud/
 │   └── data/wenxi.db               # SQLite数据库
 ├── frontend/                         # Vue 3 前端
 │   ├── src/
-│   │   ├── api/index.js            # axios封装
+│   │   ├── api/
+│   │   │   ├── index.js            # axios封装
+│   │   │   └── lanzou.js          # 蓝奏云API
 │   │   ├── router/index.js          # Vue Router
 │   │   ├── stores/
 │   │   │   ├── auth.js             # 认证store
@@ -116,7 +118,8 @@ wenxi-cloud/
 │   │   ├── views/
 │   │   │   ├── Login.vue
 │   │   │   ├── Register.vue
-│   │   │   └── Dashboard.vue
+│   │   │   ├── Dashboard.vue
+│   │   │   └── LanzouSettings.vue  # 蓝奏云设置
 │   │   ├── App.vue
 │   │   ├── main.js
 │   │   └── style.css               # Tailwind入口
