@@ -65,7 +65,7 @@
 | Phase 1: Go后端搭建 | ✅ 完成 | 100% |
 | Phase 2: Go后端验证 | ✅ 完成 | 100% |
 | Phase 3: Vue前端搭建 | ✅ 完成 | 100% |
-| Phase 4: 蓝奏云对接 | 🔄 进行中 | ~65% |
+| Phase 4: 蓝奏云对接 | 🔄 进行中 | ~80% |
 | Phase 5: 功能完善 | ⏳ 待开始 | 0% |
 | Phase 6: 测试系统 | ✅ 完成 | 100% |
 
@@ -215,6 +215,8 @@ upload_sessions (id, user_id, file_name, file_size, file_hash,
 | GET | /files | 文件列表 | ✅ |
 | GET | /folders | 文件夹列表 | ✅ |
 | POST | /folders | 创建文件夹 | ✅ |
+| POST | /share | 创建分享链接 | ✅ |
+| GET | /files/:id/url | 获取下载直链 | ✅ |
 | POST | /upload/init | 初始化上传 | ✅ |
 | POST | /upload/complete/:id | 完成上传 | ✅ |
 | GET | /upload/status/:id | 上传状态 | ✅ |
