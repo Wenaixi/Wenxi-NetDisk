@@ -58,6 +58,16 @@ export const useFileStore = defineStore('file', () => {
     return updated
   }
 
+  async function moveFile(id, folderId) {
+    await fileAPI.move(id, folderId)
+    files.value = files.value.filter(f => f.id !== id)
+  }
+
+  async function moveFolder(id, folderId) {
+    await folderAPI.move(id, folderId)
+    folders.value = folders.value.filter(f => f.id !== id)
+  }
+
   function navigateToFolder(folder) {
     breadcrumbs.value.push({ id: folder.id, name: folder.name })
     fetchFiles(folder.id)
@@ -79,6 +89,7 @@ export const useFileStore = defineStore('file', () => {
   return {
     files, folders, currentFolder, loading, breadcrumbs,
     fetchFiles, createFolder, deleteFile, deleteFolder,
-    renameFile, renameFolder, navigateToFolder, navigateToRoot, navigateBack
+    renameFile, renameFolder, moveFile, moveFolder,
+    navigateToFolder, navigateToRoot, navigateBack
   }
 })
