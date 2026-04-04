@@ -45,6 +45,19 @@
             v-model:checked="selectMode"
             label="选择模式"
           />
+          <n-input
+            v-if="fileStore.files.length > 0 || fileStore.folders.length > 0"
+            v-model:value="searchQuery"
+            placeholder="搜索..."
+            clearable
+            style="width: 150px"
+          />
+          <n-select
+            v-if="fileStore.files.length > 0 || fileStore.folders.length > 0"
+            v-model:value="sortBy"
+            :options="sortOptions"
+            style="width: 120px"
+          />
           <n-button @click="refresh">
             <template #icon><n-icon><Refresh /></n-icon></template>
           </n-button>
@@ -71,11 +84,11 @@
 
         <div v-else>
           <!-- 文件夹区域 -->
-          <div v-if="fileStore.folders.length > 0" class="mb-6">
-            <div class="text-gray-400 text-sm mb-3">文件夹</div>
+          <div v-if="filteredFolders.length > 0" class="mb-6">
+            <div class="text-gray-400 text-sm mb-3">文件夹 ({{ filteredFolders.length }})</div>
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               <div
-                v-for="folder in fileStore.folders"
+                v-for="folder in filteredFolders"
                 :key="folder.id"
                 :class="[
                   'bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]',
@@ -100,11 +113,11 @@
           </div>
 
           <!-- 文件区域 -->
-          <div v-if="fileStore.files.length > 0">
-            <div class="text-gray-400 text-sm mb-3">文件</div>
+          <div v-if="filteredFiles.length > 0">
+            <div class="text-gray-400 text-sm mb-3">文件 ({{ filteredFiles.length }})</div>
             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               <div
-                v-for="file in fileStore.files"
+                v-for="file in filteredFiles"
                 :key="file.id"
                 :class="[
                   'bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]',
@@ -403,6 +416,45 @@ const renameName = ref('')
 // 选择模式相关
 const selectMode = ref(false)
 const selectedItems = ref([])
+
+// 搜索和排序相关
+const searchQuery = ref('')
+const sortBy = ref('name')
+const sortOptions = [
+  { label: '名称', value: 'name' },
+  { label: '大小', value: 'size' },
+  { label: '时间', value: 'time' }
+]
+
+// 过滤和排序后的文件夹/文件列表
+const filteredFolders = computed(() => {
+  let result = [...fileStore.folders]
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    result = result.filter(f => f.name.toLowerCase().includes(q))
+  }
+  result.sort((a, b) => {
+    if (sortBy.value === 'name') return a.name.localeCompare(b.name)
+    if (sortBy.value === 'time') return new Date(b.created_at || 0) - new Date(a.created_at || 0)
+    return 0
+  })
+  return result
+})
+
+const filteredFiles = computed(() => {
+  let result = [...fileStore.files]
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    result = result.filter(f => f.name.toLowerCase().includes(q))
+  }
+  result.sort((a, b) => {
+    if (sortBy.value === 'name') return a.name.localeCompare(b.name)
+    if (sortBy.value === 'size') return (b.size || 0) - (a.size || 0)
+    if (sortBy.value === 'time') return new Date(b.created_at || 0) - new Date(a.created_at || 0)
+    return 0
+  })
+  return result
+})
 
 // 批量移动相关
 const showMoveModal = ref(false)
