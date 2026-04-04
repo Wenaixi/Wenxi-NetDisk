@@ -3,6 +3,9 @@ import { ref, computed } from 'vue'
 import { encryptFile, generateEncryptionKey, exportKey } from '../utils/crypto'
 import { fileAPI } from '../api'
 
+// 分块大小 2MB
+const ChunkSize = 2 * 1024 * 1024
+
 export const useUploadStore = defineStore('upload', () => {
   // State
   const isEncrypting = ref(false)
@@ -80,24 +83,42 @@ export const useUploadStore = defineStore('upload', () => {
       item.status = 'encrypting'
 
       try {
-        // 加密
-        const encryptedBlob = await encryptFile(item.file, key)
+        const file = item.file
+        const totalChunks = Math.ceil(file.size / ChunkSize)
+
+        // 加密文件(按块加密上传)
+        let encryptedBlob
+        if (file.size > ChunkSize) {
+          // 大文件按块加密
+          encryptedBlob = await encryptFileInChunks(file, key, totalChunks, (chunkProgress) => {
+            item.progress = Math.round(chunkProgress * 30) // 加密占30%进度
+          })
+        } else {
+          encryptedBlob = await encryptFile(file, key)
+        }
+
         item.status = 'uploading'
 
         // 初始化上传
         const sessionResponse = await fileAPI.initializeUpload({
-          file_name: item.file.name,
+          file_name: file.name,
           file_size: encryptedBlob.size,
-          mime_type: item.file.type || 'application/octet-stream',
+          mime_type: file.type || 'application/octet-stream',
           folder_id: folderId,
         })
 
         const { upload_url, session_id } = sessionResponse.data
 
-        // 上传
-        await uploadToUrl(upload_url, encryptedBlob, (loaded) => {
-          item.progress = Math.round((loaded / encryptedBlob.size) * 100)
-        })
+        // 上传(分块)
+        if (encryptedBlob.size > ChunkSize) {
+          await uploadInChunks(upload_url, encryptedBlob, (uploadProgress) => {
+            item.progress = 30 + Math.round(uploadProgress * 70) // 上传占70%进度
+          })
+        } else {
+          await uploadToUrl(upload_url, encryptedBlob, (loaded) => {
+            item.progress = 30 + Math.round((loaded / encryptedBlob.size) * 70)
+          })
+        }
 
         // 完成上传
         const exportedKey = await exportKey(key)
@@ -186,6 +207,73 @@ export const useUploadStore = defineStore('upload', () => {
       isUploading.value = false
       error.value = err.message || '上传失败'
       throw err
+    }
+  }
+
+  /**
+   * 按块加密大文件
+   * @param {File} file 原始文件
+   * @param {CryptoKey} key 加密密钥
+   * @param {number} totalChunks 总分块数
+   * @param {function} onProgress 进度回调 (0-1)
+   * @returns {Promise<Blob>} 加密后的Blob
+   */
+  async function encryptFileInChunks(file, key, totalChunks, onProgress) {
+    const parts = []
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * ChunkSize
+      const end = Math.min(start + ChunkSize, file.size)
+      const chunk = file.slice(start, end)
+      const encryptedChunk = await encryptFile(chunk, key)
+      parts.push(encryptedChunk)
+      onProgress?.((i + 1) / totalChunks)
+    }
+    return new Blob(parts, { type: 'application/octet-stream' })
+  }
+
+  /**
+   * 按块上传大文件(断点续传支持)
+   * @param {string} url 上传URL
+   * @param {Blob} blob 加密后的Blob
+   * @param {function} onProgress 进度回调 (0-1)
+   */
+  async function uploadInChunks(url, blob, onProgress) {
+    const totalChunks = Math.ceil(blob.size / ChunkSize)
+    let uploadedBytes = 0
+
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * ChunkSize
+      const end = Math.min(start + ChunkSize, blob.size)
+      const chunk = blob.slice(start, end)
+
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+
+        xhr.upload.addEventListener('progress', (event) => {
+          if (event.lengthComputable) {
+            onProgress?.((uploadedBytes + event.loaded) / blob.size)
+          }
+        })
+
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            uploadedBytes += chunk.size
+            resolve()
+          } else {
+            reject(new Error(`上传失败: ${xhr.status}`))
+          }
+        })
+
+        xhr.addEventListener('error', () => reject(new Error('网络错误')))
+        xhr.addEventListener('abort', () => reject(new Error('上传已取消')))
+
+        // 设置分块上传请求头
+        xhr.open('PUT', url, true)
+        xhr.setRequestHeader('Content-Type', 'application/octet-stream')
+        xhr.setRequestHeader('Content-Range', `bytes ${start}-${end - 1}/${blob.size}`)
+        xhr.setRequestHeader('X-Chunk-Index', String(i))
+        xhr.send(chunk)
+      })
     }
   }
 

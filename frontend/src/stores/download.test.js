@@ -133,4 +133,44 @@ describe('useDownloadStore', () => {
     expect(store.isDownloading).toBe(false)
     expect(store.isDecrypting).toBe(false)
   })
+
+  // Queue tests
+  it('should add files to download queue', () => {
+    const store = useDownloadStore()
+    const files = [
+      { id: 1, name: 'file1.txt', encryptionKey: 'key1', encryptionNonce: 'nonce1', size: 1024 },
+      { id: 2, name: 'file2.txt', encryptionKey: 'key2', encryptionNonce: 'nonce2', size: 2048 }
+    ]
+
+    store.addToQueue(files)
+
+    expect(store.downloadQueue).toHaveLength(2)
+    expect(store.hasQueueItems).toBe(true)
+  })
+
+  it('should remove file from queue', () => {
+    const store = useDownloadStore()
+    const files = [
+      { id: 1, name: 'file1.txt', encryptionKey: 'key1', encryptionNonce: 'nonce1', size: 1024 },
+      { id: 2, name: 'file2.txt', encryptionKey: 'key2', encryptionNonce: 'nonce2', size: 2048 }
+    ]
+
+    store.addToQueue(files)
+    store.removeFromQueue(1)
+
+    expect(store.downloadQueue).toHaveLength(1)
+  })
+
+  it('should clear download queue', () => {
+    const store = useDownloadStore()
+    const files = [
+      { id: 1, name: 'file1.txt', encryptionKey: 'key1', encryptionNonce: 'nonce1', size: 1024 }
+    ]
+
+    store.addToQueue(files)
+    store.clearQueue()
+
+    expect(store.downloadQueue).toHaveLength(0)
+    expect(store.hasQueueItems).toBe(false)
+  })
 })

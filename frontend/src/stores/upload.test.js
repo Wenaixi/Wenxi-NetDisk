@@ -168,4 +168,31 @@ describe('useUploadStore', () => {
 
     expect(store.queueUploadedCount).toBe(2)
   })
+
+  it('should compute hasQueueItems correctly', () => {
+    const store = useUploadStore()
+    expect(store.hasQueueItems).toBe(false)
+
+    store.addToQueue([{ file: new File(['test'], 'test.txt') }])
+    expect(store.hasQueueItems).toBe(true)
+
+    store.clearQueue()
+    expect(store.hasQueueItems).toBe(false)
+  })
+
+  it('should track upload error on queue item', () => {
+    const store = useUploadStore()
+    const files = [{ file: new File(['test1'], 'test1.txt') }]
+
+    store.addToQueue(files)
+    const itemId = store.uploadQueue[0].id
+
+    store.uploadQueue[0].status = 'error'
+    store.uploadQueue[0].error = 'Upload failed'
+    store.queueErrors.push({ file: 'test1.txt', error: 'Upload failed' })
+
+    const erroredItem = store.uploadQueue.find(i => i.id === itemId)
+    expect(erroredItem.status).toBe('error')
+    expect(erroredItem.error).toBe('Upload failed')
+  })
 })
