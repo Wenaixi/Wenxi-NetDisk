@@ -32,7 +32,19 @@
 
 ## 开发历史
 
-### 2026-04-05 - Handler层成功路径测试 + Mock架构
+### 2026-04-05 - Handler层额外测试 + 覆盖补充
+
+**Handler额外测试 (handler_extra_test.go, 新增20个测试用例):**
+- FileHandler: UpdateFileDescription成功/RenameFile成功/MoveFile成功+移动到根/DeleteFile成功/GetFile成功 (6用例)
+- FolderHandler: DeleteFolder成功 (1用例)
+- RecycleHandler: Restore成功/Delete成功/List成功 (3用例)
+- LanzouHandler: CreateFolder成功/ListFolders成功/CompleteUpload验证 (3用例)
+- ShareHandler: ListShares成功/DeleteShare成功 (2用例)
+- AuthHandler: Login成功(邮箱) (1用例)
+- 额外边界测试: UpdateFileDescription_InvalidIDExtra/RenameFile_MissingNameExtra/MoveFile_InvalidIDExtra
+
+**Go后端测试数: 501 → 513 (净增12个, 全部通过)**
+**总测试数: 766 (513 Go + 253 Vue) 全部通过**
 
 **Handler成功路径测试 (handler_success_test.go, 新增~36个测试用例):**
 - 新增完整的Mock架构: MockUserRepository, MockLanZouTokenRepository, MockShareRepository, MockRecycleBinRepository, MockUploadSessionRepository, MockLanZouClientProvider, MockFileMetadataCreator, MockFileVersionRepository
@@ -647,7 +659,7 @@ references/lanzouyun-disk/
 
 ## 测试统计
 
-### Go后端 (501 tests)
+### Go后端 (513 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | pkg/crypto | 5 | ✅ |
