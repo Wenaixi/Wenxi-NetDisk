@@ -40,7 +40,13 @@
 - 使用 shallowMount 避免 naive-ui 组件渲染问题
 - 剪贴板 API mock (navigator.clipboard.readText)
 
-**Vue 组件测试覆盖总结 (8个组件/页面, 86个测试):**
+**LanZouBrowser组件测试:**
+- 新增 LanZouBrowser.test.js (26个测试用例) - 蓝奏云浏览器页面
+- 测试覆盖: 面包屑导航/文件夹导航/文件下载/分享链接创建/批量删除/选择模式/文件大小格式化/状态获取
+- 使用 vi.hoisted() 解决 lanzouAPI mock 提升问题
+- 使用 shallowMount + naive-ui stubs 避免渲染问题
+
+**Vue 组件测试覆盖总结 (9个组件/页面, 112个测试):**
 - Login(8) / Register(10) - 认证流程
 - AppHeader(8) - 通用头部组件
 - FileDetailModal(17) - 文件详情弹窗
@@ -48,8 +54,9 @@
 - RecycleBin(16) - 回收站页面
 - Sync(16) - 同步资源页面
 - ShareParse(15) - 链接解析页面
+- LanZouBrowser(26) - 蓝奏云浏览器页面
 
-**测试统计: 449 (222 Go + 227 Vue) 全部通过**
+**测试统计: 475 (222 Go + 253 Vue) 全部通过**
 
 ### 2026-04-05 - 文件版本管理 + 缺失API补全
 
@@ -637,6 +644,7 @@ references/lanzouyun-disk/
 | RecycleBin | 16 | ✅ |
 | Sync | 16 | ✅ |
 | ShareParse | 15 | ✅ |
+| LanZouBrowser | 26 | ✅ |
 
 **总测试数: 434 (222 Go + 212 Vue) 全部通过**
 
