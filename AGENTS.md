@@ -23,7 +23,7 @@
 |------|------|------|
 | **后端** | Go + Gin + GORM | 1.21 |
 | **前端** | Vue 3 + Vite + Naive UI + Tailwind CSS 4 | ^3.4 |
-| **数据库** | SQLite (modernc.org/sqlite 纯Go) | - |
+| **数据库** | SQLite (glebarez/sqlite 纯Go) | - |
 | **认证** | JWT | HS256 |
 | **加密** | ChaCha20-Poly1305 | 客户端 |
 | **部署** | VPS | Linux |
@@ -31,6 +31,32 @@
 ---
 
 ## 开发历史
+
+### 2026-04-05 - Share模型完善 + E2E测试框架
+
+**Share模型完善:**
+- Share表添加UserID字段 (独立验证分享所有权, 无需JOIN file表)
+- DeleteShare改为通过UserID直接验证 (简化权限检查)
+- FindByUserID简化为直接按user_id查询 (移除JOIN)
+- CreateShare添加UserID字段
+- 修复share_service_test.go mock数据UserID字段
+
+**认证API修复:**
+- 注册接口: username改为可选, 自动从邮箱前缀生成
+- 登录接口: 支持邮箱或用户名双模式登录
+- auth_service.go Login方法: 根据@符号判断邮箱/用户名查询
+
+**SQLite驱动替换:**
+- gorm.io/driver/sqlite (CGO依赖) → glebarez/sqlite (纯Go无CGO)
+- 添加 DisableForeignKeyConstraintWhenMigrating 解决SQLite temp表FOREIGN KEY列错误
+- 彻底解决CGO/gcc编译依赖问题
+
+**E2E测试框架:**
+- Playwright配置完成 (port:3000, 系统Chrome channel)
+- e2e/auth.spec.js (4个测试用例)
+- e2e/file.spec.js (7个测试用例)
+- e2e/lanzou.spec.js (6个页面访问测试)
+- npm scripts: test:e2e, test:e2e:ui
 
 ### 2026-04-04 - Phase 6 E2E测试框架搭建
 
