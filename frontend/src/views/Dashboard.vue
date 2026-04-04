@@ -29,30 +29,40 @@
         </div>
 
         <div v-else>
-          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            <div
-              v-for="folder in fileStore.folders"
-              :key="folder.id"
-              class="bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]"
-              @dblclick="fileStore.navigateToFolder(folder)"
-            >
-              <div class="flex items-center gap-2">
-                <n-icon size="24" color="#60a5fa"><Folder /></n-icon>
-                <span class="text-white truncate">{{ folder.name }}</span>
+          <!-- 文件夹区域 -->
+          <div v-if="fileStore.folders.length > 0" class="mb-6">
+            <div class="text-gray-400 text-sm mb-3">文件夹</div>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div
+                v-for="folder in fileStore.folders"
+                :key="folder.id"
+                class="bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]"
+                @dblclick="fileStore.navigateToFolder(folder)"
+              >
+                <div class="flex items-center gap-2">
+                  <n-icon size="24" color="#60a5fa"><Folder /></n-icon>
+                  <span class="text-white truncate">{{ folder.name }}</span>
+                </div>
               </div>
             </div>
+          </div>
 
-            <div
-              v-for="file in fileStore.files"
-              :key="file.id"
-              class="bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]"
-              @click="handleFileClick(file)"
-            >
-              <div class="flex items-center gap-2 mb-2">
-                <n-icon size="24" color="#a78bfa"><Document /></n-icon>
-                <span class="text-white truncate">{{ file.name }}</span>
+          <!-- 文件区域 -->
+          <div v-if="fileStore.files.length > 0">
+            <div class="text-gray-400 text-sm mb-3">文件</div>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div
+                v-for="file in fileStore.files"
+                :key="file.id"
+                class="bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]"
+                @click="handleFileClick(file)"
+              >
+                <div class="flex items-center gap-2 mb-2">
+                  <n-icon size="24" color="#a78bfa"><Document /></n-icon>
+                  <span class="text-white truncate">{{ file.name }}</span>
+                </div>
+                <div class="text-gray-500 text-sm">{{ formatSize(file.size) }}</div>
               </div>
-              <div class="text-gray-500 text-sm">{{ formatSize(file.size) }}</div>
             </div>
           </div>
         </div>
