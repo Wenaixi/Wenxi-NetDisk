@@ -218,6 +218,102 @@ func TestAuthService_ValidatePassword(t *testing.T) {
 	})
 }
 
+// TestAuthService_Login tests user login
+func TestAuthService_Login(t *testing.T) {
+	t.Run("should login with email successfully", func(t *testing.T) {
+		repo := newMockUserRepo()
+		jwtManager := jwt.NewJWTManager("testsecret", 1440)
+		svc := NewAuthService(repo, jwtManager)
+
+		hashedPassword, err := crypto.HashPassword("Test123456")
+		if err != nil {
+			t.Fatalf("failed to hash password: %v", err)
+		}
+		repo.users[0].PasswordHash = hashedPassword
+
+		token, err := svc.Login("test@example.com", "Test123456")
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if token == "" {
+			t.Error("expected token, got empty string")
+		}
+	})
+
+	t.Run("should login with username successfully", func(t *testing.T) {
+		repo := newMockUserRepo()
+		jwtManager := jwt.NewJWTManager("testsecret", 1440)
+		svc := NewAuthService(repo, jwtManager)
+
+		hashedPassword, err := crypto.HashPassword("Test123456")
+		if err != nil {
+			t.Fatalf("failed to hash password: %v", err)
+		}
+		repo.users[0].PasswordHash = hashedPassword
+
+		token, err := svc.Login("testuser", "Test123456")
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if token == "" {
+			t.Error("expected token, got empty string")
+		}
+	})
+
+	t.Run("should fail with wrong password", func(t *testing.T) {
+		repo := newMockUserRepo()
+		jwtManager := jwt.NewJWTManager("testsecret", 1440)
+		svc := NewAuthService(repo, jwtManager)
+
+		hashedPassword, err := crypto.HashPassword("CorrectPassword")
+		if err != nil {
+			t.Fatalf("failed to hash password: %v", err)
+		}
+		repo.users[0].PasswordHash = hashedPassword
+
+		token, err := svc.Login("test@example.com", "WrongPassword")
+
+		if err == nil {
+			t.Error("expected invalid credentials error")
+		}
+		if token != "" {
+			t.Error("expected empty token on failed login")
+		}
+	})
+
+	t.Run("should fail with non-existent email", func(t *testing.T) {
+		repo := newMockUserRepo()
+		jwtManager := jwt.NewJWTManager("testsecret", 1440)
+		svc := NewAuthService(repo, jwtManager)
+
+		token, err := svc.Login("nonexistent@example.com", "Test123456")
+
+		if err == nil {
+			t.Error("expected invalid credentials error")
+		}
+		if token != "" {
+			t.Error("expected empty token on failed login")
+		}
+	})
+
+	t.Run("should fail with non-existent username", func(t *testing.T) {
+		repo := newMockUserRepo()
+		jwtManager := jwt.NewJWTManager("testsecret", 1440)
+		svc := NewAuthService(repo, jwtManager)
+
+		token, err := svc.Login("nonexistentuser", "Test123456")
+
+		if err == nil {
+			t.Error("expected invalid credentials error")
+		}
+		if token != "" {
+			t.Error("expected empty token on failed login")
+		}
+	})
+}
+
 // mockFileRepo 模拟文件仓库 (for complete file service test)
 type mockFileRepoComplete struct {
 	files []*model.File
@@ -285,6 +381,26 @@ func (m *mockFileRepoComplete) Update(file *model.File) error {
 	for i, f := range m.files {
 		if f.ID == file.ID {
 			m.files[i] = file
+			return nil
+		}
+	}
+	return errors.New("file not found")
+}
+
+func (m *mockFileRepoComplete) UpdateFileName(id uint, name string) error {
+	for i, f := range m.files {
+		if f.ID == id {
+			m.files[i].Name = name
+			return nil
+		}
+	}
+	return errors.New("file not found")
+}
+
+func (m *mockFileRepoComplete) MoveFile(id uint, folderID *uint) error {
+	for i, f := range m.files {
+		if f.ID == id {
+			m.files[i].FolderID = folderID
 			return nil
 		}
 	}

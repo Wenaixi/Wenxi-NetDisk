@@ -269,3 +269,62 @@ func (m *mockLanzouClientProvider) GetClient(userID uint) (*lanzou.Client, error
 	}
 	return lanzou.NewClient("test-cookie"), nil
 }
+
+// TestLanZouService_CreateShare_NotConnected tests CreateShare when not connected
+func TestLanZouService_CreateShare_NotConnected(t *testing.T) {
+	repo := newMockLanzouTokenRepo()
+	svc := NewLanZouService(repo)
+
+	_, err := svc.CreateShare(1, 123, 0)
+	if err == nil {
+		t.Error("expected error when not connected")
+	}
+	if err != nil && err.Error() != "lanzou not connected" {
+		t.Errorf("expected 'lanzou not connected' error, got '%v'", err)
+	}
+}
+
+// TestLanZouService_CreateShare_ExpiredToken tests CreateShare with expired token
+func TestLanZouService_CreateShare_ExpiredToken(t *testing.T) {
+	repo := newMockLanzouTokenRepo()
+	svc := NewLanZouService(repo)
+
+	repo.tokens[1] = &model.LanZouToken{
+		UserID:    1,
+		Cookie:    "test-cookie",
+		ExpiresAt: time.Now().Add(-24 * time.Hour),
+	}
+
+	_, err := svc.CreateShare(1, 123, 0)
+	if err == nil {
+		t.Error("expected error for expired token")
+	}
+}
+
+// TestLanZouService_GetFileURL_NotConnected tests GetFileURL when not connected
+func TestLanZouService_GetFileURL_NotConnected(t *testing.T) {
+	repo := newMockLanzouTokenRepo()
+	svc := NewLanZouService(repo)
+
+	_, _, err := svc.GetFileURL(1, 123)
+	if err == nil {
+		t.Error("expected error when not connected")
+	}
+}
+
+// TestLanZouService_GetFileURL_ExpiredToken tests GetFileURL with expired token
+func TestLanZouService_GetFileURL_ExpiredToken(t *testing.T) {
+	repo := newMockLanzouTokenRepo()
+	svc := NewLanZouService(repo)
+
+	repo.tokens[1] = &model.LanZouToken{
+		UserID:    1,
+		Cookie:    "test-cookie",
+		ExpiresAt: time.Now().Add(-24 * time.Hour),
+	}
+
+	_, _, err := svc.GetFileURL(1, 123)
+	if err == nil {
+		t.Error("expected error for expired token")
+	}
+}

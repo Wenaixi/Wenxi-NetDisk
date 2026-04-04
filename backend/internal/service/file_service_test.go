@@ -314,3 +314,118 @@ func TestFileService_UpdateFileDescription(t *testing.T) {
 		}
 	})
 }
+
+// TestFileService_UpdateFileName tests updating file name
+func TestFileService_UpdateFileName(t *testing.T) {
+	t.Run("should update name for owner", func(t *testing.T) {
+		repo := newMockFileRepo()
+		svc := NewFileService(repo)
+
+		file, err := svc.UpdateFileName(1, 1, "renamed.pdf")
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if file == nil {
+			t.Error("expected file, got nil")
+			return
+		}
+		if file.Name != "renamed.pdf" {
+			t.Errorf("expected name 'renamed.pdf', got '%s'", file.Name)
+		}
+	})
+
+	t.Run("should deny update for non-owner", func(t *testing.T) {
+		repo := newMockFileRepo()
+		svc := NewFileService(repo)
+
+		file, err := svc.UpdateFileName(999, 1, "renamed.pdf")
+
+		if err == nil {
+			t.Error("expected access denied error")
+		}
+		if file != nil {
+			t.Error("expected nil file for non-owner")
+		}
+	})
+
+	t.Run("should return error for non-existent file", func(t *testing.T) {
+		repo := newMockFileRepo()
+		svc := NewFileService(repo)
+
+		file, err := svc.UpdateFileName(1, 999, "renamed.pdf")
+
+		if err == nil {
+			t.Error("expected error for non-existent file")
+		}
+		if file != nil {
+			t.Error("expected nil file for non-existent file")
+		}
+	})
+}
+
+// TestFileService_MoveFile tests moving files to folders
+func TestFileService_MoveFile(t *testing.T) {
+	t.Run("should move file to new folder for owner", func(t *testing.T) {
+		repo := newMockFileRepo()
+		svc := NewFileService(repo)
+
+		folderID := uint(5)
+		file, err := svc.MoveFile(1, 1, &folderID)
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if file == nil {
+			t.Error("expected file, got nil")
+			return
+		}
+		if file.FolderID == nil || *file.FolderID != 5 {
+			t.Errorf("expected folder ID 5, got %v", file.FolderID)
+		}
+	})
+
+	t.Run("should move file to root (nil folder)", func(t *testing.T) {
+		repo := newMockFileRepo()
+		svc := NewFileService(repo)
+
+		file, err := svc.MoveFile(1, 1, nil)
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if file == nil {
+			t.Error("expected file, got nil")
+		}
+	})
+
+	t.Run("should deny move for non-owner", func(t *testing.T) {
+		repo := newMockFileRepo()
+		svc := NewFileService(repo)
+
+		folderID := uint(5)
+		file, err := svc.MoveFile(999, 1, &folderID)
+
+		if err == nil {
+			t.Error("expected access denied error")
+		}
+		if file != nil {
+			t.Error("expected nil file for non-owner")
+		}
+	})
+
+	t.Run("should return error for non-existent file", func(t *testing.T) {
+		repo := newMockFileRepo()
+		svc := NewFileService(repo)
+
+		folderID := uint(5)
+		file, err := svc.MoveFile(1, 999, &folderID)
+
+		if err == nil {
+			t.Error("expected error for non-existent file")
+		}
+		if file != nil {
+			t.Error("expected nil file for non-existent file")
+		}
+	})
+}

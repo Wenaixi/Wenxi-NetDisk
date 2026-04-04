@@ -32,6 +32,19 @@
 
 ## 开发历史
 
+### 2026-04-05 - Service层深度测试 + 覆盖率提升
+
+**AuthService测试增强 (5个用例):**
+- Login: 邮箱登录/用户名登录/错误密码/不存在邮箱/不存在用户名 (覆盖率从0%→100%)
+
+**FileService测试增强 (8个用例):**
+- UpdateFileName: 所有者重命名/非所有者拒绝/文件不存在
+- MoveFile: 移动到新文件夹/移动到根目录/非所有者拒绝/文件不存在 (覆盖率从0%→100%)
+
+**Service层覆盖率: 68.9% → 76.0%**
+
+**总测试数: 410 (395 Go + 253 Vue → 648) 全部通过**
+
 ### 2026-04-05 - Handler层全面测试 + FileHandler增强
 
 **ShareHandler测试 (12个用例):**
@@ -58,7 +71,7 @@
 - CompleteUpload: 浮点/负数session_id
 - UploadStatus: 浮点/负数session_id
 
-**总测试数: 640 (387 Go + 253 Vue) 全部通过**
+**总测试数: 655 (402 Go + 253 Vue) 全部通过**
 
 ### 2026-04-05 - ShareParse组件测试 + 测试系统全面完善
 
@@ -621,11 +634,11 @@ references/lanzouyun-disk/
 
 **测试统计更新: 449 (222 Go + 227 Vue) 全部通过**
 
-**总测试数: 640 (387 Go + 253 Vue) 全部通过**
+**总测试数: 655 (402 Go + 253 Vue) 全部通过**
 
 ## 测试统计
 
-### Go后端 (387 tests)
+### Go后端 (402 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | pkg/crypto | 5 | ✅ |
@@ -633,8 +646,8 @@ references/lanzouyun-disk/
 | pkg/lanzou | 6 | ✅ |
 | pkg/response | 15 (5结构+10HTTP) | ✅ |
 | pkg/middleware | 20 (10Auth+4Logger+6CORS) | ✅ |
-| service/auth | 8 | ✅ |
-| service/file | 12 | ✅ |
+| service/auth | 13 (+5 Login) | ✅ |
+| service/file | 20 (+8 UpdateFileName/MoveFile) | ✅ |
 | service/folder | 22 | ✅ |
 | service/lanzou | 9 | ✅ |
 | service/upload | 6 | ✅ |
