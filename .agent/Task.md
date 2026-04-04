@@ -210,20 +210,22 @@
 - [x] 组件测试 - LanZouBrowser (26)
 
 ### Task 6.3: Handler层测试 ✅
-- [x] AuthHandler: Register/Login验证 (8) + GetCurrentUser成功路径 (+9)
-- [x] FileHandler: GetFile/DeleteFile/MoveFile/UpdateFileDescription/RenameFile/CreateFileMetadata (19+6)
-- [x] FolderHandler: GetFolder/DeleteFolder/UpdateFolder/MoveFolder/CreateFolder/ListFolders/UpdateFolderDescription (21+1)
-- [x] RecycleHandler: Restore/Delete/Clear/List (11+3)
+- [x] AuthHandler: Register/Login验证 (8) + GetCurrentUser成功路径 (+9) + Register成功/NotFound (+3)
+- [x] FileHandler: GetFile/DeleteFile/MoveFile/UpdateFileDescription/RenameFile/CreateFileMetadata (19+6) + BadID处理 (+4)
+- [x] FolderHandler: GetFolder/DeleteFolder/UpdateFolder/MoveFolder/CreateFolder/ListFolders/UpdateFolderDescription (21+1) + 全面成功路径 (+10)
+- [x] RecycleHandler: Restore/Delete/Clear/List (11+3) + Clear验证/List完整 (+2)
 - [x] DownloadHandler: GetDownloadURL (6+2)
-- [x] LanZouHandler: Connect/CreateFolder/InitUpload/CompleteUpload/Status/CreateShare/GetFileURL (9+15)
-- [x] ShareHandler: CreateShare/GetShare/ValidateShare/DeleteShare/CreateShareViaBody/ListShares (12+4)
-- [x] ShareParseHandler: ParseShare/GetShareDownloadURL/ValidateShareURL (6+3)
-- [x] UploadHandler: ListVersions/RestoreVersion/GetUploadURL/UploadFile (11+2)
+- [x] LanZouHandler: Connect/CreateFolder/InitUpload/CompleteUpload/Status/CreateShare/GetFileURL (9+15) + Disconnect成功/Connect验证/BadID (+4)
+- [x] ShareHandler: CreateShare/GetShare/ValidateShare/DeleteShare/CreateShareViaBody/ListShares (12+4) + ValidateShare全面/GetShare成功/DeleteShare BadID (+6)
+- [x] ShareParseHandler: ParseShare/GetShareDownloadURL/ValidateShareURL (6+3) + 成功路径验证 (+4)
+- [x] UploadHandler: ListVersions/RestoreVersion/GetUploadURL/UploadFile (11+2) + RestoreVersion BadID (+1)
 - [x] Handler成功路径测试 (36用例, Mock架构)
 - [x] Handler额外测试 (20用例, File/Folder/Recycle/Share/Auth)
+- [x] Handler Round3测试 (58用例, 完整成功路径)
 - [x] Handler构造器测试 (9用例)
 - [x] guessMimeType测试 (16用例)
 - [x] Handler响应格式验证 (1)
+- [x] Handler覆盖率 72.9% → 80.8% (总314用例)
 
 ### Task 6.4: E2E 测试 🔄
 - [x] Playwright 配置 (playwright.config.js)
@@ -249,7 +251,7 @@
 | Phase 3: Vue 前端 | 5 | 5 | 100% |
 | Phase 4: 蓝奏云对接 | 3 | 3 | 100% |
 | Phase 5: 功能完善 | 7 | 7 | 100% |
-| Phase 6: 测试系统 | 5 | 4 | 98% |
+| Phase 6: 测试系统 | 5 | 4.5 | 99% |
 
 ---
 

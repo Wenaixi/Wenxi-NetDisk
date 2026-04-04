@@ -32,6 +32,28 @@
 
 ## 开发历史
 
+### 2026-04-05 - Handler Round3测试 (覆盖率80.8%)
+
+**Handler Round3测试 (handler_round3_test.go, 新增58个测试用例, 总计314):**
+- AuthHandler: Register成功路径(邮箱派生用户名/带用户名)、GetCurrentUser不存在 (3用例)
+- ShareHandler: ValidateShare(密码正确/错误/无效token/空密码)、GetShare成功路径、DeleteShare无效ID (6用例)
+- FolderHandler: CreateFolder/GetFolder(成功/NotFound/BadID)/UpdateFolder/UpdateFolderDescription/MoveFolder(成功/到根目录)/ListFolders带parentID (10用例)
+- ShareParseHandler: GetShareDownloadURL(成功/缺URL)、ValidateShareURL(成功/缺URL) (4用例)
+- LanzouHandler: Disconnect成功、Connect缺cookie、UploadStatus/CompleteUpload无效ID (4用例)
+- RecycleHandler: Clear验证、List完整路径 (2用例)
+- FileHandler: DeleteFile/MoveFile/RenameFile BadID、ListFiles多文件 (4用例)
+- UploadHandler: RestoreVersion无效versionID (1用例)
+- mock实现: mockFolderRepoForHandler(完整FolderRepository接口)、mockShareRepoForValidate(完整ShareRepository接口)、mockFileRepoForValidate
+
+**Handler覆盖率: 72.9% → 80.8% (提升7.9%)**
+**AuthHandler.Register: 36.4% → 81.8%**
+**ShareHandler.ValidateShare: 35.7% → 80%+**
+**FolderHandler CreateFolder: 54.5% → 81.8%**
+**FolderHandler GetFolder: 54.5% → 81.8%**
+**FolderHandler UpdateFolder: 52.0% → 68.0%**
+
+**总测试数: ~314 (Go Handler层)**
+
 ### 2026-04-05 - Handler层额外测试 + 覆盖补充
 
 **Handler额外测试 (handler_extra_test.go, 新增20个测试用例):**
