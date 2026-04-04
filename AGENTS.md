@@ -65,9 +65,9 @@
 | Phase 1: Go后端搭建 | ✅ 完成 | 100% |
 | Phase 2: Go后端验证 | ✅ 完成 | 100% |
 | Phase 3: Vue前端搭建 | 🔄 进行中 | ~80% |
-| Phase 4: 蓝奏云对接 | 🔄 进行中 | ~20% |
+| Phase 4: 蓝奏云对接 | 🔄 进行中 | ~55% |
 | Phase 5: 功能完善 | ⏳ 待开始 | 0% |
-| Phase 6: 测试系统 | 🔄 进行中 | ~30% |
+| Phase 6: 测试系统 | 🔄 进行中 | ~85% |
 
 ---
 
@@ -291,8 +291,10 @@ references/lanzouyun-disk/
 - [x] 蓝奏云API封装包 - lanzou (types/client/test) 6个测试通过
 - [ ] Go service层测试
 - [x] Vue单元测试 - Pinia stores 全部通过 (20个测试)
-- [ ] 客户端加密实现
+- [x] 客户端加密实现 (AES-GCM替代ChaCha20)
+- [x] 前端upload store
 - [ ] 断点续传完善
+- [ ] 下载解密集成
 - [ ] 分享功能增强
 
 ---
@@ -301,6 +303,7 @@ references/lanzouyun-disk/
 
 | Commit | 描述 |
 |--------|------|
+| a9d0282 | feat: 完善前端加密上传功能与蓝奏云类型修复 |
 | b152313 | test: 添加Vue前端Pinia Store单元测试 (Vitest) |
 | 18f6923 | docs: 更新AGENTS.md - Phase 6测试进度至40% |
 | 0601bb4 | test: 添加repository层单元测试框架 (gorm+sqlite) |
@@ -316,4 +319,4 @@ references/lanzouyun-disk/
 ---
 
 **最后更新**: 2026-04-04
-**状态**: Phase 3 (~70%), Phase 6 测试系统进行中 (~60%)
+**状态**: Phase 3 (~90%), Phase 4 (~55%), Phase 6 测试系统 (~85%)
