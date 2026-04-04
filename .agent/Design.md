@@ -395,10 +395,11 @@ RecycleFolderRepo         - 回收站用文件夹仓库 (recycle_service)
 | Store | shareParse | 16 | ✅ |
 | Utils | crypto | 4 | ✅ |
 | Utils | fileSplit | 22 | ✅ |
+| Component | FileDetailModal | 17 | ✅ |
 | E2E | Playwright | 15 | ⏭️ |
 
 ---
 
 **文档版本**: 6.0.0
 **最后更新**: 2026-04-05
-**状态**: Phase 6 完成, 测试 324 全部通过 (186 Go + 138 Vue)
+**状态**: Phase 6 完成, 测试 344 全部通过 (202 Go + 142 Vue)

@@ -198,7 +198,9 @@
 - [x] Store 测试 - shareParse (16)
 - [x] Crypto 工具测试 (4)
 - [x] fileSplit 工具测试 (22)
-- [ ] 组件测试 (Vitest) - 待实现
+- [x] 组件测试 - FileDetailModal (17) ✅
+- [ ] 组件测试 - AppHeader (待实现)
+- [ ] 组件测试 - 其他组件 (待实现)
 
 ### Task 6.3: E2E 测试 🔄
 - [x] Playwright 配置 (playwright.config.js)
