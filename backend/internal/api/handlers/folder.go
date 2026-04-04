@@ -94,29 +94,35 @@ func (h *FolderHandler) UpdateFolder(c *gin.Context) {
 	}
 
 	var req struct {
-		Name        string `json:"name" binding:"required"`
-		Description string `json:"description"`
+		Name        string `json:"name"`
+		Description *string `json:"description"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
 		return
 	}
 
-	folder, err := h.folderSvc.UpdateFolder(uid, uint(folderID), req.Name)
-	if err != nil {
-		response.InternalError(c, err.Error())
-		return
-	}
-
-	if req.Description != "" {
-		folder, err = h.folderSvc.UpdateFolderDescription(uid, uint(folderID), req.Description)
+	// 更新名称
+	if req.Name != "" {
+		folder, err := h.folderSvc.UpdateFolder(uid, uint(folderID), req.Name)
 		if err != nil {
 			response.InternalError(c, err.Error())
 			return
 		}
+		response.Success(c, folder)
 	}
 
-	response.Success(c, folder)
+	// 更新描述
+	if req.Description != nil {
+		folder, err := h.folderSvc.UpdateFolderDescription(uid, uint(folderID), *req.Description)
+		if err != nil {
+			response.InternalError(c, err.Error())
+			return
+		}
+		response.Success(c, folder)
+	}
+
+	response.BadRequest(c, "name or description is required")
 }
 
 // DeleteFolder 删除文件夹

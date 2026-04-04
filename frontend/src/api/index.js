@@ -37,7 +37,7 @@ export const fileAPI = {
   }),
   getUploadUrl: (data) => api.post('/files/upload-url', data),
   delete: (id) => api.delete(`/files/${id}`),
-  rename: (id, name) => api.put(`/files/${id}/rename`, { name }),
+  rename: (id, name) => api.put(`/files/${id}`, { name }),
   move: (id, folderId) => api.put(`/files/${id}/move`, { folder_id: folderId }),
   updateDescription: (id, description) => api.put(`/files/${id}/description`, { description }),
   getVersions: (id) => api.get(`/files/${id}/versions`),

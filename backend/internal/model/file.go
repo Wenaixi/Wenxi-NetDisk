@@ -7,6 +7,7 @@ import (
 type File struct {
 	ID              uint      `gorm:"primaryKey" json:"id"`
 	UserID          uint      `gorm:"not null;index" json:"user_id"`
+	FolderID        *uint     `gorm:"index" json:"folder_id"`
 	Name            string    `gorm:"size:255;not null" json:"name"`
 	Size            int64     `gorm:"not null" json:"size"`
 	LanZouFileID    string    `gorm:"size:100" json:"lanzou_file_id"`

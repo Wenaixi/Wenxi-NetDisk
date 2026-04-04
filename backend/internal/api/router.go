@@ -9,6 +9,7 @@ import (
 	"github.com/wenaixi/wenxi-cloud/backend/internal/repository"
 	"github.com/wenaixi/wenxi-cloud/backend/internal/service"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func SetupRouter(cfg *config.Config) *gin.Engine {
@@ -21,14 +22,17 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	// JWT Manager
 	jwtManager := jwt.NewJWTManager(cfg.JWTsecret, cfg.JWTExpire)
 
+	// Initialize DB (called in main.go, but we accept it here)
+	db := getDB()
+
 	// Repositories
-	userRepo := repository.NewUserRepository(nil) // Will be set after DB init
-	fileRepo := repository.NewFileRepository(nil)
-	shareRepo := repository.NewShareRepository(nil)
-	lanzouRepo := repository.NewLanZouTokenRepository(nil)
-	uploadRepo := repository.NewUploadSessionRepository(nil)
-	folderRepo := repository.NewFolderRepository(nil)
-	recycleRepo := repository.NewRecycleBinRepository(nil)
+	userRepo := repository.NewUserRepository(db)
+	fileRepo := repository.NewFileRepository(db)
+	shareRepo := repository.NewShareRepository(db)
+	lanzouRepo := repository.NewLanZouTokenRepository(db)
+	uploadRepo := repository.NewUploadSessionRepository(db)
+	folderRepo := repository.NewFolderRepository(db)
+	recycleRepo := repository.NewRecycleBinRepository(db)
 
 	// Services
 	authSvc := service.NewAuthService(userRepo, jwtManager)
@@ -72,6 +76,8 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			files.GET("", fileHandler.ListFiles)
 			files.POST("", fileHandler.CreateFileMetadata)
 			files.GET("/:id", fileHandler.GetFile)
+			files.PUT("/:id", fileHandler.RenameFile)
+			files.PUT("/:id/move", fileHandler.MoveFile)
 			files.PUT("/:id/description", fileHandler.UpdateFileDescription)
 			files.DELETE("/:id", fileHandler.DeleteFile)
 			files.POST("/:id/share", shareHandler.CreateShare)
@@ -138,4 +144,15 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	}
 
 	return r
+}
+
+// Package-level DB variable, set by main.go
+var globalDB *gorm.DB
+
+func SetDB(db *gorm.DB) {
+	globalDB = db
+}
+
+func getDB() *gorm.DB {
+	return globalDB
 }

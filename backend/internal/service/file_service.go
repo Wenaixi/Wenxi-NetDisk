@@ -107,3 +107,39 @@ func (s *FileService) UpdateFileDescription(userID, fileID uint, description str
 
 	return file, nil
 }
+
+// UpdateFileName 更新文件名
+func (s *FileService) UpdateFileName(userID, fileID uint, name string) (*model.File, error) {
+	file, err := s.fileRepo.FindByID(fileID)
+	if err != nil {
+		return nil, err
+	}
+	if file.UserID != userID {
+		return nil, errors.New("access denied")
+	}
+
+	file.Name = name
+	if err := s.fileRepo.Update(file); err != nil {
+		return nil, err
+	}
+
+	return file, nil
+}
+
+// MoveFile 移动文件到指定文件夹
+func (s *FileService) MoveFile(userID, fileID uint, folderID *uint) (*model.File, error) {
+	file, err := s.fileRepo.FindByID(fileID)
+	if err != nil {
+		return nil, err
+	}
+	if file.UserID != userID {
+		return nil, errors.New("access denied")
+	}
+
+	file.FolderID = folderID
+	if err := s.fileRepo.Update(file); err != nil {
+		return nil, err
+	}
+
+	return file, nil
+}

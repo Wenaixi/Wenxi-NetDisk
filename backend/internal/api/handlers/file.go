@@ -110,3 +110,57 @@ func (h *FileHandler) UpdateFileDescription(c *gin.Context) {
 
 	response.Success(c, file)
 }
+
+func (h *FileHandler) RenameFile(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	fileID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		response.BadRequest(c, "invalid file id")
+		return
+	}
+
+	var req struct {
+		Name string `json:"name" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	file, err := h.fileSvc.UpdateFileName(uid, uint(fileID), req.Name)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, file)
+}
+
+func (h *FileHandler) MoveFile(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	fileID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		response.BadRequest(c, "invalid file id")
+		return
+	}
+
+	var req struct {
+		FolderID *uint `json:"folder_id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	file, err := h.fileSvc.MoveFile(uid, uint(fileID), req.FolderID)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, file)
+}
