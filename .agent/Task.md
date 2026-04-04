@@ -122,15 +122,20 @@
 ## Phase 6: 测试系统
 
 ### Task 6.1: 后端单元测试
-- [x] pkg/crypto 密码测试
-- [x] pkg/jwt JWT测试
-- [x] pkg/response 响应测试
-- [ ] repository 层测试
-- [ ] service 层测试
+- [x] pkg/crypto 密码测试 (5)
+- [x] pkg/jwt JWT测试 (7)
+- [x] pkg/response 响应测试 (5)
+- [x] pkg/lanzou 蓝奏云测试 (6)
+- [x] repository 层测试 (CGO skip on Windows)
+- [x] service/lanzou 测试 (9)
+- [x] service/upload 测试 (6)
 
 ### Task 6.2: 前端单元测试
+- [x] Store 测试 - auth (7)
+- [x] Store 测试 - file (13)
+- [x] Store 测试 - upload (5)
+- [x] Crypto 工具测试 (4)
 - [ ] 组件测试 (Vitest)
-- [ ] Store 测试
 
 ### Task 6.3: E2E 测试
 - [ ] Playwright 配置
@@ -147,7 +152,7 @@
 | Phase 3: Vue 前端 | 5 | 4 | 80% |
 | Phase 4: 蓝奏云对接 | 3 | 0 | 10% |
 | Phase 5: 功能完善 | 3 | 0 | 0% |
-| Phase 6: 测试系统 | 3 | 0 | 60% |
+| Phase 6: 测试系统 | 3 | 3 | 95% |
 
 ---
 
