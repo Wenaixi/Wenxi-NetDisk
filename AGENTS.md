@@ -65,7 +65,7 @@
 | Phase 1: Go后端搭建 | ✅ 完成 | 100% |
 | Phase 2: Go后端验证 | ✅ 完成 | 100% |
 | Phase 3: Vue前端搭建 | 🔄 进行中 | ~70% |
-| Phase 4: 蓝奏云对接 | ⏳ 待开始 | 0% |
+| Phase 4: 蓝奏云对接 | 🔄 进行中 | ~10% |
 | Phase 5: 功能完善 | ⏳ 待开始 | 0% |
 | Phase 6: 测试系统 | 🔄 进行中 | ~30% |
 
@@ -125,6 +125,8 @@ wenxi-cloud/
 │   ├── Requirement.md              # 需求规范
 │   ├── Design.md                    # 架构设计
 │   └── Task.md                     # 任务列表
+├── references/                       # 参考项目
+│   └── lanzouyun-disk/             # 蓝奏云桌面端参考 (Electron+React)
 └── AGENTS.md                       # 项目记忆
 ```
 
@@ -192,6 +194,56 @@ upload_sessions (id, user_id, file_name, file_size, file_hash,
 | POST | / | 创建分享 | ✅ |
 | GET | /:token | 获取分享 | ✅ |
 | DELETE | /:id | 删除分享 | ✅ |
+
+---
+
+## 蓝奏云API设计 (参考 lanzouyun-disk)
+
+### 核心API (基于Electron桌面端逆向分析)
+
+| 功能 | API端点 | 方法 | 参数 |
+|------|---------|------|------|
+| 列出文件 | `doupload.php` | POST | task=5, folder_id, pg |
+| 列出文件夹 | `doupload.php` | POST | task=47, folder_id |
+| 创建文件夹 | `doupload.php` | POST | task=2, parent_id, folder_name |
+| 文件详情 | `doupload.php` | POST | task=22, file_id |
+| 文件夹详情 | `doupload.php` | POST | task=18, folder_id |
+| 删除 | `doupload.php` | POST | task=6/46 (文件/文件夹) |
+| 重命名 | `doupload.php` | POST | task=14, file_id/folder_id, name |
+| 移动 | `doupload.php` | POST | task=15/48, file_id/folder_id, folder_id |
+| 回收站 | `doupload.php` | POST | task=46 |
+| 分享 | `doupload.php` | POST | task=39, file_id/folder_id |
+| 下载(无密码) | 解析HTML iframe | GET | url |
+| 下载(有密码) | 解析HTML #passwddiv | POST | ajaxData |
+
+### 参考项目结构
+
+```
+references/lanzouyun-disk/
+├── src/common/
+│   ├── http.ts              # HTTP客户端 (got + cookie jar)
+│   ├── cookie.ts            # Cookie管理
+│   ├── core/
+│   │   ├── ls.ts           # 列出文件/文件夹
+│   │   ├── mkdir.ts        # 创建文件夹
+│   │   ├── download.ts      # 下载链接解析
+│   │   ├── detail.ts       # 文件/文件夹详情
+│   │   ├── edit.ts         # 编辑
+│   │   ├── mv.ts           # 移动
+│   │   ├── rm.ts           # 删除
+│   │   ├── rename.ts       # 重命名
+│   │   ├── matcher.ts      # HTML解析器
+│   │   └── recycle.ts      # 回收站
+│   └── util.ts             # 工具函数
+```
+
+### 蓝奏云API特点
+
+1. **无官方API** - 基于Web页面逆向分析
+2. **Cookie认证** - 登录状态通过Cookie维持
+3. **HTML解析** - 使用cheerio解析页面获取数据
+4. **分页处理** - 文件列表需循环请求
+5. ** Referer验证** - 请求需携带正确Referer头
 
 ---
 
