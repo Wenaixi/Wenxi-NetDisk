@@ -6,14 +6,20 @@ import (
 
 	"github.com/wenaixi/wenxi-cloud/backend/internal/model"
 	"github.com/wenaixi/wenxi-cloud/backend/internal/pkg/lanzou"
-	"github.com/wenaixi/wenxi-cloud/backend/internal/repository"
 )
 
-type LanZouService struct {
-	tokenRepo *repository.LanZouTokenRepository
+// LanZouTokenRepository 蓝奏云token仓库接口
+type LanZouTokenRepository interface {
+	Upsert(token *model.LanZouToken) error
+	FindByUserID(userID uint) (*model.LanZouToken, error)
+	DeleteByUserID(userID uint) error
 }
 
-func NewLanZouService(tokenRepo *repository.LanZouTokenRepository) *LanZouService {
+type LanZouService struct {
+	tokenRepo LanZouTokenRepository
+}
+
+func NewLanZouService(tokenRepo LanZouTokenRepository) *LanZouService {
 	return &LanZouService{tokenRepo: tokenRepo}
 }
 
