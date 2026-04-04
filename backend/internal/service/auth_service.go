@@ -2,19 +2,29 @@ package service
 
 import (
 	"errors"
+
 	"github.com/wenaixi/wenxi-cloud/backend/internal/model"
-	"github.com/wenaixi/wenxi-cloud/backend/internal/repository"
 	"github.com/wenaixi/wenxi-cloud/backend/internal/pkg/crypto"
 	"github.com/wenaixi/wenxi-cloud/backend/internal/pkg/jwt"
 	"gorm.io/gorm"
 )
 
+// UserRepository 用户仓库接口
+type UserRepository interface {
+	Create(user *model.User) error
+	FindByID(id uint) (*model.User, error)
+	FindByUsername(username string) (*model.User, error)
+	FindByEmail(email string) (*model.User, error)
+	Update(user *model.User) error
+	Delete(id uint) error
+}
+
 type AuthService struct {
-	userRepo   *repository.UserRepository
+	userRepo   UserRepository
 	jwtManager *jwt.JWTManager
 }
 
-func NewAuthService(userRepo *repository.UserRepository, jwtManager *jwt.JWTManager) *AuthService {
+func NewAuthService(userRepo UserRepository, jwtManager *jwt.JWTManager) *AuthService {
 	return &AuthService{
 		userRepo:   userRepo,
 		jwtManager: jwtManager,
