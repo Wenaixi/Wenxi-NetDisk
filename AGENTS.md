@@ -65,7 +65,7 @@
 | Phase 1: Go后端搭建 | ✅ 完成 | 100% |
 | Phase 2: Go后端验证 | ✅ 完成 | 100% |
 | Phase 3: Vue前端搭建 | 🔄 进行中 | ~70% |
-| Phase 4: 蓝奏云对接 | 🔄 进行中 | ~10% |
+| Phase 4: 蓝奏云对接 | 🔄 进行中 | ~20% |
 | Phase 5: 功能完善 | ⏳ 待开始 | 0% |
 | Phase 6: 测试系统 | 🔄 进行中 | ~30% |
 
@@ -101,6 +101,7 @@ wenxi-cloud/
 │   │       ├── crypto/password.go   # bcrypt
 │   │       ├── database/sqlite.go   # 纯Go SQLite
 │   │       ├── jwt/jwt.go          # JWT工具
+│   │       ├── lanzou/             # 蓝奏云API封装
 │   │       ├── middleware/          # 中间件
 │   │       └── response/           # 统一响应
 │   ├── go.mod / go.sum
@@ -284,9 +285,9 @@ references/lanzouyun-disk/
 - [x] Vue前端构建
 - [x] Go单元测试 - pkg (crypto, jwt, response) 全部通过
 - [x] Go repository测试 - 框架完成 (CGO需在Linux/CI环境运行)
+- [x] 蓝奏云API封装包 - lanzou (types/client/test) 6个测试通过
 - [ ] Go service层测试
 - [x] Vue单元测试 - Pinia stores 全部通过 (20个测试)
-- [ ] 蓝奏云API集成
 - [ ] 客户端加密实现
 - [ ] 断点续传完善
 - [ ] 分享功能增强
