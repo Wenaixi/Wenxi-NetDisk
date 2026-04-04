@@ -32,18 +32,27 @@
 
 ## 开发历史
 
-### 2026-04-05 - Service层深度测试 + 覆盖率提升
+### 2026-04-05 - Handler层成功路径测试 + Mock架构
 
-**AuthService测试增强 (5个用例):**
-- Login: 邮箱登录/用户名登录/错误密码/不存在邮箱/不存在用户名 (覆盖率从0%→100%)
+**Handler成功路径测试 (handler_success_test.go, 新增~36个测试用例):**
+- 新增完整的Mock架构: MockUserRepository, MockLanZouTokenRepository, MockShareRepository, MockRecycleBinRepository, MockUploadSessionRepository, MockLanZouClientProvider, MockFileMetadataCreator, MockFileVersionRepository
+- AuthHandler.GetCurrentUser: Mock GetUserByID返回用户, 验证响应格式 (status 200 + 正确字段)
+- LanZouHandler.Connect: Mock SaveToken成功, 验证"connected"状态
+- LanZouHandler.GetStatus: 已连接/未连接两种场景, 验证connected字段
+- LanZouHandler.Disconnect: Mock DeleteToken成功, 验证"disconnected"状态
+- LanZouHandler.InitializeUpload: Mock IsConnected + InitializeUpload, 验证session_id/upload_url返回
+- ShareHandler.GetShare: Mock GetShareWithFile, 验证文件信息和requires_password
+- RecycleHandler.Clear: Mock ClearAll成功, 验证"cleared"状态
+- UploadHandler.ListVersions: Mock ListVersions返回空列表, 验证HTTP 200
+- UploadHandler.GetUploadURL: 使用mocked FileService, 验证upload_url包含pc.woozooo.com + file_id
+- guessMimeType: 16种文件扩展名的MIME类型映射测试 (.txt/.pdf/.doc/.jpg/.png/.zip等)
 
-**FileService测试增强 (8个用例):**
-- UpdateFileName: 所有者重命名/非所有者拒绝/文件不存在
-- MoveFile: 移动到新文件夹/移动到根目录/非所有者拒绝/文件不存在 (覆盖率从0%→100%)
+**Handler层测试策略升级:**
+- 从"仅测试验证失败路径"升级为"同时测试成功路径"
+- 使用mock服务替代nil依赖, 消除panic-based测试
+- 引入assertJSONResponse辅助函数, 统一响应格式验证
 
-**Service层覆盖率: 68.9% → 76.0%**
-
-**总测试数: 410 (395 Go + 253 Vue → 648) 全部通过**
+**Go后端测试数: 465 → 501 (净增36个, 全部通过)**
 
 ### 2026-04-05 - Handler层全面测试 + FileHandler增强
 
@@ -71,7 +80,7 @@
 - CompleteUpload: 浮点/负数session_id
 - UploadStatus: 浮点/负数session_id
 
-**总测试数: 655 (402 Go + 253 Vue) 全部通过**
+**总测试数: 754 (501 Go + 253 Vue) 全部通过**
 
 ### 2026-04-05 - ShareParse组件测试 + 测试系统全面完善
 
@@ -638,7 +647,7 @@ references/lanzouyun-disk/
 
 ## 测试统计
 
-### Go后端 (402 tests)
+### Go后端 (501 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | pkg/crypto | 5 | ✅ |
@@ -657,15 +666,16 @@ references/lanzouyun-disk/
 | service/recycle | 11 | ✅ |
 | service/file_version | 18 | ✅ |
 | repository | 10 | ⏭️ (skip CGO) |
-| handlers/auth | 8 | ✅ |
-| handlers/file | 19 | ✅ |
+| handlers/auth | 18 (+10 GetCurrentUser success/Register/Login/构造器) | ✅ |
+| handlers/file | 21 (+2 ListFiles/CreateFileMetadata) | ✅ |
 | handlers/folder | 21 | ✅ |
-| handlers/recycle | 11 | ✅ |
-| handlers/download | 6 | ✅ |
-| handlers/lanzou | 9 | ✅ |
-| handlers/share | 12 | ✅ |
-| handlers/share_parse | 6 | ✅ |
-| handlers/upload | 11 | ✅ |
+| handlers/recycle | 14 (+3 List/Clear success) | ✅ |
+| handlers/download | 8 (+2 GetDownloadURL/构造器) | ✅ |
+| handlers/lanzou | 30 (+21 全端点验证+成功路径) | ✅ |
+| handlers/share | 15 (+3 GetShare/ListShares success) | ✅ |
+| handlers/share_parse | 9 (+3 验证测试) | ✅ |
+| handlers/upload | 18 (+7 ListVersions/GetUploadURL/guessMimeType success) | ✅ |
+| handlers/common | 26 (构造器/响应格式) | ✅ |
 
 ### Vue前端 (253 tests)
 | 模块 | 测试数 | 状态 |
