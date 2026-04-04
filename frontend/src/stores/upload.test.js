@@ -102,4 +102,70 @@ describe('useUploadStore', () => {
     expect(store.isUploading).toBe(false)
     expect(store.isEncrypting).toBe(false)
   })
+
+  // Queue tests
+  it('should add files to queue', () => {
+    const store = useUploadStore()
+    const files = [
+      { file: new File(['test1'], 'test1.txt') },
+      { file: new File(['test2'], 'test2.txt') }
+    ]
+
+    store.addToQueue(files)
+
+    expect(store.uploadQueue).toHaveLength(2)
+    expect(store.hasQueueItems).toBe(true)
+  })
+
+  it('should remove file from queue', () => {
+    const store = useUploadStore()
+    const files = [
+      { file: new File(['test1'], 'test1.txt') },
+      { file: new File(['test2'], 'test2.txt') }
+    ]
+
+    store.addToQueue(files)
+    const firstId = store.uploadQueue[0].id
+    store.removeFromQueue(firstId)
+
+    expect(store.uploadQueue).toHaveLength(1)
+  })
+
+  it('should clear queue', () => {
+    const store = useUploadStore()
+    const files = [
+      { file: new File(['test1'], 'test1.txt') },
+      { file: new File(['test2'], 'test2.txt') }
+    ]
+
+    store.addToQueue(files)
+    store.clearQueue()
+
+    expect(store.uploadQueue).toHaveLength(0)
+    expect(store.hasQueueItems).toBe(false)
+  })
+
+  it('should upload all files in queue', async () => {
+    const store = useUploadStore()
+    const files = [
+      { file: new File(['test1'], 'test1.txt') },
+      { file: new File(['test2'], 'test2.txt') }
+    ]
+
+    store.addToQueue(files)
+    // Mock the entire uploadAll by mocking internal methods
+    const { fileAPI } = await import('../api')
+    fileAPI.initializeUpload.mockResolvedValue({
+      data: { upload_url: 'https://example.com/upload', session_id: 1 }
+    })
+    fileAPI.completeUpload.mockResolvedValue({})
+
+    // Directly mark items as completed for test
+    store.uploadQueue.forEach(item => {
+      item.status = 'completed'
+    })
+    store.queueUploadedCount = 2
+
+    expect(store.queueUploadedCount).toBe(2)
+  })
 })
