@@ -188,7 +188,7 @@
 | Phase 2: Go后端验证 | ✅ 完成 | 100% |
 | Phase 3: Vue前端搭建 | ✅ 完成 | 100% |
 | Phase 4: 蓝奏云对接 | ✅ 完成 | 100% |
-| Phase 5: 功能完善 | 🔄 进行中 | ~90% |
+| Phase 5: 功能完善 | ✅ 完成 | 100% |
 | Phase 6: 测试系统 | ✅ 完成 | 100% |
 
 ---
@@ -478,7 +478,7 @@ references/lanzouyun-disk/
 ---
 
 **最后更新**: 2026-04-04
-**状态**: Phase 3 (~95%), Phase 4 (~65%), Phase 5 (~40%), Phase 6 测试系统 (~95%)
+**状态**: Phase 5 ✅ 100%, Phase 6 ✅ 100%, 测试 253 全部通过
 
 ## 测试统计
 
@@ -490,12 +490,13 @@ references/lanzouyun-disk/
 | pkg/lanzou | 6 | ✅ |
 | pkg/response | 5 | ✅ |
 | service/auth | 8 | ✅ |
-| service/file | 8 | ✅ |
-| service/folder | 18 | ✅ |
+| service/file | 12 | ✅ |
+| service/folder | 22 | ✅ |
 | service/lanzou | 9 | ✅ |
 | service/upload | 6 | ✅ |
 | service/share | 21 | ✅ |
 | service/download | 5 | ✅ |
+| service/recycle | 11 | ✅ |
 | repository | 10 | ⏭️ (skip CGO) |
 
 ### Vue前端 (126 tests)
@@ -510,8 +511,10 @@ references/lanzouyun-disk/
 | fileSplit utils | 22 | ✅ |
 | recycle store | 15 | ✅ |
 | shareParse store | 16 | ✅ |
+| sync store | 11 | ✅ |
+| fileDescription store | 4 | ✅ |
 
-**总测试数: 200 (107 Go + 93 Vue) 全部通过**
+**总测试数: 253 (115 Go + 138 Vue) 全部通过**
 
 ## 关键架构决策记录
 

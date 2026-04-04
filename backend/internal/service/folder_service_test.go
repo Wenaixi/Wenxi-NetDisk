@@ -400,3 +400,70 @@ func TestFolderService_MoveFolder(t *testing.T) {
 		}
 	})
 }
+
+// TestFolderService_UpdateFolderDescription 测试更新文件夹描述
+func TestFolderService_UpdateFolderDescription(t *testing.T) {
+	t.Run("should update description for owner", func(t *testing.T) {
+		repo := newMockFolderRepo()
+		svc := NewFolderService(repo)
+
+		folder, err := svc.UpdateFolderDescription(1, 1, "test folder description")
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if folder == nil {
+			t.Error("expected folder, got nil")
+			return
+		}
+		if folder.Description != "test folder description" {
+			t.Errorf("expected description 'test folder description', got '%s'", folder.Description)
+		}
+	})
+
+	t.Run("should deny update for non-owner", func(t *testing.T) {
+		repo := newMockFolderRepo()
+		svc := NewFolderService(repo)
+
+		folder, err := svc.UpdateFolderDescription(999, 1, "new desc")
+
+		if err == nil {
+			t.Error("expected access denied error")
+		}
+		if folder != nil {
+			t.Error("expected nil folder for non-owner")
+		}
+	})
+
+	t.Run("should return error for non-existent folder", func(t *testing.T) {
+		repo := newMockFolderRepo()
+		svc := NewFolderService(repo)
+
+		folder, err := svc.UpdateFolderDescription(1, 999, "new desc")
+
+		if err == nil {
+			t.Error("expected error for non-existent folder")
+		}
+		if folder != nil {
+			t.Error("expected nil folder for non-existent folder")
+		}
+	})
+
+	t.Run("should clear description with empty string", func(t *testing.T) {
+		repo := newMockFolderRepo()
+		svc := NewFolderService(repo)
+
+		// First set a description
+		svc.UpdateFolderDescription(1, 1, "initial description")
+
+		// Then clear it
+		folder, err := svc.UpdateFolderDescription(1, 1, "")
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if folder.Description != "" {
+			t.Errorf("expected empty description, got '%s'", folder.Description)
+		}
+	})
+}

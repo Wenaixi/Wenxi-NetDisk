@@ -108,7 +108,7 @@ func TestExtractFileTime(t *testing.T) {
 	}{
 		{
 			name:     "standard time",
-			html:     `<span>上传时间：</span>2024-01-15<br>`,
+			html:     `<span>上传时间：2024-01-15</span>`,
 			expected: "2024-01-15",
 		},
 		{

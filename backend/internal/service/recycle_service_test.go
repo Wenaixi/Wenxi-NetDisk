@@ -10,10 +10,10 @@ import (
 
 // Mock repositories
 type mockRecycleBinRepo struct {
-	items    map[uint]*model.RecycleBin
-	nextID   uint
-	listErr  error
-	getErr   error
+	items     map[uint]*model.RecycleBin
+	nextID    uint
+	listErr   error
+	getErr    error
 	createErr error
 	deleteErr error
 }
@@ -99,7 +99,7 @@ func newMockRecycleFileRepo() *mockRecycleFileRepo {
 	}
 }
 
-func (m *mockRecycleFileRepo) GetByID(id uint) (*model.File, error) {
+func (m *mockRecycleFileRepo) FindByID(id uint) (*model.File, error) {
 	file, exists := m.files[id]
 	if !exists {
 		return nil, errors.New("file not found")
@@ -135,7 +135,7 @@ func newMockRecycleFolderRepo() *mockRecycleFolderRepo {
 	}
 }
 
-func (m *mockRecycleFolderRepo) GetByID(id uint) (*model.Folder, error) {
+func (m *mockRecycleFolderRepo) FindByID(id uint) (*model.Folder, error) {
 	folder, exists := m.folders[id]
 	if !exists {
 		return nil, errors.New("folder not found")
@@ -189,7 +189,7 @@ func TestMoveToRecycleBin_Success(t *testing.T) {
 		t.Errorf("expected type 'file', got '%s'", item.ItemType)
 	}
 	// File should be deleted from repo
-	_, err = fileRepo.GetByID(1)
+	_, err = fileRepo.FindByID(1)
 	if err == nil {
 		t.Error("file should have been deleted")
 	}
@@ -234,11 +234,10 @@ func TestMoveFolderToRecycleBin_Success(t *testing.T) {
 	folderRepo := newMockRecycleFolderRepo()
 
 	folderRepo.folders[1] = &model.Folder{
-		ID:             1,
-		UserID:         1,
-		Name:           "test-folder",
-		LanZouFolderID: "lf123",
-		ParentID:       0,
+		ID:       1,
+		UserID:   1,
+		Name:     "test-folder",
+		ParentID: nil,
 	}
 
 	svc := NewRecycleBinService(recycleRepo, fileRepo, folderRepo)
@@ -318,7 +317,7 @@ func TestRestore_File(t *testing.T) {
 		t.Error("recycle item should have been deleted")
 	}
 	// File should be restored
-	file, err := fileRepo.GetByID(100)
+	file, err := fileRepo.FindByID(100)
 	if err != nil {
 		t.Fatalf("restored file not found: %v", err)
 	}

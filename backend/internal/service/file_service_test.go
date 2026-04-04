@@ -247,3 +247,70 @@ func TestFileService_DeleteFile(t *testing.T) {
 		}
 	})
 }
+
+// TestFileService_UpdateFileDescription tests updating file description
+func TestFileService_UpdateFileDescription(t *testing.T) {
+	t.Run("should update description for owner", func(t *testing.T) {
+		repo := newMockFileRepo()
+		svc := NewFileService(repo)
+
+		file, err := svc.UpdateFileDescription(1, 1, "test description")
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if file == nil {
+			t.Error("expected file, got nil")
+			return
+		}
+		if file.Description != "test description" {
+			t.Errorf("expected description 'test description', got '%s'", file.Description)
+		}
+	})
+
+	t.Run("should deny update for non-owner", func(t *testing.T) {
+		repo := newMockFileRepo()
+		svc := NewFileService(repo)
+
+		file, err := svc.UpdateFileDescription(999, 1, "new desc")
+
+		if err == nil {
+			t.Error("expected access denied error")
+		}
+		if file != nil {
+			t.Error("expected nil file for non-owner")
+		}
+	})
+
+	t.Run("should return error for non-existent file", func(t *testing.T) {
+		repo := newMockFileRepo()
+		svc := NewFileService(repo)
+
+		file, err := svc.UpdateFileDescription(1, 999, "new desc")
+
+		if err == nil {
+			t.Error("expected error for non-existent file")
+		}
+		if file != nil {
+			t.Error("expected nil file for non-existent file")
+		}
+	})
+
+	t.Run("should clear description with empty string", func(t *testing.T) {
+		repo := newMockFileRepo()
+		svc := NewFileService(repo)
+
+		// First set a description
+		svc.UpdateFileDescription(1, 1, "initial description")
+
+		// Then clear it
+		file, err := svc.UpdateFileDescription(1, 1, "")
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if file.Description != "" {
+			t.Errorf("expected empty description, got '%s'", file.Description)
+		}
+	})
+}
