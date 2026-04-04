@@ -597,7 +597,7 @@ references/lanzouyun-disk/
 
 ## 测试统计
 
-### Go后端 (222 tests)
+### Go后端 (376 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | pkg/crypto | 5 | ✅ |
@@ -615,9 +615,17 @@ references/lanzouyun-disk/
 | service/recycle | 11 | ✅ |
 | service/file_version | 18 | ✅ |
 | repository | 10 | ⏭️ (skip CGO) |
-| handlers | 69 | ✅ |
+| handlers/auth | 8 | ✅ |
+| handlers/file | 10 | ✅ |
+| handlers/folder | 21 | ✅ |
+| handlers/recycle | 11 | ✅ |
+| handlers/download | 6 | ✅ |
+| handlers/lanzou | 9 | ✅ |
+| handlers/share | 12 | ✅ |
+| handlers/share_parse | 6 | ✅ |
+| handlers/upload | 11 | ✅ |
 
-### Vue前端 (212 tests)
+### Vue前端 (253 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | auth store | 7 | ✅ |
@@ -632,6 +640,7 @@ references/lanzouyun-disk/
 | crypto utils | 4 | ✅ |
 | fileSplit utils | 22 | ✅ |
 | components | 71 | ✅ |
+| views (Login/Register/LanzouSettings/RecycleBin/Sync/ShareParse/LanZouBrowser) | 105 | ✅ |
 
 ### Vue 组件测试 (71 tests)
 | 组件 | 测试数 | 状态 |
