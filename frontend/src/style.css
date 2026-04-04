@@ -1,1 +1,64 @@
 @import "tailwindcss";
+
+/* 零圆角设计规范 - 全局禁用圆角 */
+* {
+  border-radius: 0 !important;
+}
+
+/* Naive UI 组件圆角覆盖 */
+.n-button {
+  border-radius: 0 !important;
+}
+
+.n-input {
+  border-radius: 0 !important;
+}
+
+.n-card {
+  border-radius: 0 !important;
+}
+
+.n-modal {
+  border-radius: 0 !important;
+}
+
+.n-select {
+  border-radius: 0 !important;
+}
+
+.n-dropdown {
+  border-radius: 0 !important;
+}
+
+.n-popover {
+  border-radius: 0 !important;
+}
+
+.n-tooltip {
+  border-radius: 0 !important;
+}
+
+/* 深色主题背景 */
+body {
+  background-color: #0f0f0f;
+  margin: 0;
+  padding: 0;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333333;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444444;
+}
