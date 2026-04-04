@@ -38,6 +38,7 @@
                 :key="folder.id"
                 class="bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]"
                 @dblclick="fileStore.navigateToFolder(folder)"
+                @contextmenu.prevent="openFolderMenu(folder, $event)"
               >
                 <div class="flex items-center gap-2">
                   <n-icon size="24" color="#60a5fa"><Folder /></n-icon>
@@ -150,11 +151,24 @@
     <n-modal v-model:show="showFileMenu" v-if="selectedFileItem">
       <n-card :title="selectedFileItem.name" style="width: 400px;">
         <div class="space-y-2">
-          <n-button block @click="downloadFile(selectedFileItem)">下载</n-button>
-          <n-button block type="info" @click="openShareModal">分享</n-button>
-          <n-button block @click="deleteFile(selectedFileItem)">删除</n-button>
+          <n-button v-if="selectedFileItem.size !== undefined" block @click="downloadFile(selectedFileItem)">下载</n-button>
+          <n-button v-if="selectedFileItem.size !== undefined" block type="info" @click="openShareModal">分享</n-button>
+          <n-button block @click="openRenameModal">重命名</n-button>
+          <n-button block type="error" @click="deleteFile(selectedFileItem)">删除</n-button>
           <n-button block @click="showFileMenu = false">取消</n-button>
         </div>
+      </n-card>
+    </n-modal>
+
+    <n-modal v-model:show="showRenameModal">
+      <n-card title="重命名文件" style="width: 400px;">
+        <n-input v-model:value="renameName" placeholder="新名称" />
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <n-button @click="showRenameModal = false">取消</n-button>
+            <n-button type="primary" @click="confirmRename">确定</n-button>
+          </div>
+        </template>
       </n-card>
     </n-modal>
 
@@ -262,6 +276,10 @@ const expiresOptions = [
   { label: '永久', value: 'never' }
 ]
 
+// 重命名相关
+const showRenameModal = ref(false)
+const renameName = ref('')
+
 function navigateToBreadcrumb(idx) {
   const crumb = fileStore.breadcrumbs[idx]
   if (crumb.id === fileStore.currentFolder) return
@@ -363,6 +381,29 @@ function openShareModal() {
   sharePassword.value = ''
   shareExpires.value = '7d'
   showShareModal.value = true
+}
+
+function openRenameModal() {
+  showFileMenu.value = false
+  renameName.value = selectedFileItem.value?.name || ''
+  showRenameModal.value = true
+}
+
+async function confirmRename() {
+  if (!renameName.value.trim() || !selectedFileItem.value) return
+  try {
+    await fileStore.renameFile(selectedFileItem.value.id, renameName.value)
+    message.success('重命名成功')
+    showRenameModal.value = false
+    fileStore.fetchFiles(fileStore.currentFolder)
+  } catch (err) {
+    message.error(err.message || '重命名失败')
+  }
+}
+
+function openFolderMenu(folder, event) {
+  selectedFileItem.value = folder
+  showFileMenu.value = true
 }
 
 function closeShareModal() {
