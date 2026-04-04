@@ -69,3 +69,32 @@ func (s *LanZouService) GetClient(userID uint) (*lanzou.Client, error) {
 	client := lanzou.NewClient(token.Cookie)
 	return client, nil
 }
+
+// CreateShare 创建分享链接
+func (s *LanZouService) CreateShare(userID uint, fileId int, minutes int) (*lanzou.ShareResponse, error) {
+	client, err := s.GetClient(userID)
+	if err != nil {
+		return nil, err
+	}
+	return client.Task39(fileId, minutes)
+}
+
+// GetFileURL 获取文件下载直链
+func (s *LanZouService) GetFileURL(userID uint, fileId int) (string, string, error) {
+	client, err := s.GetClient(userID)
+	if err != nil {
+		return "", "", err
+	}
+	// 蓝奏云下载需要先获取文件详情
+	resp, err := client.Task22(fileId)
+	if err != nil {
+		return "", "", err
+	}
+
+	// 从响应中提取直链
+	// 蓝奏云API返回的down_url字段
+	if url, ok := resp["down_url"].(string); ok {
+		return "", url, nil
+	}
+	return "", "", errors.New("failed to get download URL")
+}

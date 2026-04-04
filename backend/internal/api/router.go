@@ -102,6 +102,8 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			lanzou.GET("/files", lanzouHandler.ListFiles)
 			lanzou.GET("/folders", lanzouHandler.ListFolders)
 			lanzou.POST("/folders", lanzouHandler.CreateFolder)
+			lanzou.POST("/share", lanzouHandler.CreateShare)
+			lanzou.GET("/files/:id/url", lanzouHandler.GetFileURL)
 			lanzou.POST("/upload/init", lanzouHandler.InitializeUpload)
 			lanzou.POST("/upload/complete/:id", lanzouHandler.CompleteUpload)
 			lanzou.GET("/upload/status/:id", lanzouHandler.UploadStatus)

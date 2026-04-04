@@ -219,3 +219,46 @@ func (h *LanZouHandler) UploadStatus(c *gin.Context) {
 
 	response.Success(c, session)
 }
+
+// CreateShare 创建分享链接
+func (h *LanZouHandler) CreateShare(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	var req struct {
+		FileID  int `json:"file_id" binding:"required"`
+		Minutes int `json:"minutes"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	resp, err := h.lanzouSvc.CreateShare(uid, req.FileID, req.Minutes)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// GetFileURL 获取文件下载直链
+func (h *LanZouHandler) GetFileURL(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	fileID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "invalid file id")
+		return
+	}
+
+	_, url, err := h.lanzouSvc.GetFileURL(uid, fileID)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, gin.H{"url": url})
+}
