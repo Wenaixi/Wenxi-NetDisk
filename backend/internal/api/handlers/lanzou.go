@@ -70,7 +70,7 @@ func (h *LanZouHandler) Disconnect(c *gin.Context) {
 	response.Success(c, gin.H{"status": "disconnected"})
 }
 
-// ListFiles 获取蓝奏云文件列表
+// ListFiles 获取蓝奏云文件列表和文件夹列表
 func (h *LanZouHandler) ListFiles(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	uid := userID.(uint)
@@ -91,13 +91,26 @@ func (h *LanZouHandler) ListFiles(c *gin.Context) {
 		return
 	}
 
-	resp, err := client.Task5(folderID, page)
+	// 获取文件列表
+	fileResp, err := client.Task5(folderID, page)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
 	}
 
-	response.Success(c, resp)
+	// 获取文件夹列表
+	folderResp, err := client.Task47(folderID)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, gin.H{
+		"files":   fileResp.Text,
+		"folders": folderResp.Text,
+		"zt":      fileResp.Zt,
+		"info":    fileResp.Info,
+	})
 }
 
 // ListFolders 获取蓝奏云文件夹列表
