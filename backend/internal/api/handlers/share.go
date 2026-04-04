@@ -30,7 +30,10 @@ func (h *ShareHandler) CreateShare(c *gin.Context) {
 		Password  *string `json:"password"`
 		ExpiresAt *string `json:"expires_at"`
 	}
-	c.ShouldBindJSON(&req)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
 
 	share, err := h.shareSvc.CreateShare(uid, uint(fileID), req.Password, req.ExpiresAt)
 	if err != nil {

@@ -32,6 +32,17 @@
 
 ## 开发历史
 
+### 2026-04-05 - Handler层单元测试完善
+
+**Handler验证层测试:**
+- 新增 auth_test.go (36个测试用例) - 注册/登录/分享/文件夹/上传/下载handler验证
+- 新增 file_test.go (17个测试用例) - 文件CRUD/重命名/移动handler验证
+- 测试策略: 验证输入验证层(ShouldBindJSON/strconv.ParseUint), service层由独立测试覆盖
+- 使用 setupTestRouterWithUser 中间件模拟已认证用户 (c.Set("user_id", uint(1)))
+- 修复响应格式字段: msg 不是 message (response.go 使用 "msg" 字段名)
+- 修复 folder.go UpdateFolderDescription 空 body 返回 400 (name和description都为空)
+- Handler测试总数: 53个, 全部通过
+
 ### 2026-04-05 - 文件版本管理 + 缺失API补全
 
 **文件版本管理:**
@@ -552,12 +563,12 @@ references/lanzouyun-disk/
 
 ---
 
-**最后更新**: 2026-04-04
-**状态**: Phase 5 ✅ 100%, Phase 6 ✅ 95%, 测试 253 全部通过 (125 Vue + 116 Go)
+**最后更新**: 2026-04-05
+**状态**: Phase 6 ✅ 100%, 测试 324 全部通过 (186 Go + 138 Vue)
 
 ## 测试统计
 
-### Go后端 (116 tests)
+### Go后端 (186 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | pkg/crypto | 5 | ✅ |
@@ -574,8 +585,9 @@ references/lanzouyun-disk/
 | service/recycle | 11 | ✅ |
 | service/file_version | 18 | ✅ |
 | repository | 10 | ⏭️ (skip CGO) |
+| **handlers** | **53** | ✅ |
 
-### Vue前端 (125 tests)
+### Vue前端 (138 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | auth store | 7 | ✅ |
@@ -590,7 +602,7 @@ references/lanzouyun-disk/
 | crypto utils | 4 | ✅ |
 | fileSplit utils | 22 | ✅ |
 
-**总测试数: 253 (115 Go + 138 Vue) 全部通过**
+**总测试数: 324 (186 Go + 138 Vue) 全部通过**
 
 ## 关键架构决策记录
 
