@@ -65,13 +65,15 @@
 - [x] 安装 Pinia
 - [x] 创建 auth store
 - [x] 创建 file store
-- [ ] 创建 upload store
+- [x] 创建 upload store
 
 ### Task 3.4: API 层
 - [x] 配置 Axios
 - [x] 创建 auth API
 - [x] 创建 file API
-- [ ] 创建 lanzou API
+- [x] 创建 lanzou API
+- [ ] 创建 share API (待实现)
+- [ ] 创建 folder API (待实现)
 
 ### Task 3.5: 页面开发
 - [x] 登录/注册页面
