@@ -3,130 +3,147 @@
 # ===========================================
 
 # Go
-# Build output
+# ----
+# Build outputs
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
 server.exe
-backend/server.exe
 
-# Test binary
+# Test binaries
 *.test
+*_test.exe
 
-# Output of go coverage
+# Coverage output
 *.out
+coverage.out
 
-# Go workspace file
+# Go workspace (if using multi-module)
 go.work
+go.work.sum
 
-# Dependencies
+# Dependencies vendor
 vendor/
 
-# Database files (local development)
-*.db
-*.sqlite
-*.sqlite3
-data/*.db
-data/*.sqlite
+# Backend build directory
+backend/server
+backend/server.exe
+backend/data/
+backend/*.db
 
-# Environment files
+# Frontend
+# --------
+# Dependencies
+frontend/node_modules/
+frontend/.vite/
+frontend/.cache/
+frontend/.temp/
+
+# Build outputs
+frontend/dist/
+frontend/build/
+
+# Environment files (NEVER commit these)
 .env
 .env.local
 .env.*.local
+.env.production
+.env.production.local
 
 # Logs
 *.log
 logs/
+frontend/*.log
 
-# Node.js (frontend)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# Frontend build outputs
-frontend/dist/
-frontend/build/
-frontend/.vite/
-frontend/.cache/
-frontend/.temp/
-frontend/node_modules/
-
-# Build artifacts
-dist/
-build/
-*.tgz
-
-# Editor directories and files
+# Editor & IDE
+# ------------
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-*.bak
-*.backup
-*.orig
-*.rej
+.DS_Store
+Thumbs.db
+desktop.ini
 *.sublime-*
 *.code-workspace
 
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-desktop.ini
-
-# Security sensitive files
+# Security sensitive (NEVER commit these)
 *.pem
 *.key
 *.crt
 *.cer
 *.p12
 *.pfx
+*.ovpn
 
 # Temporary files
+# ---------------
 *.tmp
 *.temp
 tmp/
 temp/
 .tmp/
 .temp/
+*.swp
+*.swo
 
-# TypeScript
-*.tsbuildinfo
+# Database files (local development)
+*.db
+*.sqlite
+*.sqlite3
+**/*.db
+**/*.sqlite
 
-# Optional npm cache
-.npm
-.yarn-integrity
-
-# Optional eslint cache
-.eslintcache
+# Upload directories (NEVER commit user data)
+uploads/
+temp_chunks/
+**/uploads/
+**/temp_chunks/
 
 # Test coverage
 coverage/
 *.lcov
 .nyc_output/
 
-# Cargo (Rust)
+# Rust (if any)
 target/
-.cargo/config.toml
+.cargo/
 
-# Temporary test databases
-test.db
-test_*.db
+# Claude Code (local development tool state)
+.claude/
+.claude/settings.json
 
-# Backend data directory
-backend/data/
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 
-# Upload directories
-uploads/
-temp_chunks/
-**/uploads/
-**/temp_chunks/
+# npm/yarn/pnpm
+.npm
+.yarn
+.pnpm
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# TypeScript
+*.tsbuildinfo
+*.tsbuildinfo.*
+
+# ESLint
+.eslintcache
+.eslintrc.cache
+
+# Prettier
+.prettiercache
+.prettierrc.cache
+
+# Vite
+vite.config.*.ts
+vite.config.*.js
