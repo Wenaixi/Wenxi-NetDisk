@@ -323,6 +323,7 @@ references/lanzouyun-disk/
 
 | Commit | 描述 |
 |--------|------|
+| 864cb9e | feat: 实现FolderService完整功能及单元测试 |
 | a47ea88 | test: 添加ShareService单元测试并接口化 |
 | b97313f | test: 添加AuthService单元测试并接口化 |
 | d7b6718 | test: 添加FileService单元测试并接口化 |
@@ -351,7 +352,7 @@ references/lanzouyun-disk/
 
 ## 测试统计
 
-### Go后端 (77 tests)
+### Go后端 (95 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | pkg/crypto | 5 | ✅ |
@@ -360,6 +361,7 @@ references/lanzouyun-disk/
 | pkg/response | 5 | ✅ |
 | service/auth | 8 | ✅ |
 | service/file | 8 | ✅ |
+| service/folder | 18 | ✅ |
 | service/lanzou | 9 | ✅ |
 | service/upload | 6 | ✅ |
 | service/share | 15 | ✅ |
@@ -373,18 +375,21 @@ references/lanzouyun-disk/
 | upload store | 5 | ✅ |
 | crypto utils | 4 | ✅ |
 
-**总测试数: 106 (77 Go + 29 Vue) 全部通过**
+**总测试数: 124 (95 Go + 29 Vue) 全部通过**
 
 ## 关键架构决策记录
 
 ### 1. 接口化service层
 service层使用接口而非具体类型依赖，提高可测试性：
+- `FolderRepository` - 文件夹仓库接口
+- `FileRepository` - 文件仓库接口
+- `ShareRepository` - 分享仓库接口
+- `ShareFileRepository` - 分享用文件仓库接口
+- `LanZouTokenRepository` - 蓝奏云Token仓库接口
 - `UploadSessionRepository` - 上传会话仓库接口
 - `LanZouClientProvider` - 蓝奏云客户端提供者接口
-- `LanZouTokenRepository` - token仓库接口
 - `FileMetadataCreator` - 文件元数据创建器接口
 - `UserRepository` - 用户仓库接口
-- `FileRepository` - 文件仓库接口
 
 ### 2. 加密算法选择
 Web Crypto API不支持ChaCha20-Poly1305，使用AES-GCM-256替代，安全性相同级别。
