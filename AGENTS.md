@@ -649,8 +649,9 @@ references/lanzouyun-disk/
 | service/auth | 13 (+5 Login) | ✅ |
 | service/file | 20 (+8 UpdateFileName/MoveFile) | ✅ |
 | service/folder | 22 | ✅ |
-| service/lanzou | 9 | ✅ |
-| service/upload | 6 | ✅ |
+| service/lanzou | 13 (+4 CreateShare/GetFileURL) | ✅ |
+| service/upload | 13 (+7 UploadChunk/CompleteUpload/ResumeUpload/GetLanZouClient) | ✅ |
+| service/share_parse | 2 (ValidateShareLink/NewShareParseService) | ✅ |
 | service/share | 21 | ✅ |
 | service/download | 5 | ✅ |
 | service/recycle | 11 | ✅ |

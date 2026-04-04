@@ -89,6 +89,7 @@ func (m *mockFileService) CreateMetadata(userID uint, req *CreateFileRequest) (*
 		UserID: userID,
 		Name:   req.Name,
 		Size:   req.Size,
+		LanZouFileID: req.LanZouFileID,
 	}, nil
 }
 
@@ -271,6 +272,45 @@ func TestUploadService_ResumeUpload(t *testing.T) {
 			t.Errorf("expected non-zero session ID")
 		}
 	})
+
+	t.Run("should fail if no session found", func(t *testing.T) {
+		repo := newMockUploadRepo()
+		lanzouSvc := &mockLanzouService{connected: true}
+		fileSvc := &mockFileService{}
+
+		svc := NewUploadService(repo, lanzouSvc, fileSvc)
+
+		_, err := svc.ResumeUpload(1, "nonexistent-hash")
+		if err == nil {
+			t.Error("expected no session found error")
+		}
+	})
+
+	t.Run("should fail if upload already completed", func(t *testing.T) {
+		repo := newMockUploadRepo()
+		lanzouSvc := &mockLanzouService{connected: true}
+		fileSvc := &mockFileService{}
+
+		svc := NewUploadService(repo, lanzouSvc, fileSvc)
+		req := &InitializeUploadRequest{
+			FileName: "test.txt",
+			FileSize: 1024, // 1 chunk
+		}
+
+		resp, _ := svc.InitializeUpload(1, req)
+
+		// Upload the only chunk to complete
+		_ = svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+			ChunkIndex: 0,
+			Data:       []byte("data"),
+		})
+
+		hash := calculateFileHash("test.txt", 1024)
+		_, err := svc.ResumeUpload(1, hash)
+		if err == nil {
+			t.Error("expected already completed error")
+		}
+	})
 }
 
 // TestUploadService_CalculateFileHash tests file hash calculation
@@ -288,4 +328,281 @@ func TestUploadService_CalculateFileHash(t *testing.T) {
 	if len(hash1) != 32 {
 		t.Errorf("expected 32 char hash, got %d", len(hash1))
 	}
+}
+
+// TestUploadService_UploadChunk tests chunk upload
+func TestUploadService_UploadChunk(t *testing.T) {
+	t.Run("should increment chunks uploaded", func(t *testing.T) {
+		repo := newMockUploadRepo()
+		lanzouSvc := &mockLanzouService{connected: true}
+		fileSvc := &mockFileService{}
+
+		svc := NewUploadService(repo, lanzouSvc, fileSvc)
+		req := &InitializeUploadRequest{
+			FileName: "test.txt",
+			FileSize: 10 * 1024 * 1024, // 10MB, 5 chunks
+		}
+
+		resp, _ := svc.InitializeUpload(1, req)
+
+		err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+			ChunkIndex: 0,
+			Data:       []byte("chunk data"),
+		})
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+
+		session, _ := repo.FindByID(resp.SessionID)
+		if session.ChunksUploaded != 1 {
+			t.Errorf("expected 1 chunk uploaded, got %d", session.ChunksUploaded)
+		}
+	})
+
+	t.Run("should fail for non-existent session", func(t *testing.T) {
+		repo := newMockUploadRepo()
+		lanzouSvc := &mockLanzouService{connected: true}
+		fileSvc := &mockFileService{}
+
+		svc := NewUploadService(repo, lanzouSvc, fileSvc)
+
+		err := svc.UploadChunk(1, 999, &UploadChunkRequest{
+			ChunkIndex: 0,
+			Data:       []byte("data"),
+		})
+
+		if err == nil {
+			t.Error("expected session not found error")
+		}
+	})
+
+	t.Run("should fail for wrong user", func(t *testing.T) {
+		repo := newMockUploadRepo()
+		lanzouSvc := &mockLanzouService{connected: true}
+		fileSvc := &mockFileService{}
+
+		svc := NewUploadService(repo, lanzouSvc, fileSvc)
+		req := &InitializeUploadRequest{
+			FileName: "test.txt",
+			FileSize: 1024,
+		}
+
+		resp, _ := svc.InitializeUpload(1, req)
+
+		err := svc.UploadChunk(999, resp.SessionID, &UploadChunkRequest{
+			ChunkIndex: 0,
+			Data:       []byte("data"),
+		})
+
+		if err == nil {
+			t.Error("expected access denied error")
+		}
+	})
+
+	t.Run("should fail for completed upload", func(t *testing.T) {
+		repo := newMockUploadRepo()
+		lanzouSvc := &mockLanzouService{connected: true}
+		fileSvc := &mockFileService{}
+
+		svc := NewUploadService(repo, lanzouSvc, fileSvc)
+		req := &InitializeUploadRequest{
+			FileName: "test.txt",
+			FileSize: 1024, // 1 chunk
+		}
+
+		resp, _ := svc.InitializeUpload(1, req)
+
+		// Upload the only chunk to complete
+		_ = svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+			ChunkIndex: 0,
+			Data:       []byte("data"),
+		})
+
+		// Try to upload again
+		err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+			ChunkIndex: 0,
+			Data:       []byte("data"),
+		})
+
+		if err == nil {
+			t.Error("expected already completed error")
+		}
+	})
+
+	t.Run("should fail for invalid chunk index", func(t *testing.T) {
+		repo := newMockUploadRepo()
+		lanzouSvc := &mockLanzouService{connected: true}
+		fileSvc := &mockFileService{}
+
+		svc := NewUploadService(repo, lanzouSvc, fileSvc)
+		req := &InitializeUploadRequest{
+			FileName: "test.txt",
+			FileSize: 1024, // 1 chunk
+		}
+
+		resp, _ := svc.InitializeUpload(1, req)
+
+		err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+			ChunkIndex: 5,
+			Data:       []byte("data"),
+		})
+
+		if err == nil {
+			t.Error("expected invalid chunk index error")
+		}
+	})
+
+	t.Run("should mark completed when all chunks uploaded", func(t *testing.T) {
+		repo := newMockUploadRepo()
+		lanzouSvc := &mockLanzouService{connected: true}
+		fileSvc := &mockFileService{}
+
+		svc := NewUploadService(repo, lanzouSvc, fileSvc)
+		req := &InitializeUploadRequest{
+			FileName: "test.txt",
+			FileSize: 1024, // 1 chunk
+		}
+
+		resp, _ := svc.InitializeUpload(1, req)
+
+		err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+			ChunkIndex: 0,
+			Data:       []byte("data"),
+		})
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+
+		session, _ := repo.FindByID(resp.SessionID)
+		if session.Status != StatusCompleted {
+			t.Errorf("expected status completed, got %s", session.Status)
+		}
+	})
+}
+
+// TestUploadService_CompleteUpload tests completing upload
+func TestUploadService_CompleteUpload(t *testing.T) {
+	t.Run("should create file metadata after all chunks uploaded", func(t *testing.T) {
+		repo := newMockUploadRepo()
+		lanzouSvc := &mockLanzouService{connected: true}
+		fileSvc := &mockFileService{}
+
+		svc := NewUploadService(repo, lanzouSvc, fileSvc)
+		req := &InitializeUploadRequest{
+			FileName: "test.txt",
+			FileSize: 1024, // 1 chunk
+		}
+
+		resp, _ := svc.InitializeUpload(1, req)
+
+		// Upload the chunk
+		_ = svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+			ChunkIndex: 0,
+			Data:       []byte("data"),
+		})
+
+		// Complete upload
+		completeReq := &CompleteUploadRequest{
+			EncryptionKey:   "enc-key-123",
+			EncryptionNonce: "nonce-456",
+			LanZouFileID:    "lanzou-789",
+		}
+
+		file, err := svc.CompleteUpload(1, resp.SessionID, completeReq)
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if file == nil {
+			t.Error("expected file, got nil")
+			return
+		}
+		if file.Name != "test.txt" {
+			t.Errorf("expected filename 'test.txt', got '%s'", file.Name)
+		}
+		if file.LanZouFileID != "lanzou-789" {
+			t.Errorf("expected lanzou file ID 'lanzou-789', got '%s'", file.LanZouFileID)
+		}
+	})
+
+	t.Run("should fail for non-existent session", func(t *testing.T) {
+		repo := newMockUploadRepo()
+		lanzouSvc := &mockLanzouService{connected: true}
+		fileSvc := &mockFileService{}
+
+		svc := NewUploadService(repo, lanzouSvc, fileSvc)
+
+		_, err := svc.CompleteUpload(1, 999, &CompleteUploadRequest{
+			EncryptionKey:   "key",
+			EncryptionNonce: "nonce",
+			LanZouFileID:    "id",
+		})
+
+		if err == nil {
+			t.Error("expected session not found error")
+		}
+	})
+
+	t.Run("should fail for wrong user", func(t *testing.T) {
+		repo := newMockUploadRepo()
+		lanzouSvc := &mockLanzouService{connected: true}
+		fileSvc := &mockFileService{}
+
+		svc := NewUploadService(repo, lanzouSvc, fileSvc)
+		req := &InitializeUploadRequest{
+			FileName: "test.txt",
+			FileSize: 1024,
+		}
+
+		resp, _ := svc.InitializeUpload(1, req)
+
+		_, err := svc.CompleteUpload(999, resp.SessionID, &CompleteUploadRequest{
+			EncryptionKey:   "key",
+			EncryptionNonce: "nonce",
+			LanZouFileID:    "id",
+		})
+
+		if err == nil {
+			t.Error("expected access denied error")
+		}
+	})
+}
+
+// TestUploadService_GetLanZouClient tests getting lanzou client
+func TestUploadService_GetLanZouClient(t *testing.T) {
+	t.Run("should return client when connected", func(t *testing.T) {
+		repo := newMockUploadRepo()
+		lanzouSvc := &mockLanzouService{connected: true}
+		fileSvc := &mockFileService{}
+
+		svc := NewUploadService(repo, lanzouSvc, fileSvc)
+
+		client, err := svc.GetLanZouClient(1)
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if client == nil {
+			t.Error("expected client, got nil")
+		}
+	})
+
+	t.Run("should return error when not connected", func(t *testing.T) {
+		repo := newMockUploadRepo()
+		lanzouSvc := &mockLanzouService{connected: false}
+		fileSvc := &mockFileService{}
+
+		svc := NewUploadService(repo, lanzouSvc, fileSvc)
+
+		client, err := svc.GetLanZouClient(1)
+
+		if err == nil {
+			t.Error("expected not connected error")
+		}
+		if client != nil {
+			t.Error("expected nil client when not connected")
+		}
+	})
 }
