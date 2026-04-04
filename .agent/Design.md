@@ -67,19 +67,36 @@ wenxi-cloud/
 ├── frontend/                         # Vue 3 前端
 │   ├── src/
 │   │   ├── api/index.js            # axios封装+拦截器
+│   │   ├── api/lanzou.js           # 蓝奏云API封装
 │   │   ├── router/index.js          # Vue Router+守卫
 │   │   ├── stores/
-│   │   │   ├── auth.js             # Pinia auth store
-│   │   │   └── file.js            # Pinia file store
+│   │   │   ├── auth.js            # Pinia auth store
+│   │   │   ├── auth.test.js       # auth store测试 (7)
+│   │   │   ├── file.js            # Pinia file store
+│   │   │   ├── file.test.js       # file store测试 (13)
+│   │   │   ├── upload.js           # Pinia upload store
+│   │   │   ├── upload.test.js     # upload store测试 (5)
+│   │   │   ├── share.js           # Pinia share store
+│   │   │   ├── share.test.js     # share store测试 (5)
+│   │   │   ├── download.js       # Pinia download store
+│   │   │   └── download.test.js  # download store测试 (4)
+│   │   ├── components/
+│   │   │   └── AppHeader.vue      # 通用页面头部组件
+│   │   ├── utils/
+│   │   │   ├── crypto.js         # 客户端加密(AES-GCM)
+│   │   │   └── crypto.test.js   # crypto工具测试 (4)
 │   │   ├── views/
-│   │   │   ├── Login.vue           # 登录页
-│   │   │   ├── Register.vue        # 注册页
-│   │   │   └── Dashboard.vue       # 主面板
+│   │   │   ├── Login.vue         # 登录页
+│   │   │   ├── Register.vue      # 注册页
+│   │   │   ├── Dashboard.vue     # 主面板(本地文件)
+│   │   │   ├── LanzouSettings.vue # 蓝奏云设置页
+│   │   │   └── LanZouBrowser.vue  # 蓝奏云浏览器
 │   │   ├── App.vue
 │   │   ├── main.js
-│   │   └── style.css               # Tailwind入口
-│   ├── vite.config.js              # Vite配置 (代理/api到:8080)
-│   └── dist/                        # 构建输出
+│   │   └── style.css             # Tailwind入口
+│   ├── vite.config.js            # Vite配置 (代理/api到:8080)
+│   ├── vitest.config.js          # Vitest测试配置
+│   └── dist/                     # 构建输出
 ├── .agent/                          # 开发文档
 │   ├── Requirement.md              # 需求规范
 │   ├── Design.md                    # 本文件
