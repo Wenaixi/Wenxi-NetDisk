@@ -14,6 +14,7 @@ type File struct {
 	EncryptionKey   string    `gorm:"size:64;not null" json:"-"`
 	EncryptionNonce string    `gorm:"size:24;not null" json:"-"`
 	MimeType        string    `gorm:"size:100" json:"mime_type"`
+	Description     string    `gorm:"size:500" json:"description"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 	User            User      `gorm:"foreignKey:UserID" json:"-"`

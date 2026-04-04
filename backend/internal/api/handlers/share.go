@@ -75,12 +75,13 @@ func (h *ShareHandler) ValidateShare(c *gin.Context) {
 		return
 	}
 
-	valid, err := h.shareSvc.ValidatePassword(token, req.Password)
+	share, err := h.shareSvc.GetShareWithFile(token)
 	if err != nil {
 		response.NotFound(c, err.Error())
 		return
 	}
 
+	valid := h.shareSvc.ValidatePassword(share, req.Password)
 	if !valid {
 		response.Error(c, http.StatusUnauthorized, "invalid password")
 		return

@@ -37,8 +37,9 @@ export const fileAPI = {
   }),
   getUploadUrl: (data) => api.post('/files/upload-url', data),
   delete: (id) => api.delete(`/files/${id}`),
-  rename: (id, name) => api.put(`/files/${id}`, { name }),
+  rename: (id, name) => api.put(`/files/${id}/rename`, { name }),
   move: (id, folderId) => api.put(`/files/${id}/move`, { folder_id: folderId }),
+  updateDescription: (id, description) => api.put(`/files/${id}/description`, { description }),
   getVersions: (id) => api.get(`/files/${id}/versions`),
   restoreVersion: (id, versionId) => api.post(`/files/${id}/versions/${versionId}/restore`),
   initializeUpload: (data) => api.post('/lanzou/upload/init', data),
@@ -51,6 +52,7 @@ export const folderAPI = {
   create: (data) => api.post('/folders', data),
   delete: (id) => api.delete(`/folders/${id}`),
   rename: (id, name) => api.put(`/folders/${id}`, { name }),
+  updateDescription: (id, description) => api.put(`/folders/${id}`, { description }),
   move: (id, parentId) => api.put(`/folders/${id}/move`, { parent_id: parentId })
 }
 

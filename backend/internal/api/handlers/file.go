@@ -83,3 +83,30 @@ func (h *FileHandler) DeleteFile(c *gin.Context) {
 
 	response.Success(c, gin.H{"message": "file deleted"})
 }
+
+func (h *FileHandler) UpdateFileDescription(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	fileID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		response.BadRequest(c, "invalid file id")
+		return
+	}
+
+	var req struct {
+		Description string `json:"description"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	file, err := h.fileSvc.UpdateFileDescription(uid, uint(fileID), req.Description)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, file)
+}

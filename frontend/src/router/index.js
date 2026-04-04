@@ -41,6 +41,18 @@ const routes = [
     name: 'RecycleBin',
     component: () => import('../views/RecycleBin.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/parse',
+    name: 'ShareParse',
+    component: () => import('../views/ShareParse.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/sync',
+    name: 'Sync',
+    component: () => import('../views/Sync.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

@@ -32,7 +32,34 @@
 
 ## 开发历史
 
-### 2026-04-04 - Phase 5 进行中 (~90%)
+### 2026-04-04 - Phase 5 完成 (~100%)
+
+**文件详情功能:**
+- 后端: File/Folder模型添加Description字段 (size:500)
+- 后端: PUT /api/files/:id/description 接口
+- 后端: Folder Update支持description字段
+- 前端: FileDetailModal.vue 详情弹窗组件
+- 前端: Dashboard右键菜单添加"详情"入口
+- 前端: 显示文件大小、类型、创建/更新时间、ID、蓝奏云文件ID
+- 前端: 支持在线编辑和保存描述 (fileAPI.updateDescription / folderAPI.updateDescription)
+- 前端: fileStore添加updateFileDescription/updateFolderDescription方法
+
+**同步资源功能:**
+- 前端: syncStore (同步任务状态管理)
+- 前端: Sync.vue 同步任务管理页面 (/sync 路由)
+- 支持直链下载 → 蓝奏云上传的同步流程
+- 任务状态: pending/downloading/uploading/completed/error
+- 进度条、速度、失败重试、清除已完成
+- 支持从URL自动提取文件名
+- 11个前端单元测试全部通过
+
+**代码修复:**
+- 修复 share_parse.go parseShareFolder 方法名大小写不一致
+- 修复 share.go ValidatePassword 签名变更导致的编译错误
+- 修复 recycle_service.go 接口方法名 (GetByID → FindByID)
+- 修复 recycle_service.go Folder.ParentID 类型不匹配 (*uint vs uint)
+- 修复 router.go 缺失 lanzou 包导入
+- 修复 fileAPI.rename 路由冲突 (改为 PUT /:id/rename)
 
 **回收站功能:**
 - 后端: RecycleBin模型 + Repository + Service + Handler + API路由
@@ -123,9 +150,9 @@
 | 断点上传/下载 | P1 | ✅ |
 | 文件分割/合并 | P2 | ✅ |
 | 回收站 | P1 | ✅ |
-| 链接解析 | P1 | 🔄 |
-| 同步资源 | P2 | 🔄 |
-| 文件详情 | P2 | 🔄 |
+| 链接解析 | P1 | ✅ |
+| 同步资源 | P2 | ✅ |
+| 文件详情 | P2 | ✅ |
 
 ### 2026-04-04 - Phase 1 & 2 完成
 
@@ -471,7 +498,7 @@ references/lanzouyun-disk/
 | service/download | 5 | ✅ |
 | repository | 10 | ⏭️ (skip CGO) |
 
-### Vue前端 (76 tests)
+### Vue前端 (126 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | auth store | 7 | ✅ |
@@ -482,8 +509,9 @@ references/lanzouyun-disk/
 | crypto utils | 4 | ✅ |
 | fileSplit utils | 22 | ✅ |
 | recycle store | 15 | ✅ |
+| shareParse store | 16 | ✅ |
 
-**总测试数: 168 (107 Go + 61 Vue) 全部通过**
+**总测试数: 200 (107 Go + 93 Vue) 全部通过**
 
 ## 关键架构决策记录
 

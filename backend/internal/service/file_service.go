@@ -89,3 +89,21 @@ func (s *FileService) DeleteFile(userID, fileID uint) error {
 	}
 	return s.fileRepo.Delete(fileID)
 }
+
+// UpdateFileDescription 更新文件描述
+func (s *FileService) UpdateFileDescription(userID, fileID uint, description string) (*model.File, error) {
+	file, err := s.fileRepo.FindByID(fileID)
+	if err != nil {
+		return nil, err
+	}
+	if file.UserID != userID {
+		return nil, errors.New("access denied")
+	}
+
+	file.Description = description
+	if err := s.fileRepo.Update(file); err != nil {
+		return nil, err
+	}
+
+	return file, nil
+}

@@ -249,6 +249,7 @@
     <n-modal v-model:show="showFileMenu" v-if="selectedFileItem">
       <n-card :title="selectedFileItem.name" style="width: 400px;">
         <div class="space-y-2">
+          <n-button block @click="openDetailModal">详情</n-button>
           <n-button v-if="selectedFileItem.size !== undefined" block @click="downloadFile(selectedFileItem)">下载</n-button>
           <n-button v-if="selectedFileItem.size !== undefined" block type="info" @click="openShareModal">分享</n-button>
           <n-button block @click="openRenameModal">重命名</n-button>
@@ -258,6 +259,8 @@
         </div>
       </n-card>
     </n-modal>
+
+    <FileDetailModal :item="detailItem" @update="handleUpdateDescription" />
 
     <n-modal v-model:show="showRenameModal">
       <n-card title="重命名文件" style="width: 400px;">
@@ -376,6 +379,7 @@ import { encryptFile, generateEncryptionKey } from '../utils/crypto'
 import { fileAPI, shareAPI } from '../api'
 import { useMessage } from 'naive-ui'
 import AppHeader from '../components/AppHeader.vue'
+import FileDetailModal from '../components/FileDetailModal.vue'
 import {
   ArrowBack, CloudUpload, Refresh, Folder, Create, Document, Close
 } from '@vicons/ionicons5'
@@ -395,6 +399,7 @@ const showShareModal = ref(false)
 const newFolderName = ref('')
 const selectedFile = ref(null)
 const selectedFileItem = ref(null)
+const detailItem = ref(null)
 
 // 分享相关
 const shareResult = ref(null)
@@ -711,6 +716,20 @@ async function deleteFile(file) {
     message.success('删除成功')
   } catch (err) {
     message.error(err.message || '删除失败')
+  }
+}
+
+async function handleUpdateDescription({ id, description }) {
+  try {
+    const isFile = detailItem.value?.size !== undefined
+    if (isFile) {
+      await fileStore.updateFileDescription(id, description)
+    } else {
+      await fileStore.updateFolderDescription(id, description)
+    }
+    message.success('描述已保存')
+  } catch (err) {
+    message.error(err.message || '保存失败')
   }
 }
 

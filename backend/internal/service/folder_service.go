@@ -110,6 +110,24 @@ func (s *FolderService) DeleteFolder(userID, folderID uint) error {
 	return s.folderRepo.Delete(folderID)
 }
 
+// UpdateFolderDescription 更新文件夹描述
+func (s *FolderService) UpdateFolderDescription(userID, folderID uint, description string) (*model.Folder, error) {
+	folder, err := s.folderRepo.FindByID(folderID)
+	if err != nil {
+		return nil, err
+	}
+	if folder.UserID != userID {
+		return nil, errors.New("access denied")
+	}
+
+	folder.Description = description
+	if err := s.folderRepo.Update(folder); err != nil {
+		return nil, err
+	}
+
+	return folder, nil
+}
+
 func (s *FolderService) MoveFolder(userID, folderID uint, newParentID *uint) (*model.Folder, error) {
 	folder, err := s.folderRepo.FindByID(folderID)
 	if err != nil {

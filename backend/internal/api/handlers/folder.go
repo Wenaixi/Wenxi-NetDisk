@@ -94,7 +94,8 @@ func (h *FolderHandler) UpdateFolder(c *gin.Context) {
 	}
 
 	var req struct {
-		Name string `json:"name" binding:"required"`
+		Name        string `json:"name" binding:"required"`
+		Description string `json:"description"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, err.Error())
@@ -105,6 +106,14 @@ func (h *FolderHandler) UpdateFolder(c *gin.Context) {
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return
+	}
+
+	if req.Description != "" {
+		folder, err = h.folderSvc.UpdateFolderDescription(uid, uint(folderID), req.Description)
+		if err != nil {
+			response.InternalError(c, err.Error())
+			return
+		}
 	}
 
 	response.Success(c, folder)

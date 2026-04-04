@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/wenaixi/wenxi-cloud/backend/config"
 	"github.com/wenaixi/wenxi-cloud/backend/internal/api/handlers"
+	"github.com/wenaixi/wenxi-cloud/backend/internal/pkg/lanzou"
 	"github.com/wenaixi/wenxi-cloud/backend/internal/pkg/middleware"
 	"github.com/wenaixi/wenxi-cloud/backend/internal/pkg/jwt"
 	"github.com/wenaixi/wenxi-cloud/backend/internal/repository"
@@ -47,6 +48,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	lanzouHandler := handlers.NewLanZouHandler(lanzouSvc, uploadSvc)
 	downloadHandler := handlers.NewDownloadHandler(downloadSvc)
 	recycleHandler := handlers.NewRecycleHandler(recycleSvc)
+	shareParseHandler := handlers.NewShareParseHandler(service.NewShareParseService(lanzou.NewClient("")))
 
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
@@ -70,6 +72,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			files.GET("", fileHandler.ListFiles)
 			files.POST("", fileHandler.CreateFileMetadata)
 			files.GET("/:id", fileHandler.GetFile)
+			files.PUT("/:id/description", fileHandler.UpdateFileDescription)
 			files.DELETE("/:id", fileHandler.DeleteFile)
 			files.POST("/:id/share", shareHandler.CreateShare)
 			files.GET("/:id/download", downloadHandler.GetDownloadURL)
@@ -122,6 +125,15 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			recycle.POST("/:id/restore", recycleHandler.Restore)
 			recycle.DELETE("/:id", recycleHandler.Delete)
 			recycle.DELETE("/clear", recycleHandler.Clear)
+		}
+
+		// Share parse routes (protected)
+		shareParse := api.Group("/lanzou/share")
+		shareParse.Use(middleware.AuthRequired(jwtManager))
+		{
+			shareParse.POST("/parse", shareParseHandler.ParseShare)
+			shareParse.POST("/validate", shareParseHandler.ValidateShareURL)
+			shareParse.POST("/download", shareParseHandler.GetShareDownloadURL)
 		}
 	}
 

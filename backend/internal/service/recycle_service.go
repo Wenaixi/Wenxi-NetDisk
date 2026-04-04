@@ -23,13 +23,13 @@ type RecycleBinRepository interface {
 }
 
 type RecycleFileRepo interface {
-	GetByID(id uint) (*model.File, error)
+	FindByID(id uint) (*model.File, error)
 	Create(file *model.File) error
 	Delete(id uint) error
 }
 
 type RecycleFolderRepo interface {
-	GetByID(id uint) (*model.Folder, error)
+	FindByID(id uint) (*model.Folder, error)
 	Create(folder *model.Folder) error
 	Delete(id uint) error
 }
@@ -48,7 +48,7 @@ func NewRecycleBinService(
 
 // MoveToRecycleBin 将文件移入回收站
 func (s *RecycleBinService) MoveToRecycleBin(userID uint, fileID uint) (*model.RecycleBin, error) {
-	file, err := s.fileRepo.GetByID(fileID)
+	file, err := s.fileRepo.FindByID(fileID)
 	if err != nil {
 		return nil, errors.New("file not found")
 	}
@@ -84,7 +84,7 @@ func (s *RecycleBinService) MoveToRecycleBin(userID uint, fileID uint) (*model.R
 
 // MoveFolderToRecycleBin 将文件夹移入回收站
 func (s *RecycleBinService) MoveFolderToRecycleBin(userID uint, folderID uint) (*model.RecycleBin, error) {
-	folder, err := s.folderRepo.GetByID(folderID)
+	folder, err := s.folderRepo.FindByID(folderID)
 	if err != nil {
 		return nil, errors.New("folder not found")
 	}
@@ -104,9 +104,11 @@ func (s *RecycleBinService) MoveFolderToRecycleBin(userID uint, folderID uint) (
 		OriginalName:   folder.Name,
 		ItemType:       "folder",
 		ItemID:         folderID,
-		LanZouFolderID: folder.LanZouFolderID,
-		ParentID:       folder.ParentID,
 		DeletedAt:      time.Now(),
+	}
+
+	if folder.ParentID != nil {
+		item.ParentID = *folder.ParentID
 	}
 
 	if err := s.recycleRepo.Create(item); err != nil {
@@ -148,11 +150,13 @@ func (s *RecycleBinService) Restore(userID uint, recycleID uint) error {
 		}
 	} else if item.ItemType == "folder" {
 		folder := &model.Folder{
-			ID:             item.ItemID,
-			UserID:         userID,
-			Name:           item.OriginalName,
-			LanZouFolderID: item.LanZouFolderID,
-			ParentID:       item.ParentID,
+			ID:       item.ItemID,
+			UserID:   userID,
+			Name:     item.OriginalName,
+		}
+		if item.ParentID > 0 {
+			pid := item.ParentID
+			folder.ParentID = &pid
 		}
 		if err := s.folderRepo.Create(folder); err != nil {
 			return err
