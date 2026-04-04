@@ -323,6 +323,8 @@ references/lanzouyun-disk/
 
 | Commit | 描述 |
 |--------|------|
+| d7b6718 | test: 添加FileService单元测试并接口化 |
+| e6c9977 | docs: 全面完善AGENTS.md - 测试统计+架构决策+API文档 |
 | 4fb8bf2 | test: 完善前端测试覆盖 - upload store + crypto工具 |
 | cb6bbec | test: 添加LanZouService单元测试并修复类型问题 |
 | 5ccd040 | test: 添加UploadService单元测试并修复类型问题 |
