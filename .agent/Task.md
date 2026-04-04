@@ -72,8 +72,8 @@
 - [x] 创建 auth API
 - [x] 创建 file API
 - [x] 创建 lanzou API
-- [ ] 创建 share API (待实现)
-- [ ] 创建 folder API (待实现)
+- [x] 创建 share API (store已实现)
+- [x] 创建 folder API (store已实现)
 
 ### Task 3.5: 页面开发
 - [x] 登录/注册页面
@@ -81,23 +81,30 @@
 - [x] 文件列表
 - [x] 文件上传
 - [x] 设置页面 (LanzouSettings.vue)
+- [x] 蓝奏云浏览器 (LanZouBrowser.vue)
 
 ---
 
-## Phase 4: 蓝奏云对接
+## Phase 4: 蓝奏云对接 🔄 (~80%)
 
-### Task 4.1: 蓝奏云 API 分析
-- [ ] 分析上传 API
-- [ ] 分析下载 API
-- [ ] 分析文件夹 API
+### Task 4.1: 蓝奏云 API 分析 ✅
+- [x] 分析上传 API (Task5 文件列表)
+- [x] 分析下载 API (Task22 文件详情)
+- [x] 分析文件夹 API (Task47 文件夹列表)
+- [x] 分析分享 API (Task39 创建分享)
 
-### Task 4.2: 前端直连上传
-- [ ] 实现文件加密 (ChaCha20)
-- [ ] 实现分块上传
-- [ ] 实现断点续传
+### Task 4.2: 后端API实现 ✅
+- [x] LanZouService 服务层
+- [x] LanZouHandler 处理器
+- [x] API响应 json.Unmarshal 解析
+- [x] CreateShare 分享接口
+- [x] GetFileURL 下载直链接口
 
-### Task 4.3: 前端直连下载
-- [ ] 实现直链下载
+### Task 4.3: 前端实现 🔄
+- [x] LanZouBrowser.vue 浏览器页面
+- [x] lanzouAPI 前端API封装
+- [x] 导航和状态管理
+- [ ] 实际API集成测试
 - [ ] 实现文件解密
 
 ---
