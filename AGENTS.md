@@ -64,10 +64,10 @@
 |-------|------|------|
 | Phase 1: Go后端搭建 | ✅ 完成 | 100% |
 | Phase 2: Go后端验证 | ✅ 完成 | 100% |
-| Phase 3: Vue前端搭建 | 🔄 进行中 | ~60% |
+| Phase 3: Vue前端搭建 | 🔄 进行中 | ~70% |
 | Phase 4: 蓝奏云对接 | ⏳ 待开始 | 0% |
 | Phase 5: 功能完善 | ⏳ 待开始 | 0% |
-| Phase 6: 测试系统 | ⏳ 待开始 | 0% |
+| Phase 6: 测试系统 | 🔄 进行中 | ~30% |
 
 ---
 
@@ -244,13 +244,15 @@ upload_sessions (id, user_id, file_name, file_size, file_hash,
 
 | Commit | 描述 |
 |--------|------|
-| a951cbf | feat: 全新架构重构 - Go后端 + 蓝奏云直连 |
-| 611413d | chore: 清理旧代码和无关文件 |
-| a109844 | feat: 完成Vue 3前端基础框架搭建 |
-| b7912d4 | docs: 更新任务进度 - Phase 3 Vue前端搭建进行中 |
+| 02e1447 | chore: 完善.gitignore配置 |
+| bb7ff53 | docs: 更新AGENTS.md - 添加测试进度和提交历史 |
 | 2ff5176 | test: 添加后端单元测试 (crypto, jwt, response) |
+| b7912d4 | docs: 更新任务进度 - Phase 3 Vue前端搭建进行中 |
+| a109844 | feat: 完成Vue 3前端基础框架搭建 |
+| 611413d | chore: 清理旧代码和无关文件 |
+| a951cbf | feat: 全新架构重构 - Go后端 + 蓝奏云直连 |
 
 ---
 
 **最后更新**: 2026-04-04
-**状态**: Phase 3 Vue前端搭建进行中 (~60%)
+**状态**: Phase 3 Vue前端搭建进行中 (~70%), Phase 6 测试系统进行中 (~30%)
