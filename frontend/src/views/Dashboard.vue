@@ -136,65 +136,90 @@
     </n-modal>
 
     <n-modal v-model:show="showUploadModal" :mask-closable="false">
-      <n-card title="加密上传文件" style="width: 500px;">
+      <n-card title="加密上传文件" style="width: 600px;">
         <div class="space-y-4">
           <n-alert type="info" :show-icon="false">
             文件将在本地加密后上传，服务器和存储端均无法读取文件内容。
           </n-alert>
 
+          <!-- 文件选择区 -->
           <n-upload
-            v-if="!selectedFile"
-            :max="1"
-            @change="handleFileChange"
+            v-if="uploadStore.uploadQueue.length === 0"
+            :multiple="true"
+            @change="handleFilesChange"
             accept="*/*"
+            :max="10"
           >
-            <n-button>选择文件</n-button>
+            <n-button>选择文件 (最多10个)</n-button>
           </n-upload>
 
-          <div v-else class="bg-[#252525] p-4 rounded-none">
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-white">{{ selectedFile.name }}</span>
-              <n-button text @click="clearFile" :disabled="uploadStore.isUploading">
-                <n-icon><Close /></n-icon>
+          <!-- 上传队列 -->
+          <div v-else class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-gray-400 text-sm">
+                {{ uploadStore.queueUploadedCount }} / {{ uploadStore.queueTotalCount }} 已完成
+              </span>
+              <n-button size="small" text @click="uploadStore.clearQueue" :disabled="uploadStore.isQueueUploading">
+                清空队列
               </n-button>
             </div>
-            <div class="text-gray-400 text-sm">{{ formatSize(selectedFile.size) }}</div>
-          </div>
 
-          <div v-if="uploadStore.isEncrypting" class="space-y-2">
-            <div class="flex items-center gap-2 text-blue-400">
-              <n-spin size="small" />
-              <span>正在加密...</span>
+            <div class="max-h-60 overflow-y-auto space-y-2">
+              <div
+                v-for="item in uploadStore.uploadQueue"
+                :key="item.id"
+                class="bg-[#1a1a1a] p-3"
+              >
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2 flex-1 min-w-0">
+                    <n-icon size="16" color="#a78bfa"><Document /></n-icon>
+                    <span class="text-white truncate">{{ item.file.name }}</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <n-tag v-if="item.status === 'completed'" type="success" size="small">完成</n-tag>
+                    <n-tag v-else-if="item.status === 'error'" type="error" size="small">失败</n-tag>
+                    <n-spin v-else-if="item.status === 'encrypting'" size="small" />
+                    <n-button
+                      v-if="item.status !== 'completed' && item.status !== 'encrypting' && !uploadStore.isQueueUploading"
+                      size="tiny"
+                      text
+                      @click="uploadStore.removeFromQueue(item.id)"
+                    >
+                      <n-icon><Close /></n-icon>
+                    </n-button>
+                  </div>
+                </div>
+                <div v-if="item.status === 'uploading'" class="text-gray-500 text-xs mb-1">
+                  {{ item.progress }}%
+                </div>
+                <n-progress
+                  v-if="item.status === 'uploading'"
+                  :percentage="item.progress"
+                  :show-indicator="false"
+                  :height="4"
+                />
+                <div v-if="item.error" class="text-red-400 text-xs mt-1">{{ item.error }}</div>
+              </div>
             </div>
           </div>
-
-          <div v-if="uploadStore.isUploading" class="space-y-2">
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-400">上传进度</span>
-              <span class="text-white">{{ uploadStore.progress }}%</span>
-            </div>
-            <n-progress :percentage="uploadStore.progress" :show-indicator="false" />
-            <div class="text-gray-500 text-xs">
-              已上传: {{ formatSize(uploadStore.uploadedBytes) }} / {{ formatSize(uploadStore.totalBytes) }}
-              <span v-if="uploadStore.speed > 0">({{ formatSpeed(uploadStore.speed) }})</span>
-            </div>
-          </div>
-
-          <n-alert v-if="uploadStore.error" type="error" :show-icon="false">
-            {{ uploadStore.error }}
-          </n-alert>
         </div>
 
         <template #footer>
           <div class="flex justify-end gap-2">
-            <n-button @click="closeUploadModal" :disabled="uploadStore.isUploading || uploadStore.isEncrypting">取消</n-button>
+            <n-button @click="closeUploadModal" :disabled="uploadStore.isQueueUploading">取消</n-button>
             <n-button
+              v-if="uploadStore.uploadQueue.length > 0 && !uploadStore.isQueueUploading && !uploadStore.hasQueueItems"
               type="primary"
-              :loading="uploadStore.isUploading || uploadStore.isEncrypting"
-              :disabled="!selectedFile || uploadStore.isUploading || uploadStore.isEncrypting"
-              @click="startUpload"
+              @click="startBatchUpload"
             >
-              {{ uploadStore.isUploading ? '上传中...' : (uploadStore.isEncrypting ? '加密中...' : '开始上传') }}
+              开始上传
+            </n-button>
+            <n-button
+              v-if="uploadStore.isQueueUploading"
+              type="primary"
+              :loading="true"
+            >
+              上传中 ({{ uploadStore.queueUploadedCount }}/{{ uploadStore.queueTotalCount }})
             </n-button>
           </div>
         </template>
@@ -485,16 +510,22 @@ function handleFileChange(options) {
   uploadStore.reset()
 }
 
+function handleFilesChange(options) {
+  const files = options.fileList.map(item => item.file)
+  uploadStore.addToQueue(files)
+}
+
 function clearFile() {
   selectedFile.value = null
   uploadStore.reset()
 }
 
 function closeUploadModal() {
-  if (uploadStore.isUploading || uploadStore.isEncrypting) return
+  if (uploadStore.isQueueUploading) return
   showUploadModal.value = false
   selectedFile.value = null
   uploadStore.reset()
+  uploadStore.clearQueue()
 }
 
 async function startUpload() {
@@ -515,6 +546,33 @@ async function startUpload() {
     fileStore.fetchFiles(fileStore.currentFolder)
     showUploadModal.value = false
     selectedFile.value = null
+  } catch (err) {
+    message.error(err.message || '上传失败')
+  }
+}
+
+async function startBatchUpload() {
+  if (uploadStore.uploadQueue.length === 0) {
+    message.warning('请选择文件')
+    return
+  }
+
+  try {
+    const key = await generateEncryptionKey()
+    await uploadStore.uploadAll(key, fileStore.currentFolder)
+
+    const successCount = uploadStore.queueUploadedCount
+    const errorCount = uploadStore.queueErrors.length
+
+    if (errorCount > 0) {
+      message.warning(`上传完成: ${successCount} 个成功, ${errorCount} 个失败`)
+    } else {
+      message.success(`成功上传 ${successCount} 个文件`)
+    }
+
+    fileStore.fetchFiles(fileStore.currentFolder)
+    showUploadModal.value = false
+    uploadStore.clearQueue()
   } catch (err) {
     message.error(err.message || '上传失败')
   }

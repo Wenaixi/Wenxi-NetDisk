@@ -14,8 +14,17 @@ export const useUploadStore = defineStore('upload', () => {
   const error = ref(null)
   const currentFile = ref(null)
 
+  // 批量上传队列
+  const uploadQueue = ref([])
+  const isQueueUploading = ref(false)
+  const queueCurrentIndex = ref(0)
+  const queueTotalCount = ref(0)
+  const queueUploadedCount = ref(0)
+  const queueErrors = ref([])
+
   // Getters
   const canUpload = computed(() => !isEncrypting.value && !isUploading.value)
+  const hasQueueItems = computed(() => uploadQueue.value.length > 0)
 
   // Actions
   function reset() {
@@ -27,6 +36,86 @@ export const useUploadStore = defineStore('upload', () => {
     speed.value = 0
     error.value = null
     currentFile.value = null
+  }
+
+  function addToQueue(files) {
+    for (const file of files) {
+      uploadQueue.value.push({
+        id: Date.now() + Math.random(),
+        file,
+        status: 'pending', // pending, encrypting, uploading, completed, error
+        progress: 0,
+        error: null
+      })
+    }
+  }
+
+  function removeFromQueue(id) {
+    const idx = uploadQueue.value.findIndex(f => f.id === id)
+    if (idx !== -1) {
+      uploadQueue.value.splice(idx, 1)
+    }
+  }
+
+  function clearQueue() {
+    uploadQueue.value = []
+    queueErrors.value = []
+    queueCurrentIndex.value = 0
+    queueUploadedCount.value = 0
+  }
+
+  async function uploadAll(key, folderId = null) {
+    if (uploadQueue.value.length === 0) return
+
+    isQueueUploading.value = true
+    queueTotalCount.value = uploadQueue.value.length
+    queueUploadedCount.value = 0
+    queueErrors.value = []
+
+    for (let i = 0; i < uploadQueue.value.length; i++) {
+      const item = uploadQueue.value[i]
+      if (item.status === 'completed') continue
+
+      queueCurrentIndex.value = i
+      item.status = 'encrypting'
+
+      try {
+        // 加密
+        const encryptedBlob = await encryptFile(item.file, key)
+        item.status = 'uploading'
+
+        // 初始化上传
+        const sessionResponse = await fileAPI.initializeUpload({
+          file_name: item.file.name,
+          file_size: encryptedBlob.size,
+          mime_type: item.file.type || 'application/octet-stream',
+          folder_id: folderId,
+        })
+
+        const { upload_url, session_id } = sessionResponse.data
+
+        // 上传
+        await uploadToUrl(upload_url, encryptedBlob, (loaded) => {
+          item.progress = Math.round((loaded / encryptedBlob.size) * 100)
+        })
+
+        // 完成上传
+        const exportedKey = await exportKey(key)
+        await fileAPI.completeUpload(session_id, {
+          encryption_key: exportedKey.key,
+          encryption_nonce: exportedKey.iv,
+        })
+
+        item.status = 'completed'
+        queueUploadedCount.value++
+      } catch (err) {
+        item.status = 'error'
+        item.error = err.message || '上传失败'
+        queueErrors.value.push({ file: item.file.name, error: item.error })
+      }
+    }
+
+    isQueueUploading.value = false
   }
 
   async function encryptAndUpload(file, key, folderId = null) {
@@ -142,6 +231,19 @@ export const useUploadStore = defineStore('upload', () => {
     error,
     currentFile,
     canUpload,
+    // 批量上传
+    uploadQueue,
+    isQueueUploading,
+    queueCurrentIndex,
+    queueTotalCount,
+    queueUploadedCount,
+    queueErrors,
+    hasQueueItems,
+    addToQueue,
+    removeFromQueue,
+    clearQueue,
+    uploadAll,
+    // 单文件上传
     reset,
     encryptAndUpload,
   }
