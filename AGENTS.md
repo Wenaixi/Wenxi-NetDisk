@@ -578,14 +578,14 @@ references/lanzouyun-disk/
 
 ## 测试统计
 
-### Go后端 (212 tests)
+### Go后端 (222 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | pkg/crypto | 5 | ✅ |
 | pkg/jwt | 7 | ✅ |
 | pkg/lanzou | 6 | ✅ |
-| pkg/response | 5 | ✅ |
-| pkg/middleware | 10 | ✅ |
+| pkg/response | 15 (5结构+10HTTP) | ✅ |
+| pkg/middleware | 20 (10Auth+4Logger+6CORS) | ✅ |
 | service/auth | 8 | ✅ |
 | service/file | 12 | ✅ |
 | service/folder | 22 | ✅ |
@@ -598,7 +598,7 @@ references/lanzouyun-disk/
 | repository | 10 | ⏭️ (skip CGO) |
 | handlers | 69 | ✅ |
 
-### Vue前端 (142 tests)
+### Vue前端 (212 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | auth store | 7 | ✅ |
@@ -612,9 +612,20 @@ references/lanzouyun-disk/
 | shareParse store | 16 | ✅ |
 | crypto utils | 4 | ✅ |
 | fileSplit utils | 22 | ✅ |
-| **components** | **43** | ✅ |
+| components | 71 | ✅ |
 
-**总测试数: 380 (212 Go + 168 Vue) 全部通过**
+### Vue 组件测试 (71 tests)
+| 组件 | 测试数 | 状态 |
+|------|--------|------|
+| FileDetailModal | 17 | ✅ |
+| AppHeader | 8 | ✅ |
+| Login | 8 | ✅ |
+| Register | 10 | ✅ |
+| LanzouSettings | 12 | ✅ |
+| RecycleBin | 16 | ✅ |
+| Sync | 16 | ✅ |
+
+**总测试数: 434 (222 Go + 212 Vue) 全部通过**
 
 ## 测试规范记录
 
