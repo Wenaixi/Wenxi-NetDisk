@@ -52,7 +52,7 @@ export const folderAPI = {
   create: (data) => api.post('/folders', data),
   delete: (id) => api.delete(`/folders/${id}`),
   rename: (id, name) => api.put(`/folders/${id}`, { name }),
-  updateDescription: (id, description) => api.put(`/folders/${id}`, { description }),
+  updateDescription: (id, description) => api.put(`/folders/${id}/description`, { description }),
   move: (id, parentId) => api.put(`/folders/${id}/move`, { parent_id: parentId })
 }
 

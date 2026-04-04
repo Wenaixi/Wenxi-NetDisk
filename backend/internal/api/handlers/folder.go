@@ -110,6 +110,7 @@ func (h *FolderHandler) UpdateFolder(c *gin.Context) {
 			return
 		}
 		response.Success(c, folder)
+		return
 	}
 
 	// 更新描述
@@ -120,6 +121,7 @@ func (h *FolderHandler) UpdateFolder(c *gin.Context) {
 			return
 		}
 		response.Success(c, folder)
+		return
 	}
 
 	response.BadRequest(c, "name or description is required")
@@ -164,6 +166,34 @@ func (h *FolderHandler) MoveFolder(c *gin.Context) {
 	}
 
 	folder, err := h.folderSvc.MoveFolder(uid, uint(folderID), req.ParentID)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, folder)
+}
+
+// UpdateFolderDescription 更新文件夹描述（专用端点）
+func (h *FolderHandler) UpdateFolderDescription(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	folderID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		response.BadRequest(c, "invalid folder id")
+		return
+	}
+
+	var req struct {
+		Description string `json:"description"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	folder, err := h.folderSvc.UpdateFolderDescription(uid, uint(folderID), req.Description)
 	if err != nil {
 		response.InternalError(c, err.Error())
 		return

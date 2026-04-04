@@ -99,6 +99,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			folders.POST("", folderHandler.CreateFolder)
 			folders.GET("/:id", folderHandler.GetFolder)
 			folders.PUT("/:id", folderHandler.UpdateFolder)
+			folders.PUT("/:id/description", folderHandler.UpdateFolderDescription)
 			folders.DELETE("/:id", folderHandler.DeleteFolder)
 			folders.PUT("/:id/move", folderHandler.MoveFolder)
 		}
