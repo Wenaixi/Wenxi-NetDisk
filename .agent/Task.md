@@ -184,6 +184,7 @@
 - [x] service/share 测试 (21)
 - [x] service/download 测试 (5)
 - [x] service/recycle 测试 (11)
+- [x] service/file_version 测试 (18)
 
 ### Task 6.2: 前端单元测试 ✅
 - [x] Store 测试 - auth (7)

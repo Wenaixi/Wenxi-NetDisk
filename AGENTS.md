@@ -32,6 +32,26 @@
 
 ## 开发历史
 
+### 2026-04-05 - 文件版本管理 + 缺失API补全
+
+**文件版本管理:**
+- 新增 FileVersion 模型 (id, file_id, user_id, lanzou_file_id, size, encryption_key, encryption_nonce, description)
+- 新增 file_version_repo.go (Create/FindByFileID/FindByID/Delete/DeleteByFileID)
+- 新增 file_version_service.go (CreateVersion/ListVersions/RestoreVersion/DeleteVersion)
+- 新增 upload.go handler (UploadFile/GetUploadURL/ListVersions/RestoreVersion)
+- 路由: POST /files/upload, POST /files/upload-url, GET /files/:id/versions, POST /files/:id/versions/:version_id/restore
+- 18个单元测试全部通过
+
+**API对齐:**
+- 补齐前端 fileAPI.upload → POST /files/upload (multipart上传)
+- 补齐前端 fileAPI.getUploadUrl → POST /files/upload-url (直传URL)
+- 补齐前端 fileAPI.getVersions → GET /files/:id/versions (版本列表)
+- 补齐前端 fileAPI.restoreVersion → POST /files/:id/versions/:version_id/restore (版本恢复)
+- 前后端API路由完全对齐
+
+**数据库迁移:**
+- AutoMigrate 添加 FileVersion 模型
+
 ### 2026-04-05 - Share模型完善 + E2E测试框架
 
 **Share模型完善:**
@@ -547,6 +567,7 @@ references/lanzouyun-disk/
 | service/share | 21 | ✅ |
 | service/download | 5 | ✅ |
 | service/recycle | 11 | ✅ |
+| service/file_version | 18 | ✅ |
 | repository | 10 | ⏭️ (skip CGO) |
 
 ### Vue前端 (125 tests)

@@ -33,6 +33,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	uploadRepo := repository.NewUploadSessionRepository(db)
 	folderRepo := repository.NewFolderRepository(db)
 	recycleRepo := repository.NewRecycleBinRepository(db)
+	versionRepo := repository.NewFileVersionRepository(db)
 
 	// Services
 	authSvc := service.NewAuthService(userRepo, jwtManager)
@@ -43,6 +44,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	uploadSvc := service.NewUploadService(uploadRepo, lanzouSvc, fileSvc)
 	downloadSvc := service.NewDownloadService(fileSvc, lanzouSvc)
 	recycleSvc := service.NewRecycleBinService(recycleRepo, fileRepo, folderRepo)
+	versionSvc := service.NewFileVersionService(versionRepo, fileRepo)
 
 	// Handlers
 	authHandler := handlers.NewAuthHandler(authSvc)
@@ -52,6 +54,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	lanzouHandler := handlers.NewLanZouHandler(lanzouSvc, uploadSvc)
 	downloadHandler := handlers.NewDownloadHandler(downloadSvc)
 	recycleHandler := handlers.NewRecycleHandler(recycleSvc)
+	uploadHandler := handlers.NewUploadHandler(fileSvc, versionSvc)
 	shareParseHandler := handlers.NewShareParseHandler(service.NewShareParseService(lanzou.NewClient("")))
 
 	// Health check
@@ -82,6 +85,10 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			files.DELETE("/:id", fileHandler.DeleteFile)
 			files.POST("/:id/share", shareHandler.CreateShare)
 			files.GET("/:id/download", downloadHandler.GetDownloadURL)
+			files.POST("/upload", uploadHandler.UploadFile)
+			files.POST("/upload-url", uploadHandler.GetUploadURL)
+			files.GET("/:id/versions", uploadHandler.ListVersions)
+			files.POST("/:id/versions/:version_id/restore", uploadHandler.RestoreVersion)
 		}
 
 		// Folder routes (protected)

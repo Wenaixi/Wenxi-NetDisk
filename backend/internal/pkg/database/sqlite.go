@@ -54,5 +54,6 @@ func AutoMigrate(db *gorm.DB) error {
 		&model.LanZouToken{},
 		&model.UploadSession{},
 		&model.RecycleBin{},
+		&model.FileVersion{},
 	)
 }
