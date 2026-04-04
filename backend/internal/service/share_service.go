@@ -73,6 +73,7 @@ func (s *ShareService) CreateShare(userID, fileID uint, password *string, expire
 	}
 
 	share := &model.Share{
+		UserID:        userID,
 		FileID:        fileID,
 		ShareToken:    shareToken,
 		PasswordHash:  passwordHash,
@@ -96,12 +97,7 @@ func (s *ShareService) DeleteShare(userID, shareID uint) error {
 		return err
 	}
 
-	// Verify ownership through file
-	file, err := s.fileRepo.FindByID(share.FileID)
-	if err != nil {
-		return err
-	}
-	if file.UserID != userID {
+	if share.UserID != userID {
 		return errors.New("access denied")
 	}
 

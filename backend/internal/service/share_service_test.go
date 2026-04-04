@@ -18,6 +18,7 @@ func newMockShareRepo() *mockShareRepo {
 		shares: []*model.Share{
 			{
 				ID:          1,
+				UserID:      1,
 				FileID:      1,
 				ShareToken:  "abc123",
 				PasswordHash: nil,
@@ -25,17 +26,19 @@ func newMockShareRepo() *mockShareRepo {
 			},
 			{
 				ID:          2,
+				UserID:      1,
 				FileID:      2,
 				ShareToken:  "expired456",
 				PasswordHash: nil,
-				ExpiresAt:   &[]time.Time{time.Now().Add(-24 * time.Hour)}[0], // 已过期
+				ExpiresAt:   &[]time.Time{time.Now().Add(-24 * time.Hour)}[0],
 			},
 			{
 				ID:          3,
+				UserID:      1,
 				FileID:      3,
 				ShareToken:  "pwd789",
 				PasswordHash: &[]string{"$2a$10$hashedpwd"}[0],
-				ExpiresAt:   &[]time.Time{time.Now().Add(24 * time.Hour)}[0], // 未过期
+				ExpiresAt:   &[]time.Time{time.Now().Add(24 * time.Hour)}[0],
 			},
 		},
 	}
