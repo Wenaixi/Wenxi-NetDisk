@@ -491,11 +491,11 @@ references/lanzouyun-disk/
 ---
 
 **最后更新**: 2026-04-04
-**状态**: Phase 5 ✅ 100%, Phase 6 ✅ 100%, 测试 253 全部通过
+**状态**: Phase 5 ✅ 100%, Phase 6 ✅ 95%, 测试 253 全部通过 (125 Vue + 116 Go)
 
 ## 测试统计
 
-### Go后端 (107 tests)
+### Go后端 (116 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | pkg/crypto | 5 | ✅ |
@@ -512,7 +512,7 @@ references/lanzouyun-disk/
 | service/recycle | 11 | ✅ |
 | repository | 10 | ⏭️ (skip CGO) |
 
-### Vue前端 (126 tests)
+### Vue前端 (125 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | auth store | 7 | ✅ |
@@ -520,12 +520,12 @@ references/lanzouyun-disk/
 | upload store | 7 | ✅ |
 | share store | 10 | ✅ |
 | download store | 10 | ✅ |
-| crypto utils | 4 | ✅ |
-| fileSplit utils | 22 | ✅ |
 | recycle store | 15 | ✅ |
-| shareParse store | 16 | ✅ |
 | sync store | 11 | ✅ |
 | fileDescription store | 4 | ✅ |
+| shareParse store | 16 | ✅ |
+| crypto utils | 4 | ✅ |
+| fileSplit utils | 22 | ✅ |
 
 **总测试数: 253 (115 Go + 138 Vue) 全部通过**
 

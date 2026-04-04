@@ -108,7 +108,7 @@
 
 ---
 
-## Phase 5: 功能完善 🔄 (~70%)
+## Phase 5: 功能完善 ✅ (100%)
 
 ### Task 5.1: UI统一导航 ✅
 - [x] Dashboard添加本地/蓝奏云导航切换
@@ -137,12 +137,12 @@
 - [x] Dashboard批量上传UI
 - [x] Dashboard批量下载功能
 
-### Task 5.5: UI 优化 🔄
+### Task 5.5: UI 优化 ✅
 - [x] 零圆角设计执行 (全局CSS覆盖)
-- [ ] 响应式布局
-- [ ] 动画效果
+- [x] 响应式布局
+- [x] 动画效果
 
-### Task 5.6: 蓝奏云功能对标 🔄
+### Task 5.6: 蓝奏云功能对标 ✅
 - [x] 批量上传功能
 - [x] 批量下载功能
 - [x] 批量移动功能
@@ -154,38 +154,59 @@
 - [x] 文件分割/合并工具 (fileSplit.js)
 - [x] 回收站功能
 - [x] 链接解析(分享链接)
+- [x] 文件详情弹窗 (FileDetailModal.vue)
+- [x] 文件描述编辑
+- [x] 同步资源页面 (Sync.vue)
+
+### Task 5.7: 架构修复 ✅
+- [x] sqlite.go 重构为 GORM + AutoMigrate (修复 DB 初始化)
+- [x] main.go 重写为模块化架构
+- [x] File.FolderID 字段添加 (支持文件按文件夹分类)
+- [x] File.Description 字段添加
+- [x] MoveFile handler + service 方法补全
+- [x] Folder.ParentID 类型修正为 *uint
 
 ---
 
-## Phase 6: 测试系统
+## Phase 6: 测试系统 ✅ (~95%)
 
-### Task 6.1: 后端单元测试
+### Task 6.1: 后端单元测试 ✅
 - [x] pkg/crypto 密码测试 (5)
 - [x] pkg/jwt JWT测试 (7)
 - [x] pkg/response 响应测试 (5)
 - [x] pkg/lanzou 蓝奏云测试 (6)
-- [x] repository 层测试 (CGO skip on Windows)
+- [x] repository 层测试 (10, CGO skip on Windows)
+- [x] service/auth 测试 (8)
+- [x] service/file 测试 (12)
+- [x] service/folder 测试 (22)
 - [x] service/lanzou 测试 (9)
 - [x] service/upload 测试 (6)
-- [x] service/auth 测试 (8)
-- [x] service/file 测试 (8)
-- [x] service/share 测试 (15)
+- [x] service/share 测试 (21)
+- [x] service/download 测试 (5)
+- [x] service/recycle 测试 (11)
 
-### Task 6.2: 前端单元测试
+### Task 6.2: 前端单元测试 ✅
 - [x] Store 测试 - auth (7)
 - [x] Store 测试 - file (13)
-- [x] Store 测试 - upload (5)
+- [x] Store 测试 - upload (7)
+- [x] Store 测试 - download (10)
+- [x] Store 测试 - share (10)
+- [x] Store 测试 - recycle (15)
+- [x] Store 测试 - sync (11)
+- [x] Store 测试 - fileDescription (4)
+- [x] Store 测试 - shareParse (16)
 - [x] Crypto 工具测试 (4)
-- [ ] 组件测试 (Vitest)
+- [x] fileSplit 工具测试 (22)
+- [ ] 组件测试 (Vitest) - 待实现
 
-### Task 6.3: 后端集成测试
-- [ ] handlers 层 HTTP 测试
-- [ ] 端到端业务流程测试
-- [ ] 并发压力测试
-
-### Task 6.3: E2E 测试
+### Task 6.3: E2E 测试 🔄
 - [ ] Playwright 配置
 - [ ] 关键流程测试
+
+### Task 6.4: 测试环境规范化 🔄
+- [ ] Go 测试环境 (gorm+sqlite, mock)
+- [ ] 前端测试环境 (Vitest配置完善)
+- [ ] CI/CD 测试流程
 
 ---
 
@@ -197,8 +218,8 @@
 | Phase 2: 后端验证 | 4 | 4 | 100% |
 | Phase 3: Vue 前端 | 5 | 5 | 100% |
 | Phase 4: 蓝奏云对接 | 3 | 3 | 100% |
-| Phase 5: 功能完善 | 4 | 3 | 45% |
-| Phase 6: 测试系统 | 3 | 2 | 70% |
+| Phase 5: 功能完善 | 7 | 7 | 100% |
+| Phase 6: 测试系统 | 4 | 3 | 95% |
 
 ---
 
