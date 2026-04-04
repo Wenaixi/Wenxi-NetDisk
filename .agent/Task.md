@@ -122,8 +122,11 @@
 ## Phase 6: 测试系统
 
 ### Task 6.1: 后端单元测试
-- [ ] Service 层测试
-- [ ] Repository 层测试
+- [x] pkg/crypto 密码测试
+- [x] pkg/jwt JWT测试
+- [x] pkg/response 响应测试
+- [ ] repository 层测试
+- [ ] service 层测试
 
 ### Task 6.2: 前端单元测试
 - [ ] 组件测试 (Vitest)

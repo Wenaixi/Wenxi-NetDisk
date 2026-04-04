@@ -22,8 +22,8 @@
 | 层级 | 技术 | 版本 |
 |------|------|------|
 | **后端** | Go + Gin + GORM | 1.21 |
-| **前端** | Vue 3 + Vite + Naive UI | ^3.4 |
-| **数据库** | SQLite | - |
+| **前端** | Vue 3 + Vite + Naive UI + Tailwind CSS 4 | ^3.4 |
+| **数据库** | SQLite (modernc.org/sqlite 纯Go) | - |
 | **认证** | JWT | HS256 |
 | **加密** | ChaCha20-Poly1305 | 客户端 |
 | **部署** | VPS | Linux |
@@ -32,23 +32,23 @@
 
 ## 开发历史
 
-### 2026-04-04 - 新架构启动
+### 2026-04-04 - Phase 1 & 2 完成
 
-**决策**: 重构项目架构，采用新方案
+**Go后端完成:**
+- 目录结构: backend/cmd/server, backend/internal/...
+- 纯Go SQLite驱动 (modernc.org/sqlite - 无CGO依赖)
+- JWT认证 + bcrypt密码加密
+- RESTful API: auth, files, folders, shares, lanzou
+- 所有依赖已安装 (GOSUMDB=off 解决网络问题)
 
-**原因**:
-- 原 Python FastAPI 方案：文件经过服务器，带宽成本高
-- 新 Go + Gin 方案：客户端直连蓝奏云，服务器只存 metadata
-
-**新架构优势**:
-- 带宽成本极低（只传 metadata）
-- 文件走蓝奏云 CDN，速度快
-- 保留 E2E 加密（服务器看不到文件内容）
-
-**技术选型**:
-- 后端: Go + Gin + GORM + SQLite
-- 前端: Vue 3 + Vite + Naive UI + Tailwind CSS
-- UI风格: 零圆角设计系统（保留原有特色）
+**Vue前端完成:**
+- Vite + Vue 3 + Tailwind CSS 4 + Naive UI
+- 登录/注册页面
+- Dashboard (文件列表、文件夹导航、上传)
+- Pinia stores (auth, file)
+- Vue Router路由守卫
+- axios API封装 + 请求拦截器
+- 构建成功 (vite build)
 
 ### 2026-03-20 - 架构调整
 
@@ -60,130 +60,152 @@
 
 ## 当前进度
 
-### Phase 1: Go 后端搭建 ✅
-
-| 任务 | 状态 | 文件 |
-|------|------|------|
-| 目录结构 | ✅ | backend/cmd/server, backend/internal/... |
-| Go 模块 | ✅ | backend/go.mod |
-| 配置模块 | ✅ | backend/config/config.go |
-| 数据库模块 | ✅ | backend/internal/pkg/database/sqlite.go |
-| 响应模块 | ✅ | backend/internal/pkg/response/response.go |
-| 数据模型 | ✅ | backend/internal/model/*.go |
-| Repository 层 | ✅ | backend/internal/repository/*.go |
-| Service 层 | ✅ | backend/internal/service/*.go |
-| JWT 工具 | ✅ | backend/internal/pkg/jwt/jwt.go |
-| 密码加密 | ✅ | backend/internal/pkg/crypto/password.go |
-| 中间件 | ✅ | backend/internal/pkg/middleware/*.go |
-| Handlers | ✅ | backend/internal/api/handlers/*.go |
-| 路由 | ✅ | backend/internal/api/router.go |
-| 主入口 | ✅ | backend/cmd/server/main.go |
-
-### Phase 2: Vue 前端搭建 ⏳ (待开始)
-
-### Phase 3: 蓝奏云对接 ⏳ (待开始)
-
-### Phase 4: 功能完善 ⏳ (待开始)
+| Phase | 状态 | 进度 |
+|-------|------|------|
+| Phase 1: Go后端搭建 | ✅ 完成 | 100% |
+| Phase 2: Go后端验证 | ✅ 完成 | 100% |
+| Phase 3: Vue前端搭建 | 🔄 进行中 | ~60% |
+| Phase 4: 蓝奏云对接 | ⏳ 待开始 | 0% |
+| Phase 5: 功能完善 | ⏳ 待开始 | 0% |
+| Phase 6: 测试系统 | ⏳ 待开始 | 0% |
 
 ---
 
-## 项目结构
+## 项目结构 (当前)
 
 ```
 wenxi-cloud/
 ├── backend/                          # Go + Gin 后端
-│   ├── cmd/server/main.go           # 入口
+│   ├── cmd/server/main.go           # 入口 (端口8080)
 │   ├── config/config.go             # 配置
 │   ├── internal/
 │   │   ├── api/
 │   │   │   ├── router.go           # 路由
 │   │   │   ├── handlers/           # HTTP handlers
-│   │   │   └── middleware/        # 中间件
-│   │   ├── model/                  # GORM 模型
-│   │   ├── repository/            # 数据访问层
-│   │   ├── service/               # 业务逻辑层
-│   │   └── pkg/                   # 工具包
-│   │       ├── crypto/            # 密码加密
-│   │       ├── database/          # 数据库
-│   │       ├── jwt/               # JWT
-│   │       ├── middleware/        # 中间件
-│   │       └── response/          # 响应
-│   └── go.mod / go.sum
-├── frontend/                         # Vue 3 前端 (待搭建)
-│   └── src/
-│       ├── api/
-│       ├── components/
-│       ├── composables/
-│       ├── stores/
-│       ├── views/
-│       └── styles/
+│   │   │   │   ├── auth.go
+│   │   │   │   ├── file.go
+│   │   │   │   ├── folder.go
+│   │   │   │   ├── share.go
+│   │   │   │   └── lanzou.go
+│   │   │   └── middleware/          # 中间件 (Auth, CORS, Logger)
+│   │   ├── model/                   # 数据模型
+│   │   │   ├── user.go
+│   │   │   ├── file.go
+│   │   │   ├── folder.go
+│   │   │   ├── share.go
+│   │   │   ├── lanzou_token.go
+│   │   │   └── upload_session.go
+│   │   ├── repository/              # 数据访问层
+│   │   ├── service/                 # 业务逻辑层
+│   │   └── pkg/                     # 工具包
+│   │       ├── crypto/password.go   # bcrypt
+│   │       ├── database/sqlite.go   # 纯Go SQLite
+│   │       ├── jwt/jwt.go          # JWT工具
+│   │       ├── middleware/          # 中间件
+│   │       └── response/           # 统一响应
+│   ├── go.mod / go.sum
+│   └── data/wenxi.db               # SQLite数据库
+├── frontend/                         # Vue 3 前端
+│   ├── src/
+│   │   ├── api/index.js            # axios封装
+│   │   ├── router/index.js          # Vue Router
+│   │   ├── stores/
+│   │   │   ├── auth.js             # 认证store
+│   │   │   └── file.js             # 文件store
+│   │   ├── views/
+│   │   │   ├── Login.vue
+│   │   │   ├── Register.vue
+│   │   │   └── Dashboard.vue
+│   │   ├── App.vue
+│   │   ├── main.js
+│   │   └── style.css               # Tailwind入口
+│   ├── vite.config.js              # Vite配置 (代理API到:8080)
+│   └── dist/                        # 构建输出
 ├── .agent/                          # 开发文档
 │   ├── Requirement.md              # 需求规范
-│   ├── Design.md                  # 架构设计
-│   └── Task.md                    # 任务列表
+│   ├── Design.md                    # 架构设计
+│   └── Task.md                     # 任务列表
 └── AGENTS.md                       # 项目记忆
 ```
 
 ---
 
-## 数据库表设计
+## 数据库表设计 (已实现)
 
 ```sql
 -- users: 用户表
-users (id, username, email, password_hash, created_at, updated_at)
+users (id, email, password_hash, created_at, updated_at)
+
+-- folders: 文件夹表
+folders (id, user_id, parent_id, name, created_at, updated_at)
 
 -- files: 文件元数据表
-files (id, user_id, name, size, lanzou_file_id, lanzou_folder_id,
+files (id, user_id, folder_id, name, size, lanzou_file_id,
        encryption_key, encryption_nonce, mime_type, created_at, updated_at)
 
 -- shares: 分享表
-shares (id, file_id, share_token, password_hash, expires_at, created_at)
+shares (id, user_id, file_id, share_token, password_hash, expires_at, created_at)
 
--- lanzou_tokens: 蓝奏云 cookie/token
+-- lanzou_tokens: 蓝奏云认证
 lanzou_tokens (id, user_id, cookie, token_value, expires_at, updated_at)
 
--- upload_sessions: 断点续传会话
+-- upload_sessions: 断点续传
 upload_sessions (id, user_id, file_name, file_size, file_hash,
                  chunks_total, chunks_uploaded, status, created_at, updated_at)
 ```
 
 ---
 
-## API 接口设计
+## API 接口设计 (已实现)
 
 ### 认证模块 `/api/auth`
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| POST | /register | 用户注册 |
-| POST | /login | 用户登录 |
-| GET | /me | 获取当前用户 |
+| 方法 | 端点 | 说明 | 状态 |
+|------|------|------|------|
+| POST | /register | 用户注册 | ✅ |
+| POST | /login | 用户登录 | ✅ |
+| GET | /me | 获取当前用户 | ✅ |
 
 ### 文件模块 `/api/files`
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| GET | / | 文件列表 |
-| POST | / | 创建文件元数据 |
-| GET | /:id | 获取文件详情 |
-| DELETE | /:id | 删除文件 |
-| POST | /:id/share | 生成分享链接 |
+| 方法 | 端点 | 说明 | 状态 |
+|------|------|------|------|
+| GET | / | 文件列表 | ✅ |
+| POST | /upload | 上传文件 | ✅ |
+| POST | /upload-url | 获取上传URL | ✅ |
+| GET | /:id | 获取文件详情 | ✅ |
+| PUT | /:id | 更新文件 | ✅ |
+| DELETE | /:id | 删除文件 | ✅ |
+| GET | /:id/versions | 获取版本 | ✅ |
+| POST | /:id/versions/:vid/restore | 恢复版本 | ✅ |
+
+### 文件夹模块 `/api/folders`
+| 方法 | 端点 | 说明 | 状态 |
+|------|------|------|------|
+| GET | / | 文件夹列表 | ✅ |
+| POST | / | 创建文件夹 | ✅ |
+| PUT | /:id | 更新文件夹 | ✅ |
+| DELETE | /:id | 删除文件夹 | ✅ |
 
 ### 分享模块 `/api/shares`
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| GET | /:token | 获取分享信息 |
-| DELETE | /:id | 删除分享 |
-
-### 蓝奏云模块 `/api/lanzou`
-| 方法 | 端点 | 说明 |
-|------|------|------|
-| POST | /connect | 连接蓝奏云 |
-| GET | /status | 连接状态 |
+| 方法 | 端点 | 说明 | 状态 |
+|------|------|------|------|
+| GET | / | 分享列表 | ✅ |
+| POST | / | 创建分享 | ✅ |
+| GET | /:token | 获取分享 | ✅ |
+| DELETE | /:id | 删除分享 | ✅ |
 
 ---
 
 ## 关键设计决策
 
-### 1. 客户端直连蓝奏云
+### 1. 纯Go SQLite (无CGO)
+
+**原因**: Windows环境无GCC，macOS需要Xcode，Ubuntu需要build-essential
+
+**方案**: 使用 `modernc.org/sqlite` 替代 `mattn/go-sqlite3`
+
+**影响**: 编译简单，无外部依赖
+
+### 2. 客户端直连蓝奏云
 
 **原因**: 节省服务器带宽成本
 
@@ -193,36 +215,40 @@ upload_sessions (id, user_id, file_name, file_size, file_hash,
 3. Client → LanZouCloud: 直传加密后的文件块
 4. Client → Server: 完成上传，保存元数据
 
-### 2. E2E 加密
-
-**方案**: 客户端 ChaCha20-Poly1305 加密
-
-**密钥管理**:
-- 主密钥: 用户密码 + Argon2id 派生
-- 文件密钥: 每个文件独立，随机 nonce
-- 密钥存储: 加密后存服务器
-
 ### 3. 零圆角 UI 设计
 
 **规范**:
 - border-radius: 0px
-- 颜色: #0A0E17 背景, #00D4FF 强调色
-- 阴影: 锐利无模糊 (4px 4px 0px)
+- 颜色: #0f0f0f 背景, #1a1a1a 卡片
+- Tailwind CSS 4 无配置方式
 
 ---
 
 ## 待办事项
 
-- [ ] 安装 Go 依赖 (go mod tidy)
-- [ ] 测试后端编译和运行
-- [ ] 创建 Vue 3 前端项目
-- [ ] 集成蓝奏云 API
-- [ ] 实现客户端加密
-- [ ] 完善分享功能
-- [ ] 添加断点续传
-- [ ] 编写单元测试
+- [x] Go后端搭建
+- [x] Go后端验证 (API测试通过)
+- [x] Vue前端基础 (登录/注册/仪表盘)
+- [x] Vue前端构建
+- [ ] Go单元测试 (Phase 6)
+- [ ] Vue单元测试 (Phase 6)
+- [ ] 蓝奏云API集成
+- [ ] 客户端加密实现
+- [ ] 断点续传完善
+- [ ] 分享功能增强
+
+---
+
+## Git 提交历史
+
+| Commit | 描述 |
+|--------|------|
+| a951cbf | feat: 全新架构重构 - Go后端 + 蓝奏云直连 |
+| 611413d | chore: 清理旧代码和无关文件 |
+| a109844 | feat: 完成Vue 3前端基础框架搭建 |
+| b7912d4 | docs: 更新任务进度 - Phase 3 Vue前端搭建进行中 |
 
 ---
 
 **最后更新**: 2026-04-04
-**状态**: Phase 1 完成，Phase 2 待开始
+**状态**: Phase 3 Vue前端搭建进行中 (~60%)
