@@ -125,7 +125,8 @@ wenxi-cloud/
 │   │   │   ├── Login.vue
 │   │   │   ├── Register.vue
 │   │   │   ├── Dashboard.vue
-│   │   │   └── LanzouSettings.vue  # 蓝奏云设置
+│   │   │   ├── LanzouSettings.vue  # 蓝奏云设置
+│   │   │   └── LanZouBrowser.vue  # 蓝奏云浏览器
 │   │   ├── App.vue
 │   │   ├── main.js
 │   │   └── style.css               # Tailwind入口

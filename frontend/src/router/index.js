@@ -29,6 +29,12 @@ const routes = [
     name: 'Settings',
     component: () => import('../views/LanzouSettings.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/lanzou',
+    name: 'LanZouBrowser',
+    component: () => import('../views/LanZouBrowser.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
