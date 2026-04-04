@@ -25,13 +25,14 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	fileRepo := repository.NewFileRepository(nil)
 	shareRepo := repository.NewShareRepository(nil)
 	lanzouRepo := repository.NewLanZouTokenRepository(nil)
+	uploadRepo := repository.NewUploadSessionRepository(nil)
 
 	// Services
 	authSvc := service.NewAuthService(userRepo, jwtManager)
 	fileSvc := service.NewFileService(fileRepo)
 	shareSvc := service.NewShareService(shareRepo, fileRepo)
 	lanzouSvc := service.NewLanZouService(lanzouRepo)
-	uploadSvc := service.NewUploadService(nil, lanzouSvc, fileSvc)
+	uploadSvc := service.NewUploadService(uploadRepo, lanzouSvc, fileSvc)
 
 	// Handlers
 	authHandler := handlers.NewAuthHandler(authSvc)

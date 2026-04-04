@@ -9,7 +9,6 @@ import (
 
 	"github.com/wenaixi/wenxi-cloud/backend/internal/model"
 	"github.com/wenaixi/wenxi-cloud/backend/internal/pkg/lanzou"
-	"github.com/wenaixi/wenxi-cloud/backend/internal/repository"
 )
 
 const (
@@ -26,16 +25,37 @@ const (
 	StatusFailed = "failed"
 )
 
+// UploadSessionRepository 上传会话仓库接口
+type UploadSessionRepository interface {
+	Create(session *model.UploadSession) error
+	FindByID(id uint) (*model.UploadSession, error)
+	FindByUserIDAndHash(userID uint, fileHash string) (*model.UploadSession, error)
+	Update(session *model.UploadSession) error
+	Delete(id uint) error
+	DeleteByUserID(userID uint) error
+}
+
+// LanZouClientProvider 蓝奏云客户端提供者接口
+type LanZouClientProvider interface {
+	IsConnected(userID uint) bool
+	GetClient(userID uint) (*lanzou.Client, error)
+}
+
+// FileMetadataCreator 文件元数据创建器接口
+type FileMetadataCreator interface {
+	CreateMetadata(userID uint, req *CreateFileRequest) (*model.File, error)
+}
+
 type UploadService struct {
-	uploadRepo   *repository.UploadSessionRepository
-	lanzouSvc    *LanZouService
-	fileSvc      *FileService
+	uploadRepo   UploadSessionRepository
+	lanzouSvc    LanZouClientProvider
+	fileSvc      FileMetadataCreator
 }
 
 func NewUploadService(
-	uploadRepo *repository.UploadSessionRepository,
-	lanzouSvc *LanZouService,
-	fileSvc *FileService,
+	uploadRepo UploadSessionRepository,
+	lanzouSvc LanZouClientProvider,
+	fileSvc FileMetadataCreator,
 ) *UploadService {
 	return &UploadService{
 		uploadRepo:   uploadRepo,
