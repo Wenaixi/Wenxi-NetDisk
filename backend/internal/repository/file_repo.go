@@ -32,6 +32,16 @@ func (r *FileRepository) FindByUserID(userID uint) ([]model.File, error) {
 	return files, err
 }
 
+func (r *FileRepository) FindByFolderID(userID uint, folderID *uint) ([]model.File, error) {
+	var files []model.File
+	q := r.db.Where("user_id = ?", userID)
+	if folderID != nil {
+		q = q.Where("folder_id = ?", *folderID)
+	}
+	err := q.Order("created_at DESC").Find(&files).Error
+	return files, err
+}
+
 func (r *FileRepository) FindByLanZouFileID(lanzouFileID string) (*model.File, error) {
 	var file model.File
 	err := r.db.Where("lanzou_file_id = ?", lanzouFileID).First(&file).Error

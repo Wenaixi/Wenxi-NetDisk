@@ -2,15 +2,25 @@ package service
 
 import (
 	"errors"
+
 	"github.com/wenaixi/wenxi-cloud/backend/internal/model"
-	"github.com/wenaixi/wenxi-cloud/backend/internal/repository"
 )
 
-type FileService struct {
-	fileRepo *repository.FileRepository
+// FileRepository 文件仓库接口
+type FileRepository interface {
+	Create(file *model.File) error
+	FindByUserID(userID uint) ([]model.File, error)
+	FindByID(id uint) (*model.File, error)
+	FindByFolderID(userID uint, folderID *uint) ([]model.File, error)
+	Delete(id uint) error
+	Update(file *model.File) error
 }
 
-func NewFileService(fileRepo *repository.FileRepository) *FileService {
+type FileService struct {
+	fileRepo FileRepository
+}
+
+func NewFileService(fileRepo FileRepository) *FileService {
 	return &FileService{fileRepo: fileRepo}
 }
 
