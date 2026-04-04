@@ -8,13 +8,15 @@ vi.mock('../api', () => ({
     list: vi.fn(),
     upload: vi.fn(),
     delete: vi.fn(),
-    rename: vi.fn()
+    rename: vi.fn(),
+    move: vi.fn()
   },
   folderAPI: {
     list: vi.fn(),
     create: vi.fn(),
     delete: vi.fn(),
-    rename: vi.fn()
+    rename: vi.fn(),
+    move: vi.fn()
   }
 }))
 
@@ -190,5 +192,35 @@ describe('useFileStore', () => {
     await expect(store.fetchFiles()).rejects.toThrow('Network error')
     expect(store.files).toEqual([])
     expect(store.folders).toEqual([])
+  })
+
+  it('should move file to folder', async () => {
+    const store = useFileStore()
+    store.files = [
+      { id: 1, name: 'file1.txt' },
+      { id: 2, name: 'file2.txt' }
+    ]
+    fileAPI.move.mockResolvedValue({})
+
+    await store.moveFile(1, 5)
+
+    expect(fileAPI.move).toHaveBeenCalledWith(1, 5)
+    expect(store.files).toHaveLength(1)
+    expect(store.files[0].id).toBe(2)
+  })
+
+  it('should move folder to folder', async () => {
+    const store = useFileStore()
+    store.folders = [
+      { id: 1, name: 'folder1' },
+      { id: 2, name: 'folder2' }
+    ]
+    folderAPI.move.mockResolvedValue({})
+
+    await store.moveFolder(1, 3)
+
+    expect(folderAPI.move).toHaveBeenCalledWith(1, 3)
+    expect(store.folders).toHaveLength(1)
+    expect(store.folders[0].id).toBe(2)
   })
 })
