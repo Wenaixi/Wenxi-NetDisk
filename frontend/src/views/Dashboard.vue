@@ -3,7 +3,7 @@
     <AppHeader />
 
     <main class="p-6">
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-2">
           <n-button @click="fileStore.navigateBack()" :disabled="fileStore.breadcrumbs.length <= 1">
             <template #icon><n-icon><ArrowBack /></n-icon></template>
@@ -35,6 +35,19 @@
             <template #icon><n-icon><Refresh /></n-icon></template>
           </n-button>
         </div>
+      </div>
+
+      <div class="flex items-center gap-1 mb-4 text-sm">
+        <template v-for="(crumb, idx) in fileStore.breadcrumbs" :key="crumb.id">
+          <span v-if="idx > 0" class="text-gray-500 mx-1">/</span>
+          <n-button
+            text
+            :type="idx === fileStore.breadcrumbs.length - 1 ? 'primary' : 'default'"
+            @click="navigateToBreadcrumb(idx)"
+          >
+            {{ crumb.name }}
+          </n-button>
+        </template>
       </div>
 
       <n-spin :show="fileStore.loading">
