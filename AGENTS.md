@@ -52,6 +52,11 @@
 **数据库迁移:**
 - AutoMigrate 添加 FileVersion 模型
 
+**关键Bug修复:**
+- folder.go UpdateFolder handler 缺失 return 语句导致重复响应 (response.Success 后无 return，继续执行到 BadRequest)
+- 新增 UpdateFolderDescription handler (PUT /folders/:id/description) 专用端点
+- 前端 folderAPI.updateDescription 指向专用端点，不再与 rename 冲突
+
 ### 2026-04-05 - Share模型完善 + E2E测试框架
 
 **Share模型完善:**
