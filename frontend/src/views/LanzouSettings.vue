@@ -4,7 +4,8 @@
       <div class="flex items-center gap-4">
         <h1 class="text-xl font-bold text-white">文希云盘</h1>
         <nav class="flex items-center gap-2 ml-8">
-          <n-button text @click="$router.push('/dashboard')">首页</n-button>
+          <n-button text @click="$router.push('/dashboard')">本地文件</n-button>
+          <n-button text @click="$router.push('/lanzou')" type="primary">蓝奏云</n-button>
         </nav>
       </div>
       <div class="flex items-center gap-4">
