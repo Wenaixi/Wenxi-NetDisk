@@ -32,22 +32,24 @@
 
 ## 开发历史
 
-### 2026-04-05 - 中间件+CORS日志测试 + Vue组件测试扩展
+### 2026-04-05 - ShareParse组件测试 + 测试系统全面完善
 
-**Middleware+CORS+Logger测试:**
-- 新增 middleware_test.go (10个测试用例) - Logger和CORS中间件验证
-- Logger测试: GET/POST/错误状态/路径日志输出
-- CORS测试: 跨域请求/OPTIONS预检/允许方法/凭证/请求头
-- Middleware测试总数: 20个 (10 Auth + 10 Logger/CORS)
+**ShareParse组件测试:**
+- 新增 ShareParse.test.js (15个测试用例) - 链接解析页面
+- 测试覆盖: 页面渲染/单链接解析/多行批量解析/非URL行跳过/下载单文件/下载失败处理/placeholder下载全部
+- 使用 shallowMount 避免 naive-ui 组件渲染问题
+- 剪贴板 API mock (navigator.clipboard.readText)
 
-**Vue组件测试扩展:**
-- 新增 LanzouSettings.test.js (12个测试用例) - 蓝奏云设置页面
-- 测试覆盖: 连接状态显示/连接弹窗/cookie验证/连接断开/错误处理/加载状态
-- 使用 vi.hoisted() 解决 lanzouAPI mock 提升问题
-- 使用 Proxy mock 解决 @vicons/ionicons5 动态图标问题
-- 组件测试总计: AppHeader(8) + Login(8) + Register(10) + FileDetailModal(17) + LanzouSettings(12) = 55
+**Vue 组件测试覆盖总结 (8个组件/页面, 86个测试):**
+- Login(8) / Register(10) - 认证流程
+- AppHeader(8) - 通用头部组件
+- FileDetailModal(17) - 文件详情弹窗
+- LanzouSettings(12) - 蓝奏云设置页
+- RecycleBin(16) - 回收站页面
+- Sync(16) - 同步资源页面
+- ShareParse(15) - 链接解析页面
 
-**测试统计更新: 402 (222 Go + 180 Vue) 全部通过**
+**测试统计: 449 (222 Go + 227 Vue) 全部通过**
 
 ### 2026-04-05 - 文件版本管理 + 缺失API补全
 
@@ -574,7 +576,17 @@ references/lanzouyun-disk/
 ---
 
 **最后更新**: 2026-04-05
-**状态**: Phase 6 ✅ 100%, 测试 380 全部通过 (212 Go + 168 Vue)
+### 2026-04-05 - ShareParse组件测试 + 测试系统全面完善
+
+**ShareParse组件测试:**
+- 新增 ShareParse.test.js (15个测试用例) - 链接解析页面
+- 测试覆盖: 页面渲染/单链接解析/多行批量解析/非URL行跳过/下载单文件/下载失败处理/placeholder下载全部
+- 使用 shallowMount 避免 naive-ui 组件渲染问题
+- 剪贴板 API mock (navigator.clipboard.readText)
+
+**测试统计更新: 449 (222 Go + 227 Vue) 全部通过**
+
+**总测试数: 449 (222 Go + 227 Vue) 全部通过**
 
 ## 测试统计
 
@@ -624,6 +636,7 @@ references/lanzouyun-disk/
 | LanzouSettings | 12 | ✅ |
 | RecycleBin | 16 | ✅ |
 | Sync | 16 | ✅ |
+| ShareParse | 15 | ✅ |
 
 **总测试数: 434 (222 Go + 212 Vue) 全部通过**
 
