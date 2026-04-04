@@ -89,6 +89,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 		{
 			shares.GET("/:token", shareHandler.GetShare) // Public - get share by token
 			shares.POST("/:token/validate", shareHandler.ValidateShare) // Public - validate share password
+			shares.POST("", middleware.AuthRequired(jwtManager), shareHandler.CreateShareViaBody) // Protected - create share via body
 			shares.GET("", middleware.AuthRequired(jwtManager), shareHandler.ListShares) // Protected - list user's shares
 			shares.DELETE("/:id", middleware.AuthRequired(jwtManager), shareHandler.DeleteShare)
 		}

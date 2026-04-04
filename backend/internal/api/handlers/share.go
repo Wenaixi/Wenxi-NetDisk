@@ -116,6 +116,35 @@ func (h *ShareHandler) ListShares(c *gin.Context) {
 	response.Success(c, result)
 }
 
+// CreateShareViaBody 创建分享(从请求体获取file_id)
+func (h *ShareHandler) CreateShareViaBody(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	var req struct {
+		FileID    uint    `json:"file_id" binding:"required"`
+		Password  *string `json:"password"`
+		ExpiresAt *string `json:"expires_at"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	share, err := h.shareSvc.CreateShare(uid, req.FileID, req.Password, req.ExpiresAt)
+	if err != nil {
+		response.Error(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	response.Success(c, gin.H{
+		"share_token": share.ShareToken,
+		"share_url":   "/api/shares/" + share.ShareToken,
+		"share_pwd":   nil, // 本地分享不返回密码,需要单独查询
+		"expires_at":  share.ExpiresAt,
+	})
+}
+
 func (h *ShareHandler) DeleteShare(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	uid := userID.(uint)
