@@ -323,6 +323,7 @@ references/lanzouyun-disk/
 
 | Commit | 描述 |
 |--------|------|
+| a47ea88 | test: 添加ShareService单元测试并接口化 |
 | b97313f | test: 添加AuthService单元测试并接口化 |
 | d7b6718 | test: 添加FileService单元测试并接口化 |
 | e6c9977 | docs: 全面完善AGENTS.md - 测试统计+架构决策+API文档 |
@@ -350,15 +351,18 @@ references/lanzouyun-disk/
 
 ## 测试统计
 
-### Go后端 (33 tests)
+### Go后端 (77 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | pkg/crypto | 5 | ✅ |
 | pkg/jwt | 7 | ✅ |
 | pkg/lanzou | 6 | ✅ |
 | pkg/response | 5 | ✅ |
-| service/lanzou | 5 | ✅ |
-| service/upload | 5 | ✅ |
+| service/auth | 8 | ✅ |
+| service/file | 8 | ✅ |
+| service/lanzou | 9 | ✅ |
+| service/upload | 6 | ✅ |
+| service/share | 15 | ✅ |
 | repository | 10 | ⏭️ (skip CGO) |
 
 ### Vue前端 (29 tests)
@@ -369,7 +373,7 @@ references/lanzouyun-disk/
 | upload store | 5 | ✅ |
 | crypto utils | 4 | ✅ |
 
-**总测试数: 62+ 全部通过**
+**总测试数: 106 (77 Go + 29 Vue) 全部通过**
 
 ## 关键架构决策记录
 
