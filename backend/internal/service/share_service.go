@@ -5,18 +5,32 @@ import (
 	"encoding/hex"
 	"errors"
 	"time"
-	"github.com/wenaixi/wenxi-cloud/backend/internal/model"
-	"github.com/wenaixi/wenxi-cloud/backend/internal/repository"
 
-	"golang.org/x/crypto/bcrypt"
+	"github.com/wenaixi/wenxi-cloud/backend/internal/model"
+	"github.com/wenaixi/wenxi-cloud/backend/internal/pkg/crypto"
 )
 
-type ShareService struct {
-	shareRepo *repository.ShareRepository
-	fileRepo  *repository.FileRepository
+// ShareRepository 分享仓库接口
+type ShareRepository interface {
+	Create(share *model.Share) error
+	FindByID(id uint) (*model.Share, error)
+	FindByToken(token string) (*model.Share, error)
+	FindByFileID(fileID uint) ([]model.Share, error)
+	Delete(id uint) error
+	DeleteByFileID(fileID uint) error
 }
 
-func NewShareService(shareRepo *repository.ShareRepository, fileRepo *repository.FileRepository) *ShareService {
+// ShareFileRepository 分享服务所需的文件仓库接口
+type ShareFileRepository interface {
+	FindByID(id uint) (*model.File, error)
+}
+
+type ShareService struct {
+	shareRepo ShareRepository
+	fileRepo  ShareFileRepository
+}
+
+func NewShareService(shareRepo ShareRepository, fileRepo ShareFileRepository) *ShareService {
 	return &ShareService{
 		shareRepo: shareRepo,
 		fileRepo:  fileRepo,
@@ -42,7 +56,7 @@ func (s *ShareService) CreateShare(userID, fileID uint, password *string, expire
 
 	var passwordHash *string
 	if password != nil && *password != "" {
-		hash, err := hashPassword(*password)
+		hash, err := crypto.HashPassword(*password)
 		if err != nil {
 			return nil, err
 		}
@@ -93,7 +107,18 @@ func (s *ShareService) DeleteShare(userID, shareID uint) error {
 	return s.shareRepo.Delete(shareID)
 }
 
-func hashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(bytes), err
+// ValidatePassword 验证分享密码
+func (s *ShareService) ValidatePassword(share *model.Share, password string) bool {
+	if share.PasswordHash == nil {
+		return true // 无密码分享
+	}
+	return crypto.CheckPassword(password, *share.PasswordHash)
+}
+
+// IsExpired 检查分享是否过期
+func (s *ShareService) IsExpired(share *model.Share) bool {
+	if share.ExpiresAt == nil {
+		return false
+	}
+	return time.Now().After(*share.ExpiresAt)
 }

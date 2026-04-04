@@ -323,6 +323,7 @@ references/lanzouyun-disk/
 
 | Commit | 描述 |
 |--------|------|
+| b97313f | test: 添加AuthService单元测试并接口化 |
 | d7b6718 | test: 添加FileService单元测试并接口化 |
 | e6c9977 | docs: 全面完善AGENTS.md - 测试统计+架构决策+API文档 |
 | 4fb8bf2 | test: 完善前端测试覆盖 - upload store + crypto工具 |
@@ -378,6 +379,8 @@ service层使用接口而非具体类型依赖，提高可测试性：
 - `LanZouClientProvider` - 蓝奏云客户端提供者接口
 - `LanZouTokenRepository` - token仓库接口
 - `FileMetadataCreator` - 文件元数据创建器接口
+- `UserRepository` - 用户仓库接口
+- `FileRepository` - 文件仓库接口
 
 ### 2. 加密算法选择
 Web Crypto API不支持ChaCha20-Poly1305，使用AES-GCM-256替代，安全性相同级别。
