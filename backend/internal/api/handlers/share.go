@@ -47,18 +47,48 @@ func (h *ShareHandler) CreateShare(c *gin.Context) {
 func (h *ShareHandler) GetShare(c *gin.Context) {
 	token := c.Param("token")
 
-	share, err := h.shareSvc.GetShareByToken(token)
+	share, err := h.shareSvc.GetShareWithFile(token)
 	if err != nil {
-		response.NotFound(c, "share not found or expired")
+		response.NotFound(c, err.Error())
 		return
 	}
 
 	response.Success(c, gin.H{
-		"file_id":           share.FileID,
-		"file_name":         share.File.Name,
-		"file_size":         share.File.Size,
+		"id":                share.ID,
+		"file_id":          share.FileID,
+		"file_name":        share.File.Name,
+		"file_size":        share.File.Size,
 		"requires_password": share.PasswordHash != nil,
+		"expires_at":       share.ExpiresAt,
+		"created_at":       share.CreatedAt,
 	})
+}
+
+func (h *ShareHandler) ListShares(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	shares, err := h.shareSvc.ListShares(uid)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	// 转换为响应格式
+	var result []gin.H
+	for _, share := range shares {
+		result = append(result, gin.H{
+			"id":                share.ID,
+			"file_id":          share.FileID,
+			"file_name":        share.File.Name,
+			"file_size":        share.File.Size,
+			"requires_password": share.PasswordHash != nil,
+			"expires_at":       share.ExpiresAt,
+			"created_at":       share.CreatedAt,
+		})
+	}
+
+	response.Success(c, result)
 }
 
 func (h *ShareHandler) DeleteShare(c *gin.Context) {

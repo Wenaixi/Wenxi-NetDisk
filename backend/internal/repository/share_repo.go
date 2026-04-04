@@ -41,6 +41,12 @@ func (r *ShareRepository) FindByFileID(fileID uint) ([]model.Share, error) {
 	return shares, err
 }
 
+func (r *ShareRepository) FindByUserID(userID uint) ([]model.Share, error) {
+	var shares []model.Share
+	err := r.db.Preload("File").Joins("JOIN files ON shares.file_id = files.id").Where("files.user_id = ?", userID).Find(&shares).Error
+	return shares, err
+}
+
 func (r *ShareRepository) Delete(id uint) error {
 	return r.db.Delete(&model.Share{}, id).Error
 }

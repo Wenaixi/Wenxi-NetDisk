@@ -16,6 +16,7 @@ type ShareRepository interface {
 	FindByID(id uint) (*model.Share, error)
 	FindByToken(token string) (*model.Share, error)
 	FindByFileID(fileID uint) ([]model.Share, error)
+	FindByUserID(userID uint) ([]model.Share, error)
 	Delete(id uint) error
 	DeleteByFileID(fileID uint) error
 }
@@ -121,4 +122,38 @@ func (s *ShareService) IsExpired(share *model.Share) bool {
 		return false
 	}
 	return time.Now().After(*share.ExpiresAt)
+}
+
+// ListShares 获取用户的所有分享
+func (s *ShareService) ListShares(userID uint) ([]model.Share, error) {
+	shares, err := s.shareRepo.FindByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 过滤只返回有效分享
+	var result []model.Share
+	for _, share := range shares {
+		// 检查分享是否过期
+		if !s.IsExpired(&share) {
+			result = append(result, share)
+		}
+	}
+
+	return result, nil
+}
+
+// GetShareWithFile 获取分享详情（包含文件信息）
+func (s *ShareService) GetShareWithFile(token string) (*model.Share, error) {
+	share, err := s.shareRepo.FindByToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	// 验证是否过期
+	if s.IsExpired(share) {
+		return nil, errors.New("share expired")
+	}
+
+	return share, nil
 }

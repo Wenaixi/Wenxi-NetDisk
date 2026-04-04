@@ -75,6 +75,19 @@ func (m *mockShareRepo) FindByFileID(fileID uint) ([]model.Share, error) {
 	return result, nil
 }
 
+func (m *mockShareRepo) FindByUserID(userID uint) ([]model.Share, error) {
+	var result []model.Share
+	fileRepo := newMockShareFileRepo()
+	for _, s := range m.shares {
+		// 通过file找到userID
+		file, _ := fileRepo.FindByID(s.FileID)
+		if file != nil && file.UserID == userID {
+			result = append(result, *s)
+		}
+	}
+	return result, nil
+}
+
 func (m *mockShareRepo) Delete(id uint) error {
 	for i, s := range m.shares {
 		if s.ID == id {
@@ -103,6 +116,30 @@ type mockShareFileRepo struct {
 
 func newMockShareFileRepo() *mockShareFileRepo {
 	return &mockShareFileRepo{
+		files: []*model.File{
+			{ID: 1, UserID: 1, Name: "file1.txt", Size: 100},
+			{ID: 2, UserID: 1, Name: "file2.pdf", Size: 200},
+			{ID: 3, UserID: 2, Name: "file3.doc", Size: 300},
+		},
+	}
+}
+
+// mockShareFileRepoForShare 用于FindByUserID查询的辅助类型
+type mockShareFileRepoForShare struct {
+	files []*model.File
+}
+
+func (m mockShareFileRepoForShare) FindByID(id uint) (*model.File, error) {
+	for _, f := range m.files {
+		if f.ID == id {
+			return f, nil
+		}
+	}
+	return nil, errors.New("file not found")
+}
+
+func newMockShareFileRepoForShare() mockShareFileRepoForShare {
+	return mockShareFileRepoForShare{
 		files: []*model.File{
 			{ID: 1, UserID: 1, Name: "file1.txt", Size: 100},
 			{ID: 2, UserID: 1, Name: "file2.pdf", Size: 200},
@@ -366,6 +403,111 @@ func TestShareService_IsExpired(t *testing.T) {
 
 		if svc.IsExpired(share) {
 			t.Error("expected future-expiring share to not be expired")
+		}
+	})
+}
+
+// TestShareService_ListShares 测试获取用户的所有分享
+func TestShareService_ListShares(t *testing.T) {
+	t.Run("should list all shares for user", func(t *testing.T) {
+		shareRepo := newMockShareRepo()
+		fileRepo := newMockShareFileRepo()
+		svc := NewShareService(shareRepo, fileRepo)
+
+		shares, err := svc.ListShares(1)
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		// user 1 owns files 1,2. shares for these files: share 1 (abc123, file1), share 2 (expired456, file1)
+		// share 1 is not expired, share 2 is expired so should be filtered
+		if len(shares) != 1 {
+			t.Errorf("expected 1 share for user 1, got %d", len(shares))
+		}
+	})
+
+	t.Run("should filter out expired shares", func(t *testing.T) {
+		shareRepo := newMockShareRepo()
+		fileRepo := newMockShareFileRepo()
+		svc := NewShareService(shareRepo, fileRepo)
+
+		shares, err := svc.ListShares(1)
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		// Verify no expired shares
+		for _, share := range shares {
+			if svc.IsExpired(&share) {
+				t.Error("expected no expired shares in result")
+			}
+		}
+	})
+
+	t.Run("should return empty for user with no shares", func(t *testing.T) {
+		shareRepo := newMockShareRepo()
+		fileRepo := newMockShareFileRepo()
+		svc := NewShareService(shareRepo, fileRepo)
+
+		shares, err := svc.ListShares(999)
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if len(shares) != 0 {
+			t.Errorf("expected 0 shares, got %d", len(shares))
+		}
+	})
+}
+
+// TestShareService_GetShareWithFile 测试获取分享详情（包含过期检查）
+func TestShareService_GetShareWithFile(t *testing.T) {
+	t.Run("should return share for valid token", func(t *testing.T) {
+		shareRepo := newMockShareRepo()
+		fileRepo := newMockShareFileRepo()
+		svc := NewShareService(shareRepo, fileRepo)
+
+		share, err := svc.GetShareWithFile("abc123")
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if share == nil {
+			t.Error("expected share, got nil")
+			return
+		}
+		if share.ShareToken != "abc123" {
+			t.Errorf("expected token 'abc123', got '%s'", share.ShareToken)
+		}
+	})
+
+	t.Run("should return error for expired share", func(t *testing.T) {
+		shareRepo := newMockShareRepo()
+		fileRepo := newMockShareFileRepo()
+		svc := NewShareService(shareRepo, fileRepo)
+
+		share, err := svc.GetShareWithFile("expired456")
+
+		if err == nil {
+			t.Error("expected error for expired share")
+		}
+		if share != nil {
+			t.Error("expected nil share for expired token")
+		}
+	})
+
+	t.Run("should return error for invalid token", func(t *testing.T) {
+		shareRepo := newMockShareRepo()
+		fileRepo := newMockShareFileRepo()
+		svc := NewShareService(shareRepo, fileRepo)
+
+		share, err := svc.GetShareWithFile("invalid_token")
+
+		if err == nil {
+			t.Error("expected error for invalid token")
+		}
+		if share != nil {
+			t.Error("expected nil share for invalid token")
 		}
 	})
 }

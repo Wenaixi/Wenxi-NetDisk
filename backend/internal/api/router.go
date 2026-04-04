@@ -84,7 +84,8 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 		// Share routes
 		shares := api.Group("/shares")
 		{
-			shares.GET("/:token", shareHandler.GetShare)
+			shares.GET("/:token", shareHandler.GetShare) // Public - get share by token
+			shares.GET("", middleware.AuthRequired(jwtManager), shareHandler.ListShares) // Protected - list user's shares
 			shares.DELETE("/:id", middleware.AuthRequired(jwtManager), shareHandler.DeleteShare)
 		}
 
