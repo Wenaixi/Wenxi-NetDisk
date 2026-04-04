@@ -12,6 +12,7 @@ type FileRepository interface {
 	FindByUserID(userID uint) ([]model.File, error)
 	FindByID(id uint) (*model.File, error)
 	FindByFolderID(userID uint, folderID *uint) ([]model.File, error)
+	FindByLanZouFileID(lanzouFileID string) (*model.File, error)
 	Delete(id uint) error
 	Update(file *model.File) error
 }
@@ -22,6 +23,16 @@ type FileService struct {
 
 func NewFileService(fileRepo FileRepository) *FileService {
 	return &FileService{fileRepo: fileRepo}
+}
+
+// FindByID 根据ID查找文件（供其他服务使用）
+func (s *FileService) FindByID(id uint) (*model.File, error) {
+	return s.fileRepo.FindByID(id)
+}
+
+// FindByLanZouFileID 根据蓝奏云文件ID查找（供其他服务使用）
+func (s *FileService) FindByLanZouFileID(lanzouFileID string) (*model.File, error) {
+	return s.fileRepo.FindByLanZouFileID(lanzouFileID)
 }
 
 type CreateFileRequest struct {

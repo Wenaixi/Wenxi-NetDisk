@@ -262,6 +262,15 @@ func (m *mockFileRepoComplete) FindByFolderID(userID uint, folderID *uint) ([]mo
 	return m.FindByUserID(userID)
 }
 
+func (m *mockFileRepoComplete) FindByLanZouFileID(lanzouFileID string) (*model.File, error) {
+	for _, f := range m.files {
+		if f.LanZouFileID == lanzouFileID {
+			return f, nil
+		}
+	}
+	return nil, errors.New("file not found")
+}
+
 func (m *mockFileRepoComplete) Delete(id uint) error {
 	for i, f := range m.files {
 		if f.ID == id {

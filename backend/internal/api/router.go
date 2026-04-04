@@ -35,6 +35,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	shareSvc := service.NewShareService(shareRepo, fileRepo)
 	lanzouSvc := service.NewLanZouService(lanzouRepo)
 	uploadSvc := service.NewUploadService(uploadRepo, lanzouSvc, fileSvc)
+	downloadSvc := service.NewDownloadService(fileSvc, lanzouSvc)
 
 	// Handlers
 	authHandler := handlers.NewAuthHandler(authSvc)
@@ -42,6 +43,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	folderHandler := handlers.NewFolderHandler(folderSvc)
 	shareHandler := handlers.NewShareHandler(shareSvc)
 	lanzouHandler := handlers.NewLanZouHandler(lanzouSvc, uploadSvc)
+	downloadHandler := handlers.NewDownloadHandler(downloadSvc)
 
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
@@ -67,6 +69,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			files.GET("/:id", fileHandler.GetFile)
 			files.DELETE("/:id", fileHandler.DeleteFile)
 			files.POST("/:id/share", shareHandler.CreateShare)
+			files.GET("/:id/download", downloadHandler.GetDownloadURL)
 		}
 
 		// Folder routes (protected)
