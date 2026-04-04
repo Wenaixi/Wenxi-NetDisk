@@ -24,6 +24,13 @@
           >
             删除选中 ({{ selectedItems.length }})
           </n-button>
+          <n-button
+            v-if="selectedItems.length > 0"
+            type="info"
+            @click="openBatchMoveModal"
+          >
+            移动到 ({{ selectedItems.length }})
+          </n-button>
         </div>
         <div class="flex items-center gap-2">
           <n-checkbox
@@ -200,6 +207,7 @@
           <n-button v-if="selectedFileItem.size !== undefined" block @click="downloadFile(selectedFileItem)">下载</n-button>
           <n-button v-if="selectedFileItem.size !== undefined" block type="info" @click="openShareModal">分享</n-button>
           <n-button block @click="openRenameModal">重命名</n-button>
+          <n-button block @click="openMoveModal">移动</n-button>
           <n-button block type="error" @click="deleteFile(selectedFileItem)">删除</n-button>
           <n-button block @click="showFileMenu = false">取消</n-button>
         </div>
@@ -213,6 +221,38 @@
           <div class="flex justify-end gap-2">
             <n-button @click="showRenameModal = false">取消</n-button>
             <n-button type="primary" @click="confirmRename">确定</n-button>
+          </div>
+        </template>
+      </n-card>
+    </n-modal>
+
+    <n-modal v-model:show="showMoveModal">
+      <n-card title="移动到文件夹" style="width: 400px;">
+        <div class="space-y-4">
+          <div v-if="moveTargetFolders.length === 0" class="text-center py-6 text-gray-500">
+            暂无文件夹
+          </div>
+          <div v-else class="max-h-60 overflow-y-auto space-y-2">
+            <div
+              v-for="folder in moveTargetFolders"
+              :key="folder.id"
+              :class="[
+                'p-3 cursor-pointer hover:bg-[#252525]',
+                targetFolderId === folder.id ? 'bg-[#252525] ring-1 ring-blue-500' : 'bg-[#1a1a1a]'
+              ]"
+              @click="targetFolderId = folder.id"
+            >
+              <div class="flex items-center gap-2">
+                <n-icon size="20" color="#60a5fa"><Folder /></n-icon>
+                <span class="text-white">{{ folder.name }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <n-button @click="showMoveModal = false">取消</n-button>
+            <n-button type="primary" :loading="isMoving" @click="confirmBatchMove">移动</n-button>
           </div>
         </template>
       </n-card>
@@ -330,6 +370,13 @@ const renameName = ref('')
 const selectMode = ref(false)
 const selectedItems = ref([])
 
+// 批量移动相关
+const showMoveModal = ref(false)
+const moveTargetFolders = ref([])
+const targetFolderId = ref(null)
+const isMoving = ref(false)
+const moveMode = ref('batch') // 'batch' or 'single'
+
 function toggleSelect(id) {
   const idx = selectedItems.value.indexOf(id)
   if (idx === -1) {
@@ -364,6 +411,57 @@ async function batchDelete() {
     fileStore.fetchFiles(fileStore.currentFolder)
   } catch (err) {
     message.error(err.message || '删除失败')
+  }
+}
+
+async function openBatchMoveModal() {
+  // 获取所有文件夹作为移动目标
+  moveTargetFolders.value = [...fileStore.folders]
+  // 默认选择当前文件夹
+  targetFolderId.value = fileStore.currentFolder
+  moveMode.value = 'batch'
+  showMoveModal.value = true
+}
+
+async function confirmBatchMove() {
+  isMoving.value = true
+
+  try {
+    if (moveMode.value === 'batch') {
+      // 批量移动
+      const ids = [...selectedItems.value]
+      let movedCount = 0
+      for (const id of ids) {
+        const isFile = fileStore.files.some(f => f.id === id)
+        const isFolder = fileStore.folders.some(f => f.id === id)
+        if (isFile) {
+          await fileStore.moveFile(id, targetFolderId.value)
+          movedCount++
+        } else if (isFolder) {
+          await fileStore.moveFolder(id, targetFolderId.value)
+          movedCount++
+        }
+      }
+      message.success(`成功移动 ${movedCount} 个项目`)
+      selectedItems.value = []
+      selectMode.value = false
+    } else {
+      // 单个移动
+      if (!selectedFileItem.value) return
+      const isFile = selectedFileItem.value.size !== undefined
+      if (isFile) {
+        await fileStore.moveFile(selectedFileItem.value.id, targetFolderId.value)
+      } else {
+        await fileStore.moveFolder(selectedFileItem.value.id, targetFolderId.value)
+      }
+      message.success('移动成功')
+    }
+    showMoveModal.value = false
+    fileStore.fetchFiles(fileStore.currentFolder)
+  } catch (err) {
+    message.error(err.message || '移动失败')
+  } finally {
+    isMoving.value = false
   }
 }
 
@@ -474,6 +572,37 @@ function openRenameModal() {
   showFileMenu.value = false
   renameName.value = selectedFileItem.value?.name || ''
   showRenameModal.value = true
+}
+
+function openMoveModal() {
+  showFileMenu.value = false
+  // 获取所有文件夹作为移动目标
+  moveTargetFolders.value = [...fileStore.folders]
+  // 默认选择当前文件夹
+  targetFolderId.value = fileStore.currentFolder
+  moveMode.value = 'single'
+  showMoveModal.value = true
+}
+
+async function confirmSingleMove() {
+  if (!selectedFileItem.value) return
+  isMoving.value = true
+
+  try {
+    const isFile = selectedFileItem.value.size !== undefined
+    if (isFile) {
+      await fileStore.moveFile(selectedFileItem.value.id, targetFolderId.value)
+    } else {
+      await fileStore.moveFolder(selectedFileItem.value.id, targetFolderId.value)
+    }
+    message.success('移动成功')
+    showMoveModal.value = false
+    fileStore.fetchFiles(fileStore.currentFolder)
+  } catch (err) {
+    message.error(err.message || '移动失败')
+  } finally {
+    isMoving.value = false
+  }
 }
 
 async function confirmRename() {
