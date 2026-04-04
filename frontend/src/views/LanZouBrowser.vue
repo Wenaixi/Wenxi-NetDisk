@@ -19,6 +19,18 @@
           <n-button @click="refresh" :loading="loading">
             <template #icon><n-icon><Refresh /></n-icon></template>
           </n-button>
+          <n-checkbox
+            v-if="files.length > 0 || folders.length > 0"
+            v-model:checked="selectMode"
+            label="选择模式"
+          />
+          <n-button
+            v-if="selectedItems.length > 0"
+            type="error"
+            @click="batchDelete"
+          >
+            删除选中 ({{ selectedItems.length }})
+          </n-button>
         </div>
       </div>
 
@@ -40,10 +52,20 @@
             <div
               v-for="folder in folders"
               :key="folder.folder_id"
-              class="bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]"
-              @dblclick="navigateToFolder(folder)"
+              :class="[
+                'bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]',
+                selectMode && selectedItems.includes(folder.folder_id) ? 'ring-2 ring-blue-500' : ''
+              ]"
+              @dblclick="!selectMode && navigateToFolder(folder)"
+              @click="selectMode ? toggleSelect(folder.folder_id) : navigateToFolder(folder)"
             >
               <div class="flex items-center gap-2">
+                <n-checkbox
+                  v-if="selectMode"
+                  :checked="selectedItems.includes(folder.folder_id)"
+                  @click.stop
+                  @update:checked="toggleSelect(folder.folder_id)"
+                />
                 <n-icon size="24" color="#60a5fa"><Folder /></n-icon>
                 <span class="text-white truncate">{{ folder.name }}</span>
               </div>
@@ -52,10 +74,19 @@
             <div
               v-for="file in files"
               :key="file.file_id"
-              class="bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]"
-              @click="handleFileClick(file)"
+              :class="[
+                'bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]',
+                selectMode && selectedItems.includes(file.file_id) ? 'ring-2 ring-blue-500' : ''
+              ]"
+              @click="selectMode ? toggleSelect(file.file_id) : handleFileClick(file)"
             >
               <div class="flex items-center gap-2 mb-2">
+                <n-checkbox
+                  v-if="selectMode"
+                  :checked="selectedItems.includes(file.file_id)"
+                  @click.stop
+                  @update:checked="toggleSelect(file.file_id)"
+                />
                 <n-icon size="24" color="#a78bfa"><Document /></n-icon>
                 <span class="text-white truncate">{{ file.name }}</span>
               </div>
@@ -126,6 +157,39 @@ const showFileMenu = ref(false)
 const selectedFile = ref(null)
 const showShareModal = ref(false)
 const shareResult = ref(null)
+
+// 选择模式相关
+const selectMode = ref(false)
+const selectedItems = ref([])
+
+function toggleSelect(id) {
+  const idx = selectedItems.value.indexOf(id)
+  if (idx === -1) {
+    selectedItems.value.push(id)
+  } else {
+    selectedItems.value.splice(idx, 1)
+  }
+}
+
+async function batchDelete() {
+  if (selectedItems.value.length === 0) return
+  if (!confirm(`确定删除选中的 ${selectedItems.value.length} 个项目吗?`)) return
+
+  try {
+    const ids = [...selectedItems.value]
+    let deletedCount = 0
+    for (const id of ids) {
+      await lanzouAPI.delete(id)
+      deletedCount++
+    }
+    message.success(`成功删除 ${deletedCount} 个项目`)
+    selectedItems.value = []
+    selectMode.value = false
+    await fetchContents(currentFolderId.value)
+  } catch (err) {
+    message.error(err.message || '删除失败')
+  }
+}
 
 async function fetchStatus() {
   try {
