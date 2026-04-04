@@ -32,6 +32,19 @@
 
 ## 开发历史
 
+### 2026-04-04 - Phase 5 完成补充 (第二次提交)
+
+**架构修复:**
+- 重构 sqlite.go: 改用 GORM + AutoMigrate，修复模块化架构 DB 初始化问题
+- 重写 main.go 使用模块化 repository/service/handler 架构
+- 添加 File.FolderID 字段 (支持文件按文件夹分类)
+- 添加 File.Description 字段 (支持文件描述)
+
+**移动功能补全:**
+- 后端添加 MoveFile handler + MoveFile service 方法
+- 后端 router.go 注册 PUT /files/:id/move 路由
+- 前端 fileAPI.rename 路径对齐后端 RenameFile 路由 (PUT /files/:id)
+
 ### 2026-04-04 - Phase 5 完成 (~100%)
 
 **文件详情功能:**
