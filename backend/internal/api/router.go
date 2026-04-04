@@ -26,10 +26,12 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	shareRepo := repository.NewShareRepository(nil)
 	lanzouRepo := repository.NewLanZouTokenRepository(nil)
 	uploadRepo := repository.NewUploadSessionRepository(nil)
+	folderRepo := repository.NewFolderRepository(nil)
 
 	// Services
 	authSvc := service.NewAuthService(userRepo, jwtManager)
 	fileSvc := service.NewFileService(fileRepo)
+	folderSvc := service.NewFolderService(folderRepo)
 	shareSvc := service.NewShareService(shareRepo, fileRepo)
 	lanzouSvc := service.NewLanZouService(lanzouRepo)
 	uploadSvc := service.NewUploadService(uploadRepo, lanzouSvc, fileSvc)
@@ -37,6 +39,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	// Handlers
 	authHandler := handlers.NewAuthHandler(authSvc)
 	fileHandler := handlers.NewFileHandler(fileSvc)
+	folderHandler := handlers.NewFolderHandler(folderSvc)
 	shareHandler := handlers.NewShareHandler(shareSvc)
 	lanzouHandler := handlers.NewLanZouHandler(lanzouSvc, uploadSvc)
 
@@ -64,6 +67,18 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			files.GET("/:id", fileHandler.GetFile)
 			files.DELETE("/:id", fileHandler.DeleteFile)
 			files.POST("/:id/share", shareHandler.CreateShare)
+		}
+
+		// Folder routes (protected)
+		folders := api.Group("/folders")
+		folders.Use(middleware.AuthRequired(jwtManager))
+		{
+			folders.GET("", folderHandler.ListFolders)
+			folders.POST("", folderHandler.CreateFolder)
+			folders.GET("/:id", folderHandler.GetFolder)
+			folders.PUT("/:id", folderHandler.UpdateFolder)
+			folders.DELETE("/:id", folderHandler.DeleteFolder)
+			folders.PUT("/:id/move", folderHandler.MoveFolder)
 		}
 
 		// Share routes
