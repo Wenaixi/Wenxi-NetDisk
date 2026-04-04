@@ -129,6 +129,9 @@
 - [x] repository 层测试 (CGO skip on Windows)
 - [x] service/lanzou 测试 (9)
 - [x] service/upload 测试 (6)
+- [x] service/auth 测试 (8)
+- [x] service/file 测试 (8)
+- [x] service/share 测试 (15)
 
 ### Task 6.2: 前端单元测试
 - [x] Store 测试 - auth (7)
@@ -136,6 +139,11 @@
 - [x] Store 测试 - upload (5)
 - [x] Crypto 工具测试 (4)
 - [ ] 组件测试 (Vitest)
+
+### Task 6.3: 后端集成测试
+- [ ] handlers 层 HTTP 测试
+- [ ] 端到端业务流程测试
+- [ ] 并发压力测试
 
 ### Task 6.3: E2E 测试
 - [ ] Playwright 配置
@@ -151,8 +159,8 @@
 | Phase 2: 后端验证 | 4 | 4 | 100% |
 | Phase 3: Vue 前端 | 5 | 4 | 80% |
 | Phase 4: 蓝奏云对接 | 3 | 0 | 10% |
-| Phase 5: 功能完善 | 3 | 0 | 0% |
-| Phase 6: 测试系统 | 3 | 3 | 95% |
+| Phase 5: 功能完善 | 3 | 0 | 10% |
+| Phase 6: 测试系统 | 3 | 3 | 72% |
 
 ---
 

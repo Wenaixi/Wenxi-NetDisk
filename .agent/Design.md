@@ -296,6 +296,29 @@ Client ←metadata→ Server ←token→ LanZouCloud
 2. 请求 → Client在header带token
 3. Server验证token → 允许/拒绝
 
+### 5. Service层接口化
+
+**问题**: 单元测试困难，难以Mock依赖
+
+**方案**: 所有Service层使用接口而非具体类型依赖
+
+**实现的接口**:
+```
+UserRepository            - 用户仓库 (auth_service)
+FileRepository            - 文件仓库 (file_service)
+ShareRepository           - 分享仓库 (share_service)
+ShareFileRepository       - 分享用文件仓库 (share_service)
+LanZouTokenRepository     - 蓝奏云Token仓库 (lanzou_service)
+UploadSessionRepository   - 上传会话仓库 (upload_service)
+LanZouClientProvider      - 蓝奏云客户端提供者 (upload_service)
+FileMetadataCreator       - 文件元数据创建器 (upload_service)
+```
+
+**影响**:
+- 100%纯Go测试，无数据库依赖
+- 所有Service层可独立测试
+- 便于未来替换实现
+
 ---
 
 ## 测试策略
@@ -318,6 +341,6 @@ Client ←metadata→ Server ←token→ LanZouCloud
 
 ---
 
-**文档版本**: 4.0.0
+**文档版本**: 5.0.0
 **最后更新**: 2026-04-04
-**状态**: 活跃开发中
+**状态**: Phase 6 测试进行中
