@@ -22,7 +22,7 @@
 
         <div v-if="connected" class="space-y-4">
           <div class="flex items-center gap-3 text-green-500">
-            <n-icon size="20"><CheckmarkCircle" /></n-icon>
+            <n-icon size="20"><CheckmarkCircle /></n-icon>
             <span>已连接到蓝奏云</span>
           </div>
           <div class="text-gray-400 text-sm">
@@ -33,7 +33,7 @@
 
         <div v-else class="space-y-4">
           <div class="flex items-center gap-3 text-yellow-500">
-            <n-icon size="20"><Warning" /></n-icon>
+            <n-icon size="20"><Warning /></n-icon>
             <span>未连接蓝奏云</span>
           </div>
           <p class="text-gray-400 text-sm">
