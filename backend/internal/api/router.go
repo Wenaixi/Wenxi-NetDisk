@@ -31,12 +31,13 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	fileSvc := service.NewFileService(fileRepo)
 	shareSvc := service.NewShareService(shareRepo, fileRepo)
 	lanzouSvc := service.NewLanZouService(lanzouRepo)
+	uploadSvc := service.NewUploadService(nil, lanzouSvc, fileSvc)
 
 	// Handlers
 	authHandler := handlers.NewAuthHandler(authSvc)
 	fileHandler := handlers.NewFileHandler(fileSvc)
 	shareHandler := handlers.NewShareHandler(shareSvc)
-	lanzouHandler := handlers.NewLanZouHandler(lanzouSvc)
+	lanzouHandler := handlers.NewLanZouHandler(lanzouSvc, uploadSvc)
 
 	// Health check
 	r.GET("/health", func(c *gin.Context) {
@@ -77,6 +78,13 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 		{
 			lanzou.POST("/connect", lanzouHandler.Connect)
 			lanzou.GET("/status", lanzouHandler.GetStatus)
+			lanzou.DELETE("/connect", lanzouHandler.Disconnect)
+			lanzou.GET("/files", lanzouHandler.ListFiles)
+			lanzou.GET("/folders", lanzouHandler.ListFolders)
+			lanzou.POST("/folders", lanzouHandler.CreateFolder)
+			lanzou.POST("/upload/init", lanzouHandler.InitializeUpload)
+			lanzou.POST("/upload/complete/:id", lanzouHandler.CompleteUpload)
+			lanzou.GET("/upload/status/:id", lanzouHandler.UploadStatus)
 		}
 	}
 

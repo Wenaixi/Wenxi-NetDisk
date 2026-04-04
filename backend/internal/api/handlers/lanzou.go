@@ -1,17 +1,23 @@
 package handlers
 
 import (
+	"strconv"
+
 	"github.com/wenaixi/wenxi-cloud/backend/internal/service"
 	"github.com/wenaixi/wenxi-cloud/backend/internal/pkg/response"
 	"github.com/gin-gonic/gin"
 )
 
 type LanZouHandler struct {
-	lanzouSvc *service.LanZouService
+	lanzouSvc  *service.LanZouService
+	uploadSvc  *service.UploadService
 }
 
-func NewLanZouHandler(lanzouSvc *service.LanZouService) *LanZouHandler {
-	return &LanZouHandler{lanzouSvc: lanzouSvc}
+func NewLanZouHandler(lanzouSvc *service.LanZouService, uploadSvc *service.UploadService) *LanZouHandler {
+	return &LanZouHandler{
+		lanzouSvc: lanzouSvc,
+		uploadSvc: uploadSvc,
+	}
 }
 
 func (h *LanZouHandler) Connect(c *gin.Context) {
@@ -49,4 +55,167 @@ func (h *LanZouHandler) GetStatus(c *gin.Context) {
 		"connected":  true,
 		"expires_at": token.ExpiresAt,
 	})
+}
+
+// Disconnect 断开蓝奏云连接
+func (h *LanZouHandler) Disconnect(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	if err := h.lanzouSvc.DeleteToken(uid); err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, gin.H{"status": "disconnected"})
+}
+
+// ListFiles 获取蓝奏云文件列表
+func (h *LanZouHandler) ListFiles(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	folderID, _ := strconv.Atoi(c.Query("folder_id"))
+	if folderID == 0 {
+		folderID = -1 // 根目录
+	}
+
+	page, _ := strconv.Atoi(c.Query("page"))
+	if page < 1 {
+		page = 1
+	}
+
+	client, err := h.lanzouSvc.GetClient(uid)
+	if err != nil {
+		response.Unauthorized(c, err.Error())
+		return
+	}
+
+	resp, err := client.Task5(folderID, page)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// ListFolders 获取蓝奏云文件夹列表
+func (h *LanZouHandler) ListFolders(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	folderID, _ := strconv.Atoi(c.Query("folder_id"))
+	if folderID == 0 {
+		folderID = -1
+	}
+
+	client, err := h.lanzouSvc.GetClient(uid)
+	if err != nil {
+		response.Unauthorized(c, err.Error())
+		return
+	}
+
+	resp, err := client.Task47(folderID)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// CreateFolder 创建文件夹
+func (h *LanZouHandler) CreateFolder(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	var req struct {
+		ParentID int    `json:"parent_id"`
+		Name     string `json:"name" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	client, err := h.lanzouSvc.GetClient(uid)
+	if err != nil {
+		response.Unauthorized(c, err.Error())
+		return
+	}
+
+	resp, err := client.Task2(req.ParentID, req.Name)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// InitializeUpload 初始化上传
+func (h *LanZouHandler) InitializeUpload(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	var req service.InitializeUploadRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	resp, err := h.uploadSvc.InitializeUpload(uid, &req)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// CompleteUpload 完成上传
+func (h *LanZouHandler) CompleteUpload(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	sessionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		response.BadRequest(c, "invalid session id")
+		return
+	}
+
+	var req service.CompleteUploadRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	file, err := h.uploadSvc.CompleteUpload(uid, uint(sessionID), &req)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, file)
+}
+
+// UploadStatus 获取上传状态
+func (h *LanZouHandler) UploadStatus(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	sessionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		response.BadRequest(c, "invalid session id")
+		return
+	}
+
+	session, err := h.uploadSvc.GetUploadStatus(uid, uint(sessionID))
+	if err != nil {
+		response.NotFound(c, err.Error())
+		return
+	}
+
+	response.Success(c, session)
 }
