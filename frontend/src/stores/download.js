@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { fileAPI } from '../api'
 import { decryptFile, importKey } from '../utils/crypto'
 
@@ -10,6 +10,17 @@ export const useDownloadStore = defineStore('download', () => {
   const currentFile = ref(null)
   const error = ref(null)
   const downloadSpeed = ref(0)
+
+  // 批量下载队列
+  const downloadQueue = ref([])
+  const isQueueDownloading = ref(false)
+  const queueCurrentIndex = ref(0)
+  const queueTotalCount = ref(0)
+  const queueCompletedCount = ref(0)
+  const queueErrors = ref([])
+
+  // Getters
+  const hasQueueItems = computed(() => downloadQueue.value.length > 0)
 
   async function downloadAndDecrypt(fileId, encryptionKey, encryptionNonce) {
     if (!fileId) {
@@ -61,6 +72,91 @@ export const useDownloadStore = defineStore('download', () => {
       isDecrypting.value = false
       throw err
     }
+  }
+
+  // 批量下载功能
+  function addToQueue(files) {
+    // files: [{ id, name, encryptionKey, encryptionNonce, size }]
+    for (const file of files) {
+      downloadQueue.value.push({
+        id: file.id || (Date.now() + Math.random()),
+        name: file.name || `file_${Date.now()}`,
+        encryptionKey: file.encryptionKey,
+        encryptionNonce: file.encryptionNonce,
+        size: file.size,
+        status: 'pending', // pending, downloading, decrypting, completed, error
+        progress: 0,
+        error: null
+      })
+    }
+  }
+
+  function removeFromQueue(id) {
+    const idx = downloadQueue.value.findIndex(f => f.id === id)
+    if (idx !== -1) {
+      downloadQueue.value.splice(idx, 1)
+    }
+  }
+
+  function clearQueue() {
+    downloadQueue.value = []
+    queueErrors.value = []
+    queueCurrentIndex.value = 0
+    queueCompletedCount.value = 0
+  }
+
+  async function downloadAll() {
+    if (downloadQueue.value.length === 0) return
+
+    isQueueDownloading.value = true
+    queueTotalCount.value = downloadQueue.value.length
+    queueCompletedCount.value = 0
+    queueErrors.value = []
+
+    for (let i = 0; i < downloadQueue.value.length; i++) {
+      const item = downloadQueue.value[i]
+      if (item.status === 'completed') continue
+
+      queueCurrentIndex.value = i
+      item.status = 'downloading'
+
+      try {
+        // 获取下载链接
+        const response = await fileAPI.download(item.id)
+        const { download_url, file_name, file_size } = response
+        item.name = file_name || item.name
+
+        // 下载文件
+        const encryptedBlob = await downloadFile(download_url, (loaded) => {
+          if (file_size > 0) {
+            item.progress = Math.round((loaded / file_size) * 50)
+          }
+        })
+
+        // 解密
+        item.status = 'decrypting'
+        item.progress = 50
+
+        if (item.encryptionKey) {
+          const key = await importKey(item.encryptionKey)
+          const decryptedBlob = await decryptFile(encryptedBlob, key)
+          saveBlob(decryptedBlob, item.name)
+        } else {
+          // 无加密直接保存
+          saveBlob(encryptedBlob, item.name)
+        }
+
+        item.status = 'completed'
+        item.progress = 100
+        queueCompletedCount.value++
+      } catch (err) {
+        item.status = 'error'
+        item.error = err.message || '下载失败'
+        queueErrors.value.push({ file: item.name, error: item.error })
+      }
+    }
+
+    isQueueDownloading.value = false
   }
 
   async function downloadFile(url, onProgress) {
@@ -123,6 +219,19 @@ export const useDownloadStore = defineStore('download', () => {
     currentFile,
     error,
     downloadSpeed,
+    // 批量下载
+    downloadQueue,
+    isQueueDownloading,
+    queueCurrentIndex,
+    queueTotalCount,
+    queueCompletedCount,
+    queueErrors,
+    hasQueueItems,
+    addToQueue,
+    removeFromQueue,
+    clearQueue,
+    downloadAll,
+    // 单文件下载
     downloadAndDecrypt,
     reset
   }

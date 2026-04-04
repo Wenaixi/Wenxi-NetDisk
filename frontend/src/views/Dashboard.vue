@@ -31,6 +31,13 @@
           >
             移动到 ({{ selectedItems.length }})
           </n-button>
+          <n-button
+            v-if="selectedItems.length > 0"
+            type="warning"
+            @click="batchDownload"
+          >
+            下载选中 ({{ selectedItems.length }})
+          </n-button>
         </div>
         <div class="flex items-center gap-2">
           <n-checkbox
@@ -350,6 +357,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useFileStore } from '../stores/file'
 import { useUploadStore } from '../stores/upload'
+import { useDownloadStore } from '../stores/download'
 import { useShareStore } from '../stores/share'
 import { encryptFile, generateEncryptionKey } from '../utils/crypto'
 import { fileAPI, shareAPI } from '../api'
@@ -363,6 +371,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const fileStore = useFileStore()
 const uploadStore = useUploadStore()
+const downloadStore = useDownloadStore()
 const shareStore = useShareStore()
 const message = useMessage()
 
@@ -436,6 +445,47 @@ async function batchDelete() {
     fileStore.fetchFiles(fileStore.currentFolder)
   } catch (err) {
     message.error(err.message || '删除失败')
+  }
+}
+
+async function batchDownload() {
+  if (selectedItems.value.length === 0) return
+
+  try {
+    // 只下载文件，不下载文件夹
+    const filesToDownload = fileStore.files.filter(f => selectedItems.value.includes(f.id))
+
+    if (filesToDownload.length === 0) {
+      message.warning('请选择要下载的文件')
+      return
+    }
+
+    // 添加到下载队列
+    const downloadItems = filesToDownload.map(f => ({
+      id: f.id,
+      name: f.name,
+      size: f.size,
+      encryptionKey: f.encryption_key,
+      encryptionNonce: f.encryption_nonce
+    }))
+
+    downloadStore.addToQueue(downloadItems)
+    await downloadStore.downloadAll()
+
+    const successCount = downloadStore.queueCompletedCount
+    const errorCount = downloadStore.queueErrors.length
+
+    if (errorCount > 0) {
+      message.warning(`下载完成: ${successCount} 个成功, ${errorCount} 个失败`)
+    } else {
+      message.success(`成功下载 ${successCount} 个文件`)
+    }
+
+    downloadStore.clearQueue()
+    selectedItems.value = []
+    selectMode.value = false
+  } catch (err) {
+    message.error(err.message || '下载失败')
   }
 }
 
