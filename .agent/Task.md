@@ -200,8 +200,12 @@
 - [ ] 组件测试 (Vitest) - 待实现
 
 ### Task 6.3: E2E 测试 🔄
-- [ ] Playwright 配置
-- [ ] 关键流程测试
+- [x] Playwright 配置 (playwright.config.js)
+- [x] auth.spec.js (4个测试用例)
+- [x] file.spec.js (7个测试用例)
+- [x] lanzou.spec.js (6个测试用例)
+- [ ] chromium 浏览器安装 (网络问题，SSL下载失败)
+- [ ] 关键流程测试 (待浏览器安装后运行)
 
 ### Task 6.4: 测试环境规范化 🔄
 - [ ] Go 测试环境 (gorm+sqlite, mock)
