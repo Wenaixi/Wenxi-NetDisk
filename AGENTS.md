@@ -32,6 +32,22 @@
 
 ## 开发历史
 
+### 2026-04-05 - Handler Round4测试 (覆盖率82.6%)
+
+**Handler Round4测试 (handler_round4_test.go, 新增~24个测试用例, 总计~337):**
+- LanzouHandler: UploadStatus成功/NotFound、CompleteUpload验证、Connect成功、InitializeUpload成功/缺字段、CreateShare缺fileID、GetFileURL BadID (10用例)
+- FolderHandler: UpdateFolder(名称/描述/无效ID) (3用例)
+- ShareParseHandler: ParseShare缺URL/无效JSON (2用例)
+- RecycleHandler: ClearWithService验证 (1用例)
+- FileHandler: CreateFileMetadata缺name (1用例)
+- DownloadHandler: GetDownloadURL成功路径 (1用例)
+- UploadHandler: GetUploadURL带folderID、UploadFile验证 (2用例)
+- ShareHandler: CreateShareViaBody带过期时间 (1用例)
+- mock实现: mockUploadSessionRepoForStatus、mockFileSvcForUpload、mockLanzouClientProviderForUpload
+
+**Handler覆盖率: 80.8% → 82.6%**
+**总Handler测试数: ~337**
+
 ### 2026-04-05 - Handler Round3测试 (覆盖率80.8%)
 
 **Handler Round3测试 (handler_round3_test.go, 新增58个测试用例, 总计314):**
