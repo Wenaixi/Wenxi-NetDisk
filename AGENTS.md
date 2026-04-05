@@ -32,7 +32,31 @@
 
 ## 开发历史
 
-### 2026-04-05 - Handler Round5测试 (覆盖率85.5%)
+### 2026-04-05 - Repository层全量测试 + lanzou包测试完善
+
+**Repository层测试 (glebarez/sqlite纯Go驱动, 覆盖率90.4%):**
+- user_repo_test.go: Create, FindByID, FindByEmail, Update, Delete, EmailUnique, UsernameUnique, FindByUsername (9用例)
+- file_repo_test.go: Create, FindByID, FindByUserID, FindByFolderID, FindByParentID, Update, Delete, DeleteByUserID (8用例)
+- folder_repo_test.go: Create, FindByID, FindByUserID, FindByParentID, Update, Delete, DeleteByUserID, DeleteByParentID (9用例)
+- share_repo_test.go: Create, FindByID, FindByToken, FindByFileID, FindByUserID, Delete, DeleteByFileID (8用例)
+- lanzou_repo_test.go: Upsert, FindByUserID, DeleteByUserID, FindByCookie (4用例)
+- recycle_test.go: Create, List, GetByID, Restore, DeletePermanently, ClearAll, CleanExpired, GetByItemType (9用例)
+- upload_session_repo_test.go: Create, FindByID, FindByUserIDAndHash, Update, Delete, DeleteByUserID (7用例)
+- file_version_repo_test.go: Create, FindByID, FindByFileID, Delete, DeleteByFileID (6用例)
+- 关键修复: gorm.io/driver/sqlite → glebarez/sqlite 解决CGO依赖问题
+- 关键修复: 共享内存DB隔离 (`:memory:` 替代 `file::memory:?cache=shared`)
+
+**lanzou包测试 (lanzou_test.go, 覆盖率24.6% → 60.4%, 新增38用例):**
+- Client基础: buildRequest验证/空Cookie/无效Method、doRequest网络错误、postForm (5用例)
+- Task方法: Task5文件列表, Task47文件夹列表, Task2创建文件夹(含名处理), Task6删除文件, Task46删除文件夹, Task14重命名, Task15移动文件, Task48移动文件夹, Task39创建分享, Task22文件详情, Task18文件夹详情, Ping (18用例)
+- 辅助函数: extractName(4变体), extractDownloadURL(3变体) (7用例)
+- GetDownloadURL: 网络错误、成功解析、密码要求 (3用例)
+- 已有测试: ValidateShareURL(12变体), ExtractTitle(4变体), ExtractFileSize(2变体), ExtractFileTime(2变体), ExtractIframeDownloadURL(3变体), ParseShareFile, ExtractFolderFileList, ParseError (27用例)
+- 全部使用 httptest.NewServer mock HTTP服务器, 无网络依赖
+
+**Repository覆盖率: 0% → 90.4%**
+**lanzou覆盖率: 24.6% → 60.4%**
+**总Go测试数: ~440**
 
 **Handler Round5测试 (handler_round5_test.go, 新增~18个测试用例, 总计~355):**
 - DownloadHandler: GetDownloadURL完整成功路径/NotFound (2用例, mock完整FileDownloadRepository接口)
@@ -716,7 +740,7 @@ references/lanzouyun-disk/
 |------|--------|------|
 | pkg/crypto | 5 | ✅ |
 | pkg/jwt | 7 | ✅ |
-| pkg/lanzou | 6 | ✅ |
+| pkg/lanzou | 44 (Client基础5+Task方法18+辅助函数7+GetDownloadURL3+解析27) | ✅ |
 | pkg/response | 15 (5结构+10HTTP) | ✅ |
 | pkg/middleware | 20 (10Auth+4Logger+6CORS) | ✅ |
 | service/auth | 13 (+5 Login) | ✅ |
