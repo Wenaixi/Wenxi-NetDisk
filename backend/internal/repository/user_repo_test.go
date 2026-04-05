@@ -204,3 +204,34 @@ func TestUserRepository_UsernameUnique(t *testing.T) {
 	err = repo.Create(user2)
 	assert.Error(t, err)
 }
+
+func TestUserRepository_FindByUsername(t *testing.T) {
+	db := setupTestDB(t)
+	if db == nil {
+		return
+	}
+	repo := NewUserRepository(db)
+
+	user := &model.User{
+		Username:     "findbyusername",
+		Email:        "finduser@example.com",
+		PasswordHash: "hashedpassword",
+	}
+	repo.Create(user)
+
+	found, err := repo.FindByUsername("findbyusername")
+	assert.NoError(t, err)
+	assert.Equal(t, "findbyusername", found.Username)
+}
+
+func TestUserRepository_FindByUsername_NotFound(t *testing.T) {
+	db := setupTestDB(t)
+	if db == nil {
+		return
+	}
+	repo := NewUserRepository(db)
+
+	found, err := repo.FindByUsername("nonexistent_user")
+	assert.Error(t, err)
+	assert.Nil(t, found)
+}
