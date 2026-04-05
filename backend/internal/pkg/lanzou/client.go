@@ -24,11 +24,15 @@ type Client struct {
 // NewClient 创建蓝奏云客户端
 func NewClient(cookie string) *Client {
 	jar, _ := cookiejar.New(nil)
+	transport := &http.Transport{
+		Proxy: nil, // 不使用代理
+	}
 	return &Client{
 		baseURL: "https://pc.woozooo.com",
 		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
-			Jar:     jar,
+			Timeout:   30 * time.Second,
+			Jar:       jar,
+			Transport: transport,
 		},
 		cookie:    cookie,
 		userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -43,6 +47,11 @@ func (c *Client) SetCookie(cookie string) {
 // SetBaseURL 设置基础URL（用于测试）
 func (c *Client) SetBaseURL(baseURL string) {
 	c.baseURL = baseURL
+}
+
+// SetHTTPClient 设置自定义HTTP客户端（用于测试时绕过代理）
+func (c *Client) SetHTTPClient(httpClient *http.Client) {
+	c.httpClient = httpClient
 }
 
 // buildRequest 构建请求
@@ -429,40 +438,25 @@ func (c *Client) doGet(path string) ([]byte, error) {
 // 从 mydisk.php 页面解析 iframe referer
 // 从 mydisk.php?item=profile&action=mypower 页面解析用户信息
 func (c *Client) Profile() (*ProfileInfo, error) {
-	// 并发请求两个页面
 	type result struct {
 		data []byte
 		err  error
 	}
-	ch := make(chan result, 2)
 
-	go func() {
-		data, err := c.doGet("mydisk.php")
-		ch <- result{data, err}
-	}()
-
-	go func() {
-		data, err := c.doGet("mydisk.php?item=profile&action=mypower")
-		ch <- result{data, err}
-	}()
-
-	r1 := <-ch
-	r2 := <-ch
-
-	if r1.err != nil {
-		return nil, fmt.Errorf("failed to fetch mydisk.php: %w", r1.err)
+	// 顺序请求避免竞态
+	mainData, mainErr := c.doGet("mydisk.php")
+	if mainErr != nil {
+		return nil, fmt.Errorf("failed to fetch mydisk.php: %w", mainErr)
 	}
-	if r2.err != nil {
-		return nil, fmt.Errorf("failed to fetch profile page: %w", r2.err)
+
+	profileData, profileErr := c.doGet("mydisk.php?item=profile&action=mypower")
+	if profileErr != nil {
+		return nil, fmt.Errorf("failed to fetch profile page: %w", profileErr)
 	}
 
 	profile := &ProfileInfo{}
-
-	// 解析 profile 页面
-	c.parseProfilePage(string(r2.data), profile)
-
-	// 解析主页面获取 referer
-	profile.Referer = extractRefererFromMainPage(string(r1.data), c.baseURL)
+	c.parseProfilePage(string(profileData), profile)
+	profile.Referer = extractRefererFromMainPage(string(mainData), c.baseURL)
 
 	return profile, nil
 }

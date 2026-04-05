@@ -640,6 +640,7 @@ func TestLanZouHandler_ListFolders_MockSuccess(t *testing.T) {
 
 	tokenRepo := &mockLanzouTokenRepoForLanzouHandler{cookie: server.URL}
 	lanzouSvc := service.NewLanZouService(tokenRepo)
+	lanzouSvc.SetBaseURL(server.URL)
 	uploadRepo := &mockUploadSessionRepoForHandler{}
 	fileSvc := &mockFileSvcForLanzou{}
 	lanzouProvider := &mockLanzouClientProviderForUpload{}
@@ -1122,6 +1123,7 @@ func TestLanZouHandler_GetProfile_MockSuccess(t *testing.T) {
 
 	tokenRepo := &mockLanzouTokenRepoForLanzouHandler{cookie: server.URL}
 	lanzouSvc := service.NewLanZouService(tokenRepo)
+	lanzouSvc.SetBaseURL(server.URL)
 	uploadRepo := &mockUploadSessionRepoForHandler{}
 	fileSvc := &mockFileSvcForLanzou{}
 	lanzouProvider := &mockLanzouClientProviderForUpload{}

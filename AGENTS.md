@@ -36,9 +36,11 @@
 
 **新增功能 - 用户Profile (蓝奏云账号信息):**
 - lanzou client: doGet()方法（GET请求支持）
-- lanzou client: Profile()方法（并发请求mydisk.php + profile页面）
+- lanzou client: Profile()方法（顺序请求mydisk.php + profile页面，避免并发竞态）
 - lanzou client: parseProfilePage()解析（域名/登录时间/上传类型/文件大小/验证状态/referer）
 - lanzou client: extractRefererFromMainPage()提取iframe src
+- lanzou client: SetHTTPClient()方法（测试注入自定义HTTP客户端）
+- lanzou client: NewClient使用Proxy: nil绕过系统HTTP代理
 - service层: GetProfile方法
 - handler: GetProfile接口 (GET /api/lanzou/profile)
 - ProfileInfo类型定义
