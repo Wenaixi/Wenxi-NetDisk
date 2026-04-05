@@ -168,24 +168,25 @@
 
 ---
 
-## Phase 6: 测试系统 ✅ (~98%)
+## Phase 6: 测试系统 ✅ (~99%)
 
 ### Task 6.1: 后端单元测试 ✅
 - [x] pkg/crypto 密码测试 (5)
 - [x] pkg/jwt JWT测试 (7)
 - [x] pkg/response 响应测试 (15)
-- [x] pkg/lanzou 蓝奏云测试 (6)
+- [x] pkg/lanzou 蓝奏云测试 (44, mock HTTP全覆盖)
 - [x] pkg/middleware 中间件测试 (20)
-- [x] repository 层测试 (10, CGO skip on Windows)
+- [x] repository 层测试 (61, glebarez/sqlite纯Go驱动)
 - [x] service/auth 测试 (8)
-- [x] service/file 测试 (12)
+- [x] service/file 测试 (26, +FindByID/FindByLanZouFileID)
 - [x] service/folder 测试 (22)
-- [x] service/lanzou 测试 (9)
+- [x] service/lanzou 测试 (13, +CreateShare/GetFileURL)
 - [x] service/upload 测试 (6)
 - [x] service/share 测试 (21)
 - [x] service/download 测试 (5)
 - [x] service/recycle 测试 (11)
 - [x] service/file_version 测试 (18)
+- [x] service/share_parse 测试 (4, +ParseShareLink/GetShareDownloadLink)
 
 ### Task 6.2: 前端单元测试 ✅
 - [x] Store 测试 - auth (7)
