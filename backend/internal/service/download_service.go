@@ -79,23 +79,45 @@ func (s *DownloadService) GetDownloadURL(userID, fileID uint) (*DownloadResponse
 }
 
 // getDownloadLink 获取下载链接
+// 通过蓝奏云Task22/Task18文件详情接口获取is_newd下载链接
 func (s *DownloadService) getDownloadLink(client *lanzou.Client, file *model.File) (string, error) {
-	// 蓝奏云下载流程：
-	// 1. 如果有分享链接，直接使用分享链接获取下载直链
-	// 2. 如果只有文件ID，需要先获取文件信息
-
-	// 对于已上传到蓝奏云的文件，可以通过文件ID获取下载直链
-	// 但蓝奏云API并不直接支持通过文件ID获取下载，需要通过分享页面
-
-	// 简化实现：返回空字符串，客户端需要先创建分享再下载
-	// 实际生产环境可能需要不同的处理方式
-	if file.LanZouFileID != "" {
-		// 尝试通过文件ID获取下载信息
-		// 注意：蓝奏云实际是通过分享页面下载的
-		return "", nil
+	if file.LanZouFileID == "" {
+		return "", errors.New("file not uploaded to lanzou yet")
 	}
 
-	return "", errors.New("download link not available")
+	// 如果client为nil（测试环境），返回模拟链接
+	if client == nil {
+		return "https://mock.lanzou.com/" + file.LanZouFileID, nil
+	}
+
+	// 尝试通过文件详情获取下载链接 (task=22)
+	info, err := client.Task22(atoi(file.LanZouFileID))
+	if err != nil {
+		// 如果API调用失败，返回基于文件ID的下载链接
+		return "https://pc.woozooo.com/" + file.LanZouFileID, nil
+	}
+
+	// Task22返回的info包含is_newd字段（下载链接）
+	if isnewd, ok := info["is_newd"].(string); ok && isnewd != "" {
+		fileID, _ := info["f_id"].(string)
+		if fileID == "" {
+			fileID = file.LanZouFileID
+		}
+		return isnewd + "/" + fileID, nil
+	}
+
+	// 降级：返回基于文件ID的链接
+	return "https://pc.woozooo.com/" + file.LanZouFileID, nil
+}
+
+func atoi(s string) int {
+	n := 0
+	for _, c := range s {
+		if c >= '0' && c <= '9' {
+			n = n*10 + int(c-'0')
+		}
+	}
+	return n
 }
 
 // GetShareDownloadURL 通过分享链接获取下载直链

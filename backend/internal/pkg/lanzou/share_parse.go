@@ -107,6 +107,7 @@ func (c *Client) ParseShareFolder(html, shareURL, pwd string) (*ShareObject, err
 }
 
 // GetShareDownloadURL 获取分享文件的真实下载链接
+// 完整解析链: 分享页 → iframe → AJAX解析 → dom/file/{url}
 // shareURL: 分享链接
 // pwd: 密码(如果有)
 func (c *Client) GetShareDownloadURL(shareURL, pwd string) (string, error) {
@@ -124,13 +125,136 @@ func (c *Client) GetShareDownloadURL(shareURL, pwd string) (string, error) {
 	htmlStr := string(html)
 
 	// 检查是否需要密码
-	if strings.Contains(htmlStr, "passwddiv") && pwd != "" {
-		// 有密码的分享需要提交密码获取下载链接
+	if strings.Contains(htmlStr, "passwddiv") {
+		if pwd == "" {
+			return "", &ParseError{Message: "分享需要密码"}
+		}
 		return c.getShareDownloadURLWithPwd(htmlStr, shareURL, pwd)
 	}
 
-	// 无密码分享，提取iframe中的下载链接
-	return extractIframeDownloadURL(htmlStr, shareURL)
+	// 无密码分享：解析iframe → AJAX → dom/file/url
+	return c.getDownloadURLFromIframe(htmlStr, shareURL)
+}
+
+// getDownloadURLFromIframe 从无密码分享页面解析下载链接
+// 流程: 分享页 → iframe → iframe页面 → parseAjax → POST → dom/file/{url}
+func (c *Client) getDownloadURLFromIframe(html, shareURL string) (string, error) {
+	// 1. 提取iframe URL
+	re := regexp.MustCompile(`iframe[^>]+src=["']([^"']+)["']`)
+	match := re.FindStringSubmatch(html)
+	if len(match) < 2 {
+		return "", &ParseError{Message: "无法提取iframe", URL: shareURL}
+	}
+	iframeURL := match[1]
+	if !strings.HasPrefix(iframeURL, "http") {
+		iframeURL = strings.TrimSuffix(shareURL, "/") + "/" + strings.TrimPrefix(iframeURL, "/")
+	}
+
+	// 2. 请求iframe页面
+	resp, err := c.httpClient.Get(iframeURL)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	iframeHTML, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	// 3. 解析AJAX参数
+	ajaxData, err := c.parseAjax(string(iframeHTML))
+	if err != nil {
+		return "", err
+	}
+
+	// 4. 发送AJAX请求 - 使用shareURL作为基础URL（蓝奏云的AJAX请求指向基础域名）
+	reqURL := c.baseURL + "/" + strings.TrimPrefix(ajaxData.URL, "/")
+	if strings.HasPrefix(ajaxData.URL, "http") {
+		reqURL = ajaxData.URL
+	}
+
+	req, err := http.NewRequest("POST", reqURL, strings.NewReader(ajaxData.Data))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("User-Agent", c.userAgent)
+	req.Header.Set("Referer", iframeURL)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err = c.httpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	// 5. 解析响应 {dom, url, inf}
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return "", err
+	}
+
+	dom, ok := result["dom"].(string)
+	if !ok {
+		return "", &ParseError{Message: "响应缺少dom字段", URL: shareURL}
+	}
+	fileURL, ok := result["url"].(string)
+	if !ok {
+		return "", &ParseError{Message: "响应缺少url字段", URL: shareURL}
+	}
+
+	return dom + "/file/" + fileURL, nil
+}
+
+// AjaxRequest AJAX请求参数
+type AjaxRequest struct {
+	URL  string
+	Type string
+	Data string
+}
+
+// parseAjax 从iframe页面解析AJAX请求参数
+func (c *Client) parseAjax(html string) (*AjaxRequest, error) {
+	// 提取$.ajax调用
+	// 简化实现: 提取url, type, data
+	re := regexp.MustCompile(`\$\.ajax\(\{[\s\S]*?url\s*:\s*["']([^"']+)["']`)
+	match := re.FindStringSubmatch(html)
+	if len(match) < 2 {
+		return nil, &ParseError{Message: "无法提取AJAX URL"}
+	}
+	ajaxURL := match[1]
+
+	re = regexp.MustCompile(`type\s*:\s*["']([^"']+)["']`)
+	match = re.FindStringSubmatch(html)
+	method := "POST"
+	if len(match) >= 2 {
+		method = match[1]
+	}
+
+	// 提取data参数 - 查找类似 data: {...} 或 data: "..."
+	re = regexp.MustCompile(`data\s*:\s*\{([\s\S]*?)\}`)
+	match = re.FindStringSubmatch(html)
+	var dataStr string
+	if len(match) >= 2 {
+		// 清理多行和空白
+		dataStr = match[1]
+		dataStr = strings.TrimSpace(dataStr)
+	}
+
+	if ajaxURL == "" {
+		return nil, &ParseError{Message: "AJAX URL为空"}
+	}
+
+	return &AjaxRequest{
+		URL:  ajaxURL,
+		Type: method,
+		Data: dataStr,
+	}, nil
 }
 
 // getShareDownloadURLWithPwd 获取有密码分享文件的下载链接

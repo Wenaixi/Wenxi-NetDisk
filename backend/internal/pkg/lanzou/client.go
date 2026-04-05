@@ -384,11 +384,19 @@ func (c *Client) Task39(fileId int, minutes int) (*ShareResponse, error) {
 	return resp, nil
 }
 
-// GetDownloadURL 获取文件下载直链
+// GetDownloadURL 获取文件下载直链（完整解析链）
 // shareURL: 蓝奏云分享链接，如 https://wws.lanzous.com/xxxxx
 // pwd: 密码（如果有）
+// 返回: 文件名, 下载直链, 错误
 func (c *Client) GetDownloadURL(shareURL, pwd string) (string, string, error) {
-	// 解析分享页面
+	return c.ParseAndDownload(shareURL, pwd)
+}
+
+// ParseAndDownload 完整解析分享链接并获取下载直链
+// 无密码: 分享页 → iframe → iframe页面 → AJAX → dom/file/{url}
+// 有密码: 分享页 → ParsePwdAjax → POST → dom/file/{url}
+func (c *Client) ParseAndDownload(shareURL, pwd string) (string, string, error) {
+	// 1. 获取分享页面
 	resp, err := c.httpClient.Get(shareURL)
 	if err != nil {
 		return "", "", err
@@ -399,21 +407,86 @@ func (c *Client) GetDownloadURL(shareURL, pwd string) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-
 	htmlStr := string(html)
 
-	// 检查是否有密码
-	if strings.Contains(htmlStr, "passwddiv") && pwd == "" {
-		return "", "", fmt.Errorf("share requires password")
+	// 2. 检查是否需要密码
+	if strings.Contains(htmlStr, "passwddiv") {
+		if pwd == "" {
+			// 需要密码但没有提供，返回基本信息
+			name := extractName(htmlStr)
+			return name, "", fmt.Errorf("share requires password")
+		}
+		// 有密码：解析密码AJAX参数并获取下载链接
+		return c.downloadWithPassword(htmlStr, shareURL, pwd)
 	}
 
-	// 提取文件名
+	// 3. 无密码：通过iframe解析获取下载链接
 	name := extractName(htmlStr)
+	downloadURL, err := c.getDownloadURLFromIframe(htmlStr, shareURL)
+	return name, downloadURL, err
+}
 
-	// 提取下载直链
-	downURL := extractDownloadURL(htmlStr, shareURL, pwd)
+// downloadWithPassword 通过密码获取下载链接
+func (c *Client) downloadWithPassword(html, shareURL, pwd string) (string, string, error) {
+	// 1. 从页面中提取AJAX参数
+	ajaxURL, ajaxData, err := extractPwdAjaxParams(html, pwd)
+	if err != nil {
+		return "", "", err
+	}
 
-	return name, downURL, nil
+	// 2. 构建请求URL
+	reqURL := shareURL
+	if !strings.HasPrefix(ajaxURL, "http") {
+		reqURL = strings.TrimSuffix(shareURL, "/") + "/" + strings.TrimPrefix(ajaxURL, "/")
+	} else {
+		reqURL = ajaxURL
+	}
+
+	// 3. 发送POST请求
+	req, err := http.NewRequest("POST", reqURL, strings.NewReader(ajaxData))
+	if err != nil {
+		return "", "", err
+	}
+	req.Header.Set("User-Agent", c.userAgent)
+	req.Header.Set("Referer", shareURL)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return "", "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", "", err
+	}
+
+	// 4. 解析响应
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return "", "", err
+	}
+
+	// 5. 提取dom和url
+	dom, ok := result["dom"].(string)
+	if !ok {
+		return "", "", fmt.Errorf("响应缺少dom字段")
+	}
+	fileURL, ok := result["url"].(string)
+	if !ok {
+		return "", "", fmt.Errorf("响应缺少url字段")
+	}
+
+	// 6. 提取文件名
+	name := extractName(html)
+	if name == "" {
+		if inf, ok := result["inf"].(string); ok {
+			name = inf
+		}
+	}
+
+	return name, dom + "/file/" + fileURL, nil
 }
 
 // extractName 从HTML提取文件名
@@ -426,7 +499,8 @@ func extractName(html string) string {
 	return ""
 }
 
-// extractDownloadURL 从HTML提取下载链接
+// extractDownloadURL 从HTML提取下载链接（旧版兼容，已废弃）
+// 新版使用 getDownloadURLFromIframe 完整解析链
 func extractDownloadURL(html, referer, pwd string) string {
 	// 简化实现，实际需要解析iframe和ajax
 	re := regexp.MustCompile(`iframe[^>]+src=["']([^"']+)["']`)
@@ -553,7 +627,7 @@ func extractRefererFromMainPage(html, baseURL string) string {
 // Ping 检测连接
 func (c *Client) Ping() error {
 	body := url.Values{"task": {"1"}}
-	_, err := c.postForm("douload.php", body)
+	_, err := c.postForm("doupload.php", body)
 	return err
 }
 

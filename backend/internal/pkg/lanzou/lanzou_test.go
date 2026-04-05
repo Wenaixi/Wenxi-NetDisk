@@ -387,20 +387,33 @@ func TestClientGetDownloadURL_NetworkError(t *testing.T) {
 	assert.Error(t, err)
 }
 
-// Test GetDownloadURL - mock success
+// Test GetDownloadURL - mock success (full iframe→AJAX flow)
 func TestClientGetDownloadURL_Success(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// Share page with iframe
+	shareServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/file/abc" {
+			// Iframe page with AJAX call
+			w.Write([]byte(`<html><script>
+$.ajax({type:"POST",url:"/doupload.php",data:{task:"1",file_id:"123"}});
+</script></html>`))
+			return
+		}
+		if r.URL.Path == "/doupload.php" {
+			// AJAX response with download URL
+			w.Write([]byte(`{"dom":"https://down.example.com","url":"xyz123","inf":"testfile.txt"}`))
+			return
+		}
 		w.Write([]byte(`<title>testfile.txt - 蓝奏云</title><iframe src="/file/abc"></iframe>`))
 	}))
-	defer server.Close()
+	defer shareServer.Close()
 
 	client := NewClient("cookie")
-	client.baseURL = server.URL
+	client.baseURL = shareServer.URL
 
-	name, downURL, err := client.GetDownloadURL(server.URL, "")
+	name, downURL, err := client.GetDownloadURL(shareServer.URL, "")
 	assert.NoError(t, err)
 	assert.Equal(t, "testfile.txt", name)
-	assert.Contains(t, downURL, "/file/abc")
+	assert.Contains(t, downURL, "xyz123")
 }
 
 // Test GetDownloadURL - password required
