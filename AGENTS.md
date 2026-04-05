@@ -782,13 +782,15 @@ references/lanzouyun-disk/
 | handlers/auth | 18 (+10 GetCurrentUser success/Register/Login/构造器) | ✅ |
 | handlers/file | 21 (+2 ListFiles/CreateFileMetadata) | ✅ |
 | handlers/folder | 21 | ✅ |
-| handlers/recycle | 14 (+3 List/Clear success) | ✅ |
+| handlers/recycle | 29 (+15 成功路径/List/Restore/Delete/Clear mock) | ✅ |
 | handlers/download | 8 (+2 GetDownloadURL/构造器) | ✅ |
 | handlers/lanzou | 30 (+21 全端点验证+成功路径) | ✅ |
 | handlers/share | 15 (+3 GetShare/ListShares success) | ✅ |
-| handlers/share_parse | 9 (+3 验证测试) | ✅ |
+| handlers/share_parse | 12 (+3 成功路径验证) | ✅ |
 | handlers/upload | 18 (+7 ListVersions/GetUploadURL/guessMimeType success) | ✅ |
 | handlers/common | 26 (构造器/响应格式) | ✅ |
+
+**Handler覆盖率: 85.5% → 86.7%**
 
 ### Vue前端 (253 tests)
 | 模块 | 测试数 | 状态 |
