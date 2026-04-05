@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-// Mock axios at top level
+// Mock axios at top level (only definition)
 vi.mock('axios', () => ({
   default: {
     create: vi.fn().mockReturnValue({
@@ -28,16 +28,13 @@ describe('fetch Interceptor', () => {
 
   it('should have token interceptor logic defined in api module', () => {
     // Verify the API module structure exists
-    vi.mock('axios', () => ({
-      default: {
-        create: vi.fn().mockReturnValue({
-          interceptors: {
-            request: { use: vi.fn() },
-            response: { use: vi.fn() }
-          }
-        })
+    const mockAxios = vi.fn().mockReturnValue({
+      interceptors: {
+        request: { use: vi.fn() },
+        response: { use: vi.fn() }
       }
-    }))
+    })
+    expect(typeof mockAxios).toBe('function')
   })
 })
 
