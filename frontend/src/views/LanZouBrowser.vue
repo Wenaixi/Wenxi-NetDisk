@@ -80,6 +80,11 @@
                   'bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]',
                   selectMode && selectedItems.includes(folder.folder_id) ? 'ring-2 ring-blue-500' : ''
                 ]"
+                draggable="true"
+                @dragstart="onDragStart($event, folder)"
+                @dragend="onDragEnd"
+                @dragover.prevent
+                @drop.prevent="onDropFolder($event, folder)"
                 @dblclick="!selectMode && navigateToFolder(folder)"
                 @click="selectMode ? toggleSelect(folder.folder_id) : navigateToFolder(folder)"
                 @contextmenu.prevent="openFolderContextMenu($event, folder)"
@@ -109,6 +114,9 @@
                   'bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]',
                   selectMode && selectedItems.includes(file.file_id) ? 'ring-2 ring-blue-500' : ''
                 ]"
+                draggable="true"
+                @dragstart="onDragStart($event, file)"
+                @dragend="onDragEnd"
               @click="selectMode ? toggleSelect(file.file_id) : handleFileClick(file)"
               @contextmenu.prevent="openFileContextMenu($event, file)"
             >
@@ -392,10 +400,44 @@ const folderSelectOptions = computed(() => {
 })
 
 // 选择模式相关
-
-// 选择模式相关
 const selectMode = ref(false)
 const selectedItems = ref([])
+
+// 拖拽移动相关
+const dragItems = ref([])
+
+function onDragStart(event, item) {
+  if (selectMode.value && selectedItems.value.length > 0) {
+    dragItems.value = selectedItems.value.map(id => {
+      const folder = folders.value.find(f => f.folder_id === id)
+      const file = files.value.find(f => f.file_id === id)
+      if (folder) return { id: folder.folder_id, type: 'folder' }
+      if (file) return { id: file.file_id, type: 'file' }
+      return null
+    }).filter(Boolean)
+  } else {
+    dragItems.value = [{ id: item.folder_id || item.file_id, type: item.folder_id ? 'folder' : 'file' }]
+  }
+}
+
+function onDragEnd() {
+  dragItems.value = []
+}
+
+function onDropFolder(event, folder) {
+  if (dragItems.value.length === 0) return
+  if (folder.folder_id === currentFolderId.value) return // 不能拖到当前目录
+
+  lanzouAPI.batchMove({ items: dragItems.value, target: folder.folder_id }).then(() => {
+    message.success('移动成功')
+    dragItems.value = []
+    selectedItems.value = []
+    selectMode.value = false
+    refresh()
+  }).catch(err => {
+    message.error(err.message || '移动失败')
+  })
+}
 
 // 过滤和排序后的文件/文件夹列表
 const filteredFolders = computed(() => {
