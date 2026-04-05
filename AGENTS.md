@@ -32,6 +32,20 @@
 
 ## 开发历史
 
+### 2026-04-05 - Handler Round5测试 (覆盖率85.5%)
+
+**Handler Round5测试 (handler_round5_test.go, 新增~18个测试用例, 总计~355):**
+- DownloadHandler: GetDownloadURL完整成功路径/NotFound (2用例, mock完整FileDownloadRepository接口)
+- RecycleHandler: List有数据/空数据、Clear验证cleared标志 (3用例, mock完整RecycleBinRepository)
+- FileHandler: ListFiles仓库错误、UpdateFileDescription无效Body、MoveFile无效Body (3用例)
+- LanzouHandler: Disconnect有Token/无Token、InitializeUpload未连接、ListFiles未连接/ListFolders未连接/CreateFolder未连接 (6用例)
+- AuthHandler: Register自动生成用户名 (1用例)
+- ShareParseHandler: ParseShare成功/GetDownloadURL成功/ValidateURL成功 (3用例, 验证输入路径)
+- mock: mockDownloadRepo_R5、mockLanzouForDownload_R5、mockRecycleBin_R5、mockFileRepoError_R5、mockLanzouNotConnectedProvider
+
+**Handler覆盖率: 82.6% → 85.5%**
+**总Handler测试数: ~355**
+
 ### 2026-04-05 - Handler Round4测试 (覆盖率82.6%)
 
 **Handler Round4测试 (handler_round4_test.go, 新增~24个测试用例, 总计~337):**
