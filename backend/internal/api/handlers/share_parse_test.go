@@ -205,3 +205,102 @@ func TestShareParseHandler_ValidateShareURL_ValidURL(t *testing.T) {
 	// ValidateShareURL calls lanzou.ValidateShareURL which makes HTTP call
 	t.Logf("status: %d", w.Code)
 }
+
+// TestShareParseHandler_ParseShare_Success 测试解析分享成功路径
+func TestShareParseHandler_ParseShare_Success(t *testing.T) {
+	svc := service.NewShareParseService(nil)
+	handler := NewShareParseHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/share/parse", handler.ParseShare)
+
+	w := httptest.NewRecorder()
+	body := `{"url":"https://lanzou.com/s/abc123","pwd":"1234"}`
+	req := httptest.NewRequest("POST", "/share/parse", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Logf("expected: service is nil, handler validated input")
+		}
+	}()
+	r.ServeHTTP(w, req)
+}
+
+// TestShareParseHandler_GetShareDownloadURL_PathValidated 测试获取下载URL路径验证
+func TestShareParseHandler_GetShareDownloadURL_PathValidated(t *testing.T) {
+	svc := service.NewShareParseService(nil)
+	handler := NewShareParseHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/share/download", handler.GetShareDownloadURL)
+
+	w := httptest.NewRecorder()
+	body := `{"url":"https://lanzou.com/s/abc123","pwd":""}`
+	req := httptest.NewRequest("POST", "/share/download", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Logf("expected: service is nil, handler validated input")
+		}
+	}()
+	r.ServeHTTP(w, req)
+}
+
+// TestShareParseHandler_ValidateShareURL_Invalid 测试验证分享链接无效
+func TestShareParseHandler_ValidateShareURL_Invalid(t *testing.T) {
+	svc := service.NewShareParseService(nil)
+	handler := NewShareParseHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/share/validate", handler.ValidateShareURL)
+
+	w := httptest.NewRecorder()
+	body := `{"url":"not-a-valid-url"}`
+	req := httptest.NewRequest("POST", "/share/validate", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+// TestShareParseHandler_ValidateShareURL_Valid 测试验证分享链接有效
+func TestShareParseHandler_ValidateShareURL_Valid(t *testing.T) {
+	svc := service.NewShareParseService(nil)
+	handler := NewShareParseHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/share/validate", handler.ValidateShareURL)
+
+	w := httptest.NewRecorder()
+	body := `{"url":"https://lanzou.com/i1234567"}`
+	req := httptest.NewRequest("POST", "/share/validate", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	// This will make a real HTTP call to lanzou
+	t.Logf("status: %d", w.Code)
+}

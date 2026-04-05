@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -370,4 +371,170 @@ func (m *mockRecycleFolderRepoForHandler) Create(folder *model.Folder) error {
 }
 func (m *mockRecycleFolderRepoForHandler) Delete(id uint) error {
 	return nil
+}
+
+// mockRecycleRepoListError 模拟List返回错误的回收站仓库
+type mockRecycleRepoListError struct{}
+
+func (m *mockRecycleRepoListError) Create(item *model.RecycleBin) error {
+	return nil
+}
+func (m *mockRecycleRepoListError) List(userID uint) ([]model.RecycleBin, error) {
+	return nil, errors.New("db query failed")
+}
+func (m *mockRecycleRepoListError) GetByID(id uint, userID uint) (*model.RecycleBin, error) {
+	return nil, errors.New("not found")
+}
+func (m *mockRecycleRepoListError) Restore(id uint, userID uint) error {
+	return nil
+}
+func (m *mockRecycleRepoListError) DeletePermanently(id uint, userID uint) error {
+	return nil
+}
+func (m *mockRecycleRepoListError) ClearAll(userID uint) error {
+	return errors.New("clear failed")
+}
+
+// TestRecycleHandler_List_Error 测试回收站列表失败路径
+func TestRecycleHandler_List_Error(t *testing.T) {
+	recycleRepo := &mockRecycleRepoListError{}
+	fileRepo := &mockRecycleFileRepoForHandler{}
+	folderRepo := &mockRecycleFolderRepoForHandler{}
+	svc := service.NewRecycleBinService(recycleRepo, fileRepo, folderRepo)
+	handler := NewRecycleHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.GET("/recycle", handler.List)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/recycle", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("expected 500, got %d", w.Code)
+	}
+}
+
+// TestRecycleHandler_Clear_Error 测试清空回收站失败路径
+func TestRecycleHandler_Clear_Error(t *testing.T) {
+	recycleRepo := &mockRecycleRepoListError{}
+	fileRepo := &mockRecycleFileRepoForHandler{}
+	folderRepo := &mockRecycleFolderRepoForHandler{}
+	svc := service.NewRecycleBinService(recycleRepo, fileRepo, folderRepo)
+	handler := NewRecycleHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/recycle/clear", handler.Clear)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/recycle/clear", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("expected 500, got %d", w.Code)
+	}
+}
+
+// mockRecycleRepoDeleteError 模拟删除操作失败的仓库
+type mockRecycleRepoDeleteError struct{}
+
+func (m *mockRecycleRepoDeleteError) Create(item *model.RecycleBin) error {
+	return nil
+}
+func (m *mockRecycleRepoDeleteError) List(userID uint) ([]model.RecycleBin, error) {
+	return []model.RecycleBin{}, nil
+}
+func (m *mockRecycleRepoDeleteError) GetByID(id uint, userID uint) (*model.RecycleBin, error) {
+	return nil, errors.New("not found")
+}
+func (m *mockRecycleRepoDeleteError) Restore(id uint, userID uint) error {
+	return nil
+}
+func (m *mockRecycleRepoDeleteError) DeletePermanently(id uint, userID uint) error {
+	return errors.New("delete failed")
+}
+func (m *mockRecycleRepoDeleteError) ClearAll(userID uint) error {
+	return nil
+}
+
+// TestRecycleHandler_Delete_Error 测试永久删除失败路径
+func TestRecycleHandler_Delete_Error(t *testing.T) {
+	recycleRepo := &mockRecycleRepoDeleteError{}
+	fileRepo := &mockRecycleFileRepoForHandler{}
+	folderRepo := &mockRecycleFolderRepoForHandler{}
+	svc := service.NewRecycleBinService(recycleRepo, fileRepo, folderRepo)
+	handler := NewRecycleHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.DELETE("/recycle/:id", handler.Delete)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("DELETE", "/recycle/1", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("expected 500, got %d", w.Code)
+	}
+}
+
+// mockRecycleRepoRestoreError 模拟恢复操作失败的仓库
+type mockRecycleRepoRestoreError struct{}
+
+func (m *mockRecycleRepoRestoreError) Create(item *model.RecycleBin) error {
+	return nil
+}
+func (m *mockRecycleRepoRestoreError) List(userID uint) ([]model.RecycleBin, error) {
+	return []model.RecycleBin{}, nil
+}
+func (m *mockRecycleRepoRestoreError) GetByID(id uint, userID uint) (*model.RecycleBin, error) {
+	return &model.RecycleBin{ID: id, UserID: userID}, nil
+}
+func (m *mockRecycleRepoRestoreError) Restore(id uint, userID uint) error {
+	return errors.New("restore failed")
+}
+func (m *mockRecycleRepoRestoreError) DeletePermanently(id uint, userID uint) error {
+	return nil
+}
+func (m *mockRecycleRepoRestoreError) ClearAll(userID uint) error {
+	return nil
+}
+
+// TestRecycleHandler_Restore_Error 测试恢复失败路径
+func TestRecycleHandler_Restore_Error(t *testing.T) {
+	recycleRepo := &mockRecycleRepoRestoreError{}
+	fileRepo := &mockRecycleFileRepoForHandler{}
+	folderRepo := &mockRecycleFolderRepoForHandler{}
+	svc := service.NewRecycleBinService(recycleRepo, fileRepo, folderRepo)
+	handler := NewRecycleHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/recycle/:id/restore", handler.Restore)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/recycle/1/restore", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("expected 500, got %d", w.Code)
+	}
 }
