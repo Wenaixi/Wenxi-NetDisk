@@ -447,3 +447,63 @@ func TestFileVersionService_DeleteVersion(t *testing.T) {
 		}
 	})
 }
+
+// TestFileVersionService_CreateVersion_RepoError 测试创建版本仓库错误
+func TestFileVersionService_CreateVersion_RepoError(t *testing.T) {
+	repo := &mockFileVersionRepoWithError{createErr: errors.New("db write failed")}
+	fileRepo := newMockVersionFileRepo()
+	svc := NewFileVersionService(repo, fileRepo)
+
+	req := &CreateFileVersionRequest{
+		LanZouFileID: "id", Size: 100, EncryptionKey: "k", EncryptionNonce: "n",
+	}
+	_, err := svc.CreateVersion(1, 1, req)
+	if err == nil {
+		t.Error("expected db write error")
+	}
+}
+
+// TestFileVersionService_RestoreVersion_UpdateError 测试恢复版本时更新文件失败
+func TestFileVersionService_RestoreVersion_UpdateError(t *testing.T) {
+	versionRepo := newMockFileVersionRepo()
+	fileRepo := &mockVersionFileRepoWithError{updateErr: errors.New("db update failed")}
+	svc := NewFileVersionService(versionRepo, fileRepo)
+
+	_, err := svc.RestoreVersion(1, 1, 1)
+	if err == nil {
+		t.Error("expected db update error")
+	}
+}
+
+// mockFileVersionRepoWithError 模拟Create返回错误的版本仓库
+type mockFileVersionRepoWithError struct {
+	createErr error
+}
+
+func (m *mockFileVersionRepoWithError) Create(version *model.FileVersion) error {
+	return m.createErr
+}
+func (m *mockFileVersionRepoWithError) FindByFileID(fileID uint) ([]model.FileVersion, error) {
+	return nil, nil
+}
+func (m *mockFileVersionRepoWithError) FindByID(id uint) (*model.FileVersion, error) {
+	return nil, errors.New("not found")
+}
+func (m *mockFileVersionRepoWithError) Delete(id uint) error {
+	return errors.New("not found")
+}
+func (m *mockFileVersionRepoWithError) DeleteByFileID(fileID uint) error {
+	return nil
+}
+
+// mockVersionFileRepoWithError 模拟Update返回错误的文件仓库
+type mockVersionFileRepoWithError struct {
+	updateErr error
+}
+
+func (m *mockVersionFileRepoWithError) FindByID(id uint) (*model.File, error) {
+	return &model.File{ID: 1, UserID: 1, Name: "file.txt", Size: 100}, nil
+}
+func (m *mockVersionFileRepoWithError) Update(file *model.File) error {
+	return m.updateErr
+}

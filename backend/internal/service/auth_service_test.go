@@ -314,6 +314,106 @@ func TestAuthService_Login(t *testing.T) {
 	})
 }
 
+// mockUserRepoWithGenericError 模拟返回非ErrRecordNotFound错误的仓库
+type mockUserRepoWithGenericError struct {
+	err error
+}
+
+func (m *mockUserRepoWithGenericError) Create(user *model.User) error {
+	return nil
+}
+func (m *mockUserRepoWithGenericError) FindByID(id uint) (*model.User, error) {
+	return nil, m.err
+}
+func (m *mockUserRepoWithGenericError) FindByUsername(username string) (*model.User, error) {
+	return nil, m.err
+}
+func (m *mockUserRepoWithGenericError) FindByEmail(email string) (*model.User, error) {
+	return nil, m.err
+}
+func (m *mockUserRepoWithGenericError) Update(user *model.User) error {
+	return m.err
+}
+func (m *mockUserRepoWithGenericError) Delete(id uint) error {
+	return m.err
+}
+
+// TestAuthService_Login_GenericError 测试非ErrRecordNotFound的数据库错误
+func TestAuthService_Login_GenericError(t *testing.T) {
+	repo := &mockUserRepoWithGenericError{err: errors.New("database connection failed")}
+	jwtManager := jwt.NewJWTManager("testsecret", 1440)
+	svc := NewAuthService(repo, jwtManager)
+
+	_, err := svc.Login("test@example.com", "password")
+
+	if err == nil {
+		t.Error("expected database error to be returned")
+	}
+	if err != nil && err.Error() != "database connection failed" {
+		t.Errorf("expected 'database connection failed', got '%v'", err)
+	}
+}
+
+// TestAuthService_Login_Username_GenericError 测试用户名登录时的数据库错误
+func TestAuthService_Login_Username_GenericError(t *testing.T) {
+	repo := &mockUserRepoWithGenericError{err: errors.New("db timeout")}
+	jwtManager := jwt.NewJWTManager("testsecret", 1440)
+	svc := NewAuthService(repo, jwtManager)
+
+	_, err := svc.Login("testuser", "password")
+
+	if err == nil {
+		t.Error("expected database error to be returned")
+	}
+}
+
+// TestAuthService_Register_CreateError 测试创建用户失败
+func TestAuthService_Register_CreateError(t *testing.T) {
+	repo := &mockUserRepoCreateError{}
+	jwtManager := jwt.NewJWTManager("testsecret", 1440)
+	svc := NewAuthService(repo, jwtManager)
+
+	_, err := svc.Register("newuser", "new@example.com", "password123")
+
+	if err == nil {
+		t.Error("expected create error to be returned")
+	}
+}
+
+// mockUserRepoCreateError 模拟Create返回错误的仓库
+type mockUserRepoCreateError struct{}
+
+func (m *mockUserRepoCreateError) Create(user *model.User) error {
+	return errors.New("failed to create user")
+}
+func (m *mockUserRepoCreateError) FindByID(id uint) (*model.User, error) {
+	return nil, gorm.ErrRecordNotFound
+}
+func (m *mockUserRepoCreateError) FindByUsername(username string) (*model.User, error) {
+	return nil, gorm.ErrRecordNotFound
+}
+func (m *mockUserRepoCreateError) FindByEmail(email string) (*model.User, error) {
+	return nil, gorm.ErrRecordNotFound
+}
+func (m *mockUserRepoCreateError) Update(user *model.User) error {
+	return errors.New("not found")
+}
+func (m *mockUserRepoCreateError) Delete(id uint) error {
+	return errors.New("not found")
+}
+
+// TestAuthService_GetUserByID_NotFound 测试获取不存在的用户
+func TestAuthService_GetUserByID_NotFound(t *testing.T) {
+	repo := newMockUserRepo()
+	jwtManager := jwt.NewJWTManager("testsecret", 1440)
+	svc := NewAuthService(repo, jwtManager)
+
+	_, err := svc.GetUserByID(999)
+	if err == nil {
+		t.Error("expected user not found error")
+	}
+}
+
 // mockFileRepo 模拟文件仓库 (for complete file service test)
 type mockFileRepoComplete struct {
 	files []*model.File
