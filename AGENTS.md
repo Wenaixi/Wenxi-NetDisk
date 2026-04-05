@@ -56,9 +56,9 @@
 
 **Repository覆盖率: 0% → 90.4%**
 **lanzou覆盖率: 24.6% → 60.4%**
-**总Go测试数: ~500**
+**总Go测试数: ~520**
 
-### 2026-04-05 - Service层深度测试完善 (覆盖率85.2% → ~90%)
+### 2026-04-05 - Service层深度测试完善 (覆盖率85.2% → 91.6%)
 
 **folder_service_test.go (新增12用例, 总计~32):**
 - CreateFolder空名称、UpdateFolder_NotFound、DeleteFolder_NotFound
@@ -760,7 +760,7 @@ references/lanzouyun-disk/
 
 ## 测试统计
 
-### Go后端 (513 tests)
+### Go后端 (~530 tests)
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | pkg/crypto | 5 | ✅ |
@@ -769,16 +769,16 @@ references/lanzouyun-disk/
 | pkg/response | 15 (5结构+10HTTP) | ✅ |
 | pkg/middleware | 20 (10Auth+4Logger+6CORS) | ✅ |
 | service/auth | 13 (+5 Login) | ✅ |
-| service/file | 20 (+8 UpdateFileName/MoveFile) | ✅ |
-| service/folder | 22 | ✅ |
+| service/file | 26 (+14 FindByID/FindByLanZouFileID) | ✅ |
+| service/folder | 32 (+10 深层嵌套isDescendant/NotFound/错误路径) | ✅ |
 | service/lanzou | 13 (+4 CreateShare/GetFileURL) | ✅ |
 | service/upload | 13 (+7 UploadChunk/CompleteUpload/ResumeUpload/GetLanZouClient) | ✅ |
-| service/share_parse | 2 (ValidateShareLink/NewShareParseService) | ✅ |
-| service/share | 21 | ✅ |
-| service/download | 5 | ✅ |
-| service/recycle | 11 | ✅ |
+| service/share_parse | 4 (+2 ParseShareLink/GetShareDownloadLink) | ✅ |
+| service/share | 26 (+5 FileNotFound/AccessDenied/DeleteShare) | ✅ |
+| service/download | 6 (+1 getDownloadLink_NoLanZouFileID) | ✅ |
+| service/recycle | 23 (+12 Restore_Folder/错误路径/CreateError) | ✅ |
 | service/file_version | 18 | ✅ |
-| repository | 10 | ⏭️ (skip CGO) |
+| repository | 61 (纯Go glebarez/sqlite, 0→90.4%) | ✅ |
 | handlers/auth | 18 (+10 GetCurrentUser success/Register/Login/构造器) | ✅ |
 | handlers/file | 21 (+2 ListFiles/CreateFileMetadata) | ✅ |
 | handlers/folder | 21 | ✅ |
