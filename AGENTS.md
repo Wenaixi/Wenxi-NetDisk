@@ -32,6 +32,30 @@
 
 ## 开发历史
 
+### 2026-04-05 - 前端upload.js对接后端UploadChunk + 批量上传任务状态联动
+
+**前端upload.js分块上传架构改造:**
+- `uploadAll`: 初始化响应从 `sessionResponse.data` 改为直接用 `sessionResponse`（axios拦截器已展平）
+- `uploadInChunks`: 签名从 `(url, blob, onProgress)` 改为 `(sessionId, folderId, blob, totalChunks, onProgress)` - 不再使用XHR PUT，改为调用 `fileAPI.uploadChunk(sessionId, formData)`
+- 小文件不再用XHR PUT，直接通过 `fileAPI.uploadChunk` 上传
+- `encryptAndUpload`: 进度追踪使用 `uploadedBytesRef` 替代错误的 `.value` 链式调用
+
+**批量上传任务状态联动 (upload.js → uploadTask.js):**
+- `uploadAll` 在队列开始时调用 `uploadTaskStore.addTask` 创建任务记录
+- 加密进度(0-30%)实时同步到 `uploadTaskStore.updateProgress`
+- 上传进度(30-100%)实时同步到 `uploadTaskStore.updateProgress`
+- 完成后调用 `uploadTaskStore.completeTask` 标记完成
+- 失败时调用 `uploadTaskStore.failTask` 标记失败并记录错误信息
+- `/upload-tasks` 页面可实时查看批量上传进度
+
+**UploadChunk Handler完整性:**
+- 后端: `POST /api/lanzou/upload/chunk/:id` 已实现并测试
+- 前端: `fileAPI.uploadChunk(sessionId, formData)` 已添加
+- Mock测试: `mockLanzouProviderForChunk` 同时设置 `SetBaseURL` 和 `SetUploadBaseURL`
+
+**测试统计: 前端 511 测试通过 + Go 全模块测试通过**
+**Git: dev分支已推送 (3个commit: UploadChunk后端/前端对接/任务状态联动)**
+
 ### 2026-04-05 - 下载URL解析链完善 + Html5Upload上传集成 + 全部测试通过
 
 **DownloadService增强 (完整下载URL解析链):**
