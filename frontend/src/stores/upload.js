@@ -12,6 +12,7 @@ export const useUploadStore = defineStore('upload', () => {
   const isUploading = ref(false)
   const progress = ref(0)
   const uploadedBytes = ref(0)
+  const uploadedBytesRef = ref(0) // 用于加密上传函数内部追踪进度
   const totalBytes = ref(0)
   const speed = ref(0)
   const error = ref(null)
@@ -107,17 +108,21 @@ export const useUploadStore = defineStore('upload', () => {
           folder_id: folderId,
         })
 
-        const { upload_url, session_id } = sessionResponse.data
+        const { session_id, total_chunks } = sessionResponse
 
         // 上传(分块)
         if (encryptedBlob.size > ChunkSize) {
-          await uploadInChunks(upload_url, encryptedBlob, (uploadProgress) => {
+          await uploadInChunks(session_id, folderId, encryptedBlob, total_chunks, (uploadProgress) => {
             item.progress = 30 + Math.round(uploadProgress * 70) // 上传占70%进度
           })
         } else {
-          await uploadToUrl(upload_url, encryptedBlob, (loaded) => {
-            item.progress = 30 + Math.round((loaded / encryptedBlob.size) * 70)
-          })
+          // 小文件直接作为单个分块上传
+          const formData = new FormData()
+          formData.append('file', encryptedBlob, file.name)
+          formData.append('chunk_index', '0')
+          formData.append('folder_id', String(folderId || -1))
+          await fileAPI.uploadChunk(session_id, formData)
+          item.progress = 100
         }
 
         // 完成上传
@@ -163,28 +168,47 @@ export const useUploadStore = defineStore('upload', () => {
         folder_id: folderId,
       })
 
-      const { upload_url, session_id } = sessionResponse.data
+      const { session_id, total_chunks } = sessionResponse
 
-      // Step 3: 上传加密后的文件
-      const startTime = Date.now()
-      const lastLoaded = { value: 0 }
+      // 上传分块
+      if (encryptedBlob.size > ChunkSize) {
+        let uploadedBytes = 0
+        const startTime = Date.now()
+        const lastLoaded = { value: 0 }
 
-      await uploadToUrl(
-        upload_url,
-        encryptedBlob,
-        (loaded) => {
-          uploadedBytes.value = loaded
-          progress.value = Math.round((loaded / encryptedBlob.size) * 100)
+        for (let i = 0; i < total_chunks; i++) {
+          const start = i * ChunkSize
+          const end = Math.min(start + ChunkSize, encryptedBlob.size)
+          const chunk = encryptedBlob.slice(start, end)
+
+          const formData = new FormData()
+          formData.append('file', chunk)
+          formData.append('chunk_index', String(i))
+          formData.append('folder_id', String(folderId || -1))
+
+          await fileAPI.uploadChunk(session_id, formData)
+
+          uploadedBytes += chunk.size
+          uploadedBytesRef.value = uploadedBytes
+          progress.value = Math.round((uploadedBytes / encryptedBlob.size) * 100)
 
           // Calculate speed
           const elapsed = (Date.now() - startTime) / 1000
           if (elapsed > 0) {
-            const bytesPerSecond = (loaded - lastLoaded.value) / 0.5
+            const bytesPerSecond = (uploadedBytes - lastLoaded.value) / 0.5
             speed.value = bytesPerSecond
-            lastLoaded.value = loaded
+            lastLoaded.value = uploadedBytes
           }
         }
-      )
+      } else {
+        // 小文件直接作为单个分块上传
+        const formData = new FormData()
+        formData.append('file', encryptedBlob, file.name)
+        formData.append('chunk_index', '0')
+        formData.append('folder_id', String(folderId || -1))
+        await fileAPI.uploadChunk(session_id, formData)
+        progress.value = 100
+      }
 
       // Step 4: 导出密钥并完成上传
       const exportedKey = await exportKey(key)
@@ -233,12 +257,13 @@ export const useUploadStore = defineStore('upload', () => {
 
   /**
    * 按块上传大文件(断点续传支持)
-   * @param {string} url 上传URL
+   * @param {number} sessionId 上传会话ID
+   * @param {number} folderId 目标文件夹ID
    * @param {Blob} blob 加密后的Blob
+   * @param {number} totalChunks 总分块数
    * @param {function} onProgress 进度回调 (0-1)
    */
-  async function uploadInChunks(url, blob, onProgress) {
-    const totalChunks = Math.ceil(blob.size / ChunkSize)
+  async function uploadInChunks(sessionId, folderId, blob, totalChunks, onProgress) {
     let uploadedBytes = 0
 
     for (let i = 0; i < totalChunks; i++) {
@@ -246,34 +271,15 @@ export const useUploadStore = defineStore('upload', () => {
       const end = Math.min(start + ChunkSize, blob.size)
       const chunk = blob.slice(start, end)
 
-      await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
+      const formData = new FormData()
+      formData.append('file', chunk)
+      formData.append('chunk_index', String(i))
+      formData.append('folder_id', String(folderId || -1))
 
-        xhr.upload.addEventListener('progress', (event) => {
-          if (event.lengthComputable) {
-            onProgress?.((uploadedBytes + event.loaded) / blob.size)
-          }
-        })
+      await fileAPI.uploadChunk(sessionId, formData)
 
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            uploadedBytes += chunk.size
-            resolve()
-          } else {
-            reject(new Error(`上传失败: ${xhr.status}`))
-          }
-        })
-
-        xhr.addEventListener('error', () => reject(new Error('网络错误')))
-        xhr.addEventListener('abort', () => reject(new Error('上传已取消')))
-
-        // 设置分块上传请求头
-        xhr.open('PUT', url, true)
-        xhr.setRequestHeader('Content-Type', 'application/octet-stream')
-        xhr.setRequestHeader('Content-Range', `bytes ${start}-${end - 1}/${blob.size}`)
-        xhr.setRequestHeader('X-Chunk-Index', String(i))
-        xhr.send(chunk)
-      })
+      uploadedBytes += chunk.size
+      onProgress?.(uploadedBytes / blob.size)
     }
   }
 

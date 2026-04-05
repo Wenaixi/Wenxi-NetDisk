@@ -69,6 +69,13 @@ export const lanzouAPI = {
 
   // 解析分享链接
   parseShare: (data) => api.post('/lanzou/share/parse', data),
+
+  // 上传文件分块
+  uploadChunk: (sessionId, formData) => {
+    return api.post(`/lanzou/upload/chunk/${sessionId}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  },
 }
 
 export default lanzouAPI

@@ -44,6 +44,9 @@ export const fileAPI = {
   restoreVersion: (id, versionId) => api.post(`/files/${id}/versions/${versionId}/restore`),
   initializeUpload: (data) => api.post('/lanzou/upload/init', data),
   completeUpload: (sessionId, data) => api.post(`/lanzou/upload/complete/${sessionId}`, data),
+  uploadChunk: (sessionId, formData) => api.post(`/lanzou/upload/chunk/${sessionId}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
   download: (id) => api.get(`/files/${id}/download`)
 }
 
