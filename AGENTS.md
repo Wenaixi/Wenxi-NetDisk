@@ -32,6 +32,18 @@
 
 ## 开发历史
 
+### 2026-04-05 - sync.js同步上传真实对接后端API
+
+**sync.js 完整上传链路改造:**
+- `downloadFile`: 使用 reader.read() + Uint8Array 累积 chunks 替代 `blob.arrayBuffer()`，避免文件过小时 buffer 不完整
+- `uploadToLanzou`: 实现完整分块上传：generateEncryptionKey → encryptFile → initializeUpload → 循环 uploadChunk → completeUpload
+- 进度计算: 下载阶段 0-50%，加密+上传阶段 50-100%，正确同步到 syncStore
+- 不再使用 mock setTimeout 循环，使用真实 fileAPI 调用
+
+**测试统计: 前端 511 测试通过 + Go 全模块测试通过**
+**Git: dev分支已推送 (4个commit)**
+**功能状态: Phase 7 (Dashboard增强+文件管理) 核心功能已完成, 批量设置密码/自动同步等细节待完善**
+
 ### 2026-04-05 - 前端upload.js对接后端UploadChunk + 批量上传任务状态联动
 
 **前端upload.js分块上传架构改造:**
