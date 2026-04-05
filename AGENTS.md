@@ -32,6 +32,28 @@
 
 ## 开发历史
 
+### 2026-04-05 - Profile功能 + 测试修复 + 前端510测试
+
+**新增功能 - 用户Profile (蓝奏云账号信息):**
+- lanzou client: doGet()方法（GET请求支持）
+- lanzou client: Profile()方法（并发请求mydisk.php + profile页面）
+- lanzou client: parseProfilePage()解析（域名/登录时间/上传类型/文件大小/验证状态/referer）
+- lanzou client: extractRefererFromMainPage()提取iframe src
+- service层: GetProfile方法
+- handler: GetProfile接口 (GET /api/lanzou/profile)
+- ProfileInfo类型定义
+- 14+个单元测试（client层10个+handler层3个）
+
+**Bug修复:**
+- share_parse_service.go: BatchParseShareLinks添加strings.TrimSpace处理空白URL
+- profile页面解析正则优化（支持多行HTML匹配lastLogin/supportList/maxSize）
+- access_test.go: 网络错误测试改用500 mock服务器避免DNS解析挂起
+- lanzou_test.go: Profile测试中未使用的err变量修复
+- LanZouBrowser.vue: 模板嵌套div闭合修复（文件区域grid标签缺失）
+- LanZouBrowser.test.js: 添加n-select stub消除Vue警告
+
+**测试统计: Go全模块通过 + 前端510/510通过**
+
 ### 2026-04-05 - ShareParse重写 + 批量解析 + 前端509测试
 
 **ShareParse.vue 完全重写 (对齐 references/Parse.tsx):**

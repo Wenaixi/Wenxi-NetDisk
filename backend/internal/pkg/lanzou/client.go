@@ -475,14 +475,14 @@ func (c *Client) parseProfilePage(html string, profile *ProfileInfo) {
 		profile.Domain = strings.TrimSpace(m[1])
 	}
 
-	// 解析最近登录时间 - <span class="mf2">xxx</span> after "最近登录时间"
-	lastLoginRe := regexp.MustCompile(`最近登录时间.*?<span[^>]*class=["'][^"']*mf2[^"']*["'][^>]*>(.*?)</span>`)
+	// 解析最近登录时间 - 使用[\s\S]*?代替.*?来匹配跨行
+	lastLoginRe := regexp.MustCompile(`最近登录时间[\s\S]*?<span[^>]*class=["'][^"']*mf2[^"']*["'][^>]*>(.*?)</span>`)
 	if m := lastLoginRe.FindStringSubmatch(html); len(m) > 1 {
 		profile.LastLogin = strings.TrimSpace(m[1])
 	}
 
-	// 解析允许上传类型
-	supportRe := regexp.MustCompile(`允许上传类型.*?<span[^>]*class=["'][^"']*mf2[^"']*["'][^>]*>(.*?)</span>`)
+	// 解析允许上传类型 - 跨行匹配
+	supportRe := regexp.MustCompile(`允许上传类型[\s\S]*?<span[^>]*class=["'][^"']*mf2[^"']*["'][^>]*>(.*?)</span>`)
 	if m := supportRe.FindStringSubmatch(html); len(m) > 1 {
 		raw := m[1]
 		raw = strings.ReplaceAll(raw, "<br>", ",")
@@ -497,8 +497,8 @@ func (c *Client) parseProfilePage(html string, profile *ProfileInfo) {
 		}
 	}
 
-	// 解析单个文件大小 - <font>xxx</font> after "单个文件大小"
-	maxSizeRe := regexp.MustCompile(`单个文件大小.*?<font[^>]*>(.*?)</font>`)
+	// 解析单个文件大小 - 跨行匹配
+	maxSizeRe := regexp.MustCompile(`单个文件大小[\s\S]*?<font[^>]*>(.*?)</font>`)
 	if m := maxSizeRe.FindStringSubmatch(html); len(m) > 1 {
 		profile.MaxSize = strings.TrimSpace(m[1])
 	}
