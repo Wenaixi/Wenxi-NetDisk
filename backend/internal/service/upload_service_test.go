@@ -606,3 +606,185 @@ func TestUploadService_GetLanZouClient(t *testing.T) {
 		}
 	})
 }
+
+// TestUploadService_InitializeUpload_NotConnected 测试未连接蓝奏云
+func TestUploadService_InitializeUpload_NotConnected(t *testing.T) {
+	repo := newMockUploadRepo()
+	lanzouSvc := &mockLanzouService{connected: false}
+	fileSvc := &mockFileService{}
+
+	svc := NewUploadService(repo, lanzouSvc, fileSvc)
+	req := &InitializeUploadRequest{FileName: "test.txt", FileSize: 1024}
+
+	_, err := svc.InitializeUpload(1, req)
+	if err == nil {
+		t.Error("expected lanzou not connected error")
+	}
+}
+
+// TestUploadService_InitializeUpload_LargeFile 测试大文件分块
+func TestUploadService_InitializeUpload_LargeFile(t *testing.T) {
+	repo := newMockUploadRepo()
+	lanzouSvc := &mockLanzouService{connected: true}
+	fileSvc := &mockFileService{}
+
+	svc := NewUploadService(repo, lanzouSvc, fileSvc)
+	// 5MB file should be 3 chunks (5MB / 2MB = 2.5 → ceil = 3)
+	req := &InitializeUploadRequest{FileName: "large.bin", FileSize: 5 * 1024 * 1024}
+
+	resp, err := svc.InitializeUpload(1, req)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if resp.TotalChunks != 3 {
+		t.Errorf("expected 3 chunks, got %d", resp.TotalChunks)
+	}
+}
+
+// TestUploadService_UploadChunk_NegativeIndex 测试负分块索引
+func TestUploadService_UploadChunk_NegativeIndex(t *testing.T) {
+	repo := newMockUploadRepo()
+	lanzouSvc := &mockLanzouService{connected: true}
+	fileSvc := &mockFileService{}
+
+	svc := NewUploadService(repo, lanzouSvc, fileSvc)
+	req := &InitializeUploadRequest{FileName: "test.txt", FileSize: 1024}
+	resp, _ := svc.InitializeUpload(1, req)
+
+	err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+		ChunkIndex: -1,
+		Data:       []byte("data"),
+	})
+	if err == nil {
+		t.Error("expected invalid chunk index error for negative index")
+	}
+}
+
+// TestUploadService_CompleteUpload_FileSvcError 测试文件服务创建失败
+func TestUploadService_CompleteUpload_FileSvcError(t *testing.T) {
+	repo := newMockUploadRepo()
+	lanzouSvc := &mockLanzouService{connected: true}
+	fileSvc := &mockFileServiceWithError{err: errors.New("db error")}
+
+	svc := NewUploadService(repo, lanzouSvc, fileSvc)
+	req := &InitializeUploadRequest{FileName: "test.txt", FileSize: 1024}
+	resp, _ := svc.InitializeUpload(1, req)
+
+	// Upload chunk to make it completable
+	_ = svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{ChunkIndex: 0, Data: []byte("data")})
+
+	_, err := svc.CompleteUpload(1, resp.SessionID, &CompleteUploadRequest{
+		EncryptionKey: "key", EncryptionNonce: "nonce", LanZouFileID: "id",
+	})
+	if err == nil {
+		t.Error("expected error from file service")
+	}
+}
+
+// TestUploadService_GetUploadStatus_SessionNotFound 测试会话不存在
+func TestUploadService_GetUploadStatus_SessionNotFound(t *testing.T) {
+	repo := newMockUploadRepo()
+	lanzouSvc := &mockLanzouService{connected: true}
+	fileSvc := &mockFileService{}
+
+	svc := NewUploadService(repo, lanzouSvc, fileSvc)
+	_, err := svc.GetUploadStatus(1, 999)
+	if err == nil {
+		t.Error("expected session not found error")
+	}
+}
+
+// TestUploadService_ResumeUpload_CompletedViaChunks 测试通过分块上传完成后恢复
+func TestUploadService_ResumeUpload_CompletedViaChunks(t *testing.T) {
+	repo := newMockUploadRepo()
+	lanzouSvc := &mockLanzouService{connected: true}
+	fileSvc := &mockFileService{}
+
+	svc := NewUploadService(repo, lanzouSvc, fileSvc)
+	req := &InitializeUploadRequest{FileName: "test.txt", FileSize: 1024}
+	resp, _ := svc.InitializeUpload(1, req)
+
+	// Complete the upload
+	_ = svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{ChunkIndex: 0, Data: []byte("data")})
+
+	// Try to resume
+	hash := calculateFileHash("test.txt", 1024)
+	_, err := svc.ResumeUpload(1, hash)
+	if err == nil {
+		t.Error("expected already completed error")
+	}
+}
+
+// TestUploadService_ResumeUpload_NotFound 测试恢复不存在的会话
+func TestUploadService_ResumeUpload_NotFound(t *testing.T) {
+	repo := newMockUploadRepo()
+	lanzouSvc := &mockLanzouService{connected: true}
+	fileSvc := &mockFileService{}
+
+	svc := NewUploadService(repo, lanzouSvc, fileSvc)
+	_, err := svc.ResumeUpload(1, "nonexistent")
+	if err == nil {
+		t.Error("expected no upload session found error")
+	}
+}
+
+// mockFileServiceWithError 模拟返回错误的文件服务
+type mockFileServiceWithError struct {
+	err error
+}
+
+func (m *mockFileServiceWithError) CreateMetadata(userID uint, req *CreateFileRequest) (*model.File, error) {
+	return nil, m.err
+}
+
+func (m *mockFileServiceWithError) ListFiles(userID uint) ([]model.File, error) {
+	return nil, nil
+}
+
+func (m *mockFileServiceWithError) GetFile(userID, fileID uint) (*model.File, error) {
+	return nil, nil
+}
+
+func (m *mockFileServiceWithError) DeleteFile(userID, fileID uint) error {
+	return nil
+}
+
+// TestUploadService_InitializeUpload_ZeroByteFile 测试零字节文件
+func TestUploadService_InitializeUpload_ZeroByteFile(t *testing.T) {
+	repo := newMockUploadRepo()
+	lanzouSvc := &mockLanzouService{connected: true}
+	fileSvc := &mockFileService{}
+
+	svc := NewUploadService(repo, lanzouSvc, fileSvc)
+	req := &InitializeUploadRequest{FileName: "empty.txt", FileSize: 0}
+
+	resp, err := svc.InitializeUpload(1, req)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	// 0 byte file should have 0 chunks
+	if resp.TotalChunks != 0 {
+		t.Errorf("expected 0 chunks for empty file, got %d", resp.TotalChunks)
+	}
+}
+
+// TestUploadService_UploadChunk_OutOfRange 测试超出范围的分块索引
+func TestUploadService_UploadChunk_OutOfRange(t *testing.T) {
+	repo := newMockUploadRepo()
+	lanzouSvc := &mockLanzouService{connected: true}
+	fileSvc := &mockFileService{}
+
+	svc := NewUploadService(repo, lanzouSvc, fileSvc)
+	// 3MB file = 2 chunks
+	req := &InitializeUploadRequest{FileName: "test.bin", FileSize: 3 * 1024 * 1024}
+	resp, _ := svc.InitializeUpload(1, req)
+
+	// Try to upload chunk index 2 (should only be 0, 1)
+	err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+		ChunkIndex: 2,
+		Data:       []byte("data"),
+	})
+	if err == nil {
+		t.Error("expected invalid chunk index error")
+	}
+}
