@@ -32,6 +32,23 @@
 
 ## 开发历史
 
+### 2026-04-06 - LanZouBrowser批量设置密码 + 拖拽移动 + 自动同步触发
+
+**LanZouBrowser批量设置访问密码:**
+- 工具栏新增"设置密码"按钮(选中>0项时显示)
+- `openBatchAccessModal` / `submitBatchAccess`: 批量循环调用 `lanzouAPI.setAccess`
+- 成功/失败计数反馈
+
+**LanZouBrowser拖拽移动文件:**
+- 文件夹/文件添加 `draggable="true"` 属性
+- `onDragStart`: 记录被拖拽项(含选择模式下选中项)
+- `onDropFolder`: 调用 `lanzouAPI.batchMove` 执行移动
+- 参考 reference `dragFiles()` 实现
+
+**Sync.vue自动同步触发:**
+- `addSyncTask` 成功后自动调用 `syncStore.startSync()`
+- 参考 reference `sync.addTask()` 自动触发下载逻辑
+
 ### 2026-04-05 - LanZouBrowser新建文件夹 + Phase 7功能审查
 
 **LanZouBrowser新建文件夹功能:**
@@ -42,15 +59,13 @@
 
 **Phase 7 功能完整性审查 (基于reference分析):**
 - Dashboard: ✅ 单文件分享+密码+有效期, 拖拽上传, 批量删除/移动/下载
-- LanZouBrowser: ✅ 一键分享, 重命名, 设置访问密码, 移动, 批量删除, 新建文件夹
-- Sync: ✅ 添加任务, 下载→加密→上传完整链路
+- LanZouBrowser: ✅ 一键分享, 重命名, 设置访问密码, 移动, 批量删除, 新建文件夹, 批量设置密码, 拖拽移动
+- Sync: ✅ 添加任务, 下载→加密→上传完整链路, 自动同步触发
 - Settings: ✅ 主题/上传路径/并发/分块大小/回收站
 - 上传任务: ✅ 暂停/恢复/取消/进度追踪
 - SplitMerge: ✅ 文件分割与合并界面
 
 **待完善功能(来自reference):**
-- Dashboard批量设置访问密码(目前仅LanZouBrowser单文件支持)
-- 自动同步触发(Sync.vue添加任务后手动点击开始, reference自动执行)
 - 文件自动分割检测+下载时合并(part\d+of\d+规则)
 
 **测试统计: 前端 511 测试通过 + Go 全模块测试通过**
