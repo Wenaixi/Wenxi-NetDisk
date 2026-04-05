@@ -266,9 +266,12 @@
 | 上传任务管理页面 | P0 | ✅ | 参考Upload.tsx，暂停/恢复/删除/进度显示，upload.js接入uploadTaskStore |
 | 下载任务管理页面 | P0 | ✅ | 参考Download.tsx，批量解析链接下载 |
 | 文件分割/合并页面 | P1 | ✅ | SplitMerge.vue完整实现 |
-| 同步资源页面 | P1 | ✅ | Sync.vue完整实现，syncStore下载+后端上传 |
-| 文件名校验/混淆 | P1 | 🔄 | 蓝奏云文件名混淆加密 |
+| 同步资源页面 | P1 | ✅ | Sync.vue完整实现，sync.js下载→加密→上传完整链路 |
+| 文件名校验/混淆 | P1 | ✅ | 蓝奏云文件名混淆加密(不支持扩展名添加后缀) |
 | 下载自动合并分割文件 | P1 | ⬜ | 检测到分割文件自动合并 |
+| LanZouBrowser新建文件夹 | P2 | ✅ | createFolder API已对接，工具栏按钮已添加 |
+| Dashboard分享模态框 | P2 | ✅ | 单文件分享+密码+有效期，已与UploadTasks联动 |
+| Sync真实API对接 | P0 | ✅ | sync.js真实对接后端UploadChunk接口 |
 
 ---
 
@@ -284,4 +287,4 @@
 
 **最后更新**: 2026-04-05
 **文档版本**: 3.3.0
-**状态**: Phase 7 功能完善进行中 - 上传/下载任务页面已完成，批量上传状态已联动
+**状态**: Phase 7 接近完成 - sync.js真实API对接, LanZouBrowser新建文件夹, Phase 7功能完整性审查
