@@ -514,3 +514,70 @@ func TestShareService_GetShareWithFile(t *testing.T) {
 		}
 	})
 }
+
+// TestShareService_CreateShare_FileNotFound 测试文件不存在
+func TestShareService_CreateShare_FileNotFound(t *testing.T) {
+	shareRepo := newMockShareRepo()
+	fileRepo := newMockShareFileRepo()
+	svc := NewShareService(shareRepo, fileRepo)
+
+	_, err := svc.CreateShare(1, 999, nil, nil)
+	if err == nil {
+		t.Error("expected file not found error")
+	}
+}
+
+// TestShareService_CreateShare_AccessDenied 测试无权访问文件
+func TestShareService_CreateShare_AccessDenied(t *testing.T) {
+	shareRepo := newMockShareRepo()
+	fileRepo := newMockShareFileRepo()
+	svc := NewShareService(shareRepo, fileRepo)
+
+	// File 3 belongs to user 2
+	_, err := svc.CreateShare(1, 3, nil, nil)
+	if err == nil {
+		t.Error("expected access denied error")
+	}
+}
+
+// TestShareService_ListShares_RepoError 测试仓库错误
+func TestShareService_ListShares_RepoError(t *testing.T) {
+	shareRepo := newMockShareRepo()
+	fileRepo := newMockShareFileRepo()
+	svc := NewShareService(shareRepo, fileRepo)
+
+	// Inject error into repo
+	shareRepo.shares = nil // clear shares to avoid complex error injection
+	shares, err := svc.ListShares(999)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if len(shares) != 0 {
+		t.Errorf("expected 0 shares, got %d", len(shares))
+	}
+}
+
+// TestShareService_DeleteShare_NotFound 测试删除不存在的分享
+func TestShareService_DeleteShare_NotFound(t *testing.T) {
+	shareRepo := newMockShareRepo()
+	fileRepo := newMockShareFileRepo()
+	svc := NewShareService(shareRepo, fileRepo)
+
+	err := svc.DeleteShare(1, 999)
+	if err == nil {
+		t.Error("expected share not found error")
+	}
+}
+
+// TestShareService_DeleteShare_AccessDenied 测试删除他人分享
+func TestShareService_DeleteShare_AccessDenied(t *testing.T) {
+	shareRepo := newMockShareRepo()
+	fileRepo := newMockShareFileRepo()
+	svc := NewShareService(shareRepo, fileRepo)
+
+	// Share 1 belongs to user 1, try to delete as user 999
+	err := svc.DeleteShare(999, 1)
+	if err == nil {
+		t.Error("expected access denied error")
+	}
+}

@@ -144,3 +144,20 @@ func TestDownloadService_GetShareDownloadURL(t *testing.T) {
 		}
 	})
 }
+
+// TestDownloadService_getDownloadLink_NoLanZouFileID 测试无蓝奏云文件ID
+func TestDownloadService_getDownloadLink_NoLanZouFileID(t *testing.T) {
+	fileRepo := newMockDownloadFileRepo()
+	// Add a file without LanZouFileID
+	fileRepo.files = append(fileRepo.files, &model.File{
+		ID: 10, UserID: 1, Name: "no-lz.txt", Size: 50,
+		LanZouFileID: "", EncryptionKey: "k", EncryptionNonce: "n",
+	})
+	lanzouProvider := newMockDownloadLanzouProvider(true)
+	svc := NewDownloadService(fileRepo, lanzouProvider)
+
+	_, err := svc.GetDownloadURL(1, 10)
+	if err == nil {
+		t.Error("expected error for file without lanzou_file_id")
+	}
+}
