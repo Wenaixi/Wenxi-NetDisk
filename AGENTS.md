@@ -32,6 +32,30 @@
 
 ## 开发历史
 
+### 2026-04-05 - LanZouBrowser新建文件夹 + Phase 7功能审查
+
+**LanZouBrowser新建文件夹功能:**
+- 工具栏添加"新建文件夹"按钮(Create图标)
+- `submitNewFolder`: 调用 `lanzouAPI.createFolder` 在当前目录创建文件夹
+- 创建后自动刷新文件列表
+- API已有支持: `lanzouAPI.createFolder` → `POST /lanzou/folders`
+
+**Phase 7 功能完整性审查 (基于reference分析):**
+- Dashboard: ✅ 单文件分享+密码+有效期, 拖拽上传, 批量删除/移动/下载
+- LanZouBrowser: ✅ 一键分享, 重命名, 设置访问密码, 移动, 批量删除, 新建文件夹
+- Sync: ✅ 添加任务, 下载→加密→上传完整链路
+- Settings: ✅ 主题/上传路径/并发/分块大小/回收站
+- 上传任务: ✅ 暂停/恢复/取消/进度追踪
+- SplitMerge: ✅ 文件分割与合并界面
+
+**待完善功能(来自reference):**
+- Dashboard批量设置访问密码(目前仅LanZouBrowser单文件支持)
+- 自动同步触发(Sync.vue添加任务后手动点击开始, reference自动执行)
+- 文件自动分割检测+下载时合并(part\d+of\d+规则)
+
+**测试统计: 前端 511 测试通过 + Go 全模块测试通过**
+**Git: dev分支已推送 (5个commit)**
+
 ### 2026-04-05 - sync.js同步上传真实对接后端API
 
 **sync.js 完整上传链路改造:**
