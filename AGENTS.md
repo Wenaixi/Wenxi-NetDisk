@@ -32,6 +32,16 @@
 
 ## 开发历史
 
+### 2026-04-05 - ShareParseHandler mock测试 + Handler覆盖率93.4%
+
+**Handler覆盖率提升至93.4%:**
+- share_parse_test.go: 添加3个mock测试，使用httptest.NewServer模拟蓝奏云HTTP响应
+  - ParseShare_MockSuccess: mock iframe页面(文件分享)
+  - ParseShare_MockError: mock 404错误页面
+  - GetShareDownloadURL_MockSuccess: mock iframe带下载URL
+- share_parse.go覆盖: ParseShare 66.7% → 100%, ValidateShareURL 100%
+- Handler总覆盖率: 92.7% → 93.4%
+
 ### 2026-04-05 - AuthHandler深度测试 + Handler覆盖率92.7%
 
 **Handler覆盖率提升至92.7%:**
