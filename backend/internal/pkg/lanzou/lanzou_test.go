@@ -158,11 +158,12 @@ func TestClientTask6(t *testing.T) {
 	assert.Equal(t, 1, resp.Zt)
 }
 
-// Test Task46 (delete folder)
-func TestClientTask46(t *testing.T) {
+// Test Task3 (delete folder)
+func TestClientTask3(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
-		assert.Equal(t, "46", r.FormValue("task"))
+		assert.Equal(t, "3", r.FormValue("task"))
+		assert.Equal(t, "456", r.FormValue("folder_id"))
 		w.Write([]byte(`{"zt":1,"info":"folder deleted"}`))
 	}))
 	defer server.Close()
@@ -170,7 +171,25 @@ func TestClientTask46(t *testing.T) {
 	client := NewClient("cookie")
 	client.baseURL = server.URL
 
-	resp, err := client.Task46(456)
+	resp, err := client.Task3(456)
+	assert.NoError(t, err)
+	assert.Equal(t, 1, resp.Zt)
+}
+
+// Test Task46 (edit folder info)
+func TestClientTask46(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		assert.Equal(t, "46", r.FormValue("task"))
+		assert.Equal(t, "456", r.FormValue("folder_id"))
+		w.Write([]byte(`{"zt":1,"info":"folder updated"}`))
+	}))
+	defer server.Close()
+
+	client := NewClient("cookie")
+	client.baseURL = server.URL
+
+	resp, err := client.Task46(456, "new name", "new desc")
 	assert.NoError(t, err)
 	assert.Equal(t, 1, resp.Zt)
 }

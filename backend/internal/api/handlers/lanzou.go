@@ -430,7 +430,7 @@ func (h *LanZouHandler) BatchDelete(c *gin.Context) {
 		if item.Type == "file" {
 			_, err = client.Task6(item.ID)
 		} else if item.Type == "folder" {
-			_, err = client.Task46(item.ID)
+			_, err = client.Task3(item.ID)
 		} else {
 			errs = append(errs, "invalid type for item "+strconv.Itoa(item.ID))
 			continue

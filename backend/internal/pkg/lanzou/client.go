@@ -126,7 +126,7 @@ func (c *Client) Task47(folderId int) (*Task47Response, error) {
 		"folder_id": {strconv.Itoa(folderId)},
 	}
 
-	data, err := c.postForm("douupload.php", body)
+	data, err := c.postForm("doupload.php", body)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func (c *Client) Task2(parentId int, name string) (*Task2Response, error) {
 		"folder_description": {""},
 	}
 
-	data, err := c.postForm("douupload.php", body)
+	data, err := c.postForm("doupload.php", body)
 	if err != nil {
 		return nil, err
 	}
@@ -173,7 +173,7 @@ func (c *Client) Task6(fileId int) (*DeleteResponse, error) {
 		"file_id": {strconv.Itoa(fileId)},
 	}
 
-	data, err := c.postForm("douupload.php", body)
+	data, err := c.postForm("doupload.php", body)
 	if err != nil {
 		return nil, err
 	}
@@ -186,19 +186,41 @@ func (c *Client) Task6(fileId int) (*DeleteResponse, error) {
 	return resp, nil
 }
 
-// Task46 删除文件夹
-func (c *Client) Task46(folderId int) (*DeleteResponse, error) {
+// Task3 删除文件夹 (参考项目使用task=3删除文件夹)
+func (c *Client) Task3(folderId int) (*DeleteResponse, error) {
 	body := url.Values{
-		"task":      {"46"},
+		"task":      {"3"},
 		"folder_id": {strconv.Itoa(folderId)},
 	}
 
-	data, err := c.postForm("douupload.php", body)
+	data, err := c.postForm("doupload.php", body)
 	if err != nil {
 		return nil, err
 	}
 
 	resp := &DeleteResponse{}
+	if err := json.Unmarshal(data, resp); err != nil {
+		resp.Zt = -1
+		resp.Info = string(data)
+	}
+	return resp, nil
+}
+
+// Task46 编辑文件夹信息 (注意：不是删除，删除用Task3)
+func (c *Client) Task46(folderId int, name, desc string) (*Task46Response, error) {
+	body := url.Values{
+		"task":      {"46"},
+		"folder_id": {strconv.Itoa(folderId)},
+		"file_name": {name},
+		"file_desc": {desc},
+	}
+
+	data, err := c.postForm("doupload.php", body)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &Task46Response{}
 	if err := json.Unmarshal(data, resp); err != nil {
 		resp.Zt = -1
 		resp.Info = string(data)
@@ -214,7 +236,7 @@ func (c *Client) Task14(fileId int, name string) (*RenameResponse, error) {
 		"name":    {name},
 	}
 
-	data, err := c.postForm("douupload.php", body)
+	data, err := c.postForm("doupload.php", body)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +257,7 @@ func (c *Client) Task15(fileId, targetFolderId int) (*MoveResponse, error) {
 		"folder_id": {strconv.Itoa(targetFolderId)},
 	}
 
-	data, err := c.postForm("douupload.php", body)
+	data, err := c.postForm("doupload.php", body)
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +278,7 @@ func (c *Client) Task48(folderId, targetFolderId int) (*MoveResponse, error) {
 		"target_id": {strconv.Itoa(targetFolderId)},
 	}
 
-	data, err := c.postForm("douupload.php", body)
+	data, err := c.postForm("doupload.php", body)
 	if err != nil {
 		return nil, err
 	}
@@ -280,7 +302,7 @@ func (c *Client) Task48FolderRename(folderId int, name string) (*Task4Response, 
 		"folder_description": {""},
 	}
 
-	data, err := c.postForm("douupload.php", body)
+	data, err := c.postForm("doupload.php", body)
 	if err != nil {
 		return nil, err
 	}
@@ -300,7 +322,7 @@ func (c *Client) Task22(fileId int) (map[string]interface{}, error) {
 		"file_id": {strconv.Itoa(fileId)},
 	}
 
-	data, err := c.postForm("douupload.php", body)
+	data, err := c.postForm("doupload.php", body)
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +341,7 @@ func (c *Client) Task18(folderId int) (map[string]interface{}, error) {
 		"folder_id": {strconv.Itoa(folderId)},
 	}
 
-	data, err := c.postForm("douupload.php", body)
+	data, err := c.postForm("doupload.php", body)
 	if err != nil {
 		return nil, err
 	}
@@ -340,7 +362,7 @@ func (c *Client) Task39(fileId int, minutes int) (*ShareResponse, error) {
 		"onetime":  {strconv.Itoa(minutes)},
 	}
 
-	data, err := c.postForm("douupload.php", body)
+	data, err := c.postForm("doupload.php", body)
 	if err != nil {
 		return nil, err
 	}

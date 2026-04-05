@@ -129,8 +129,8 @@ type Task4Response struct {
 	Info string `json:"info"`
 }
 
-// Task12Response task=12 获取文件描述响应
-type Task12Response struct {
+// Task46Response task=46 编辑文件夹信息响应
+type Task46Response struct {
 	Zt   int    `json:"zt"`
 	Info string `json:"info"`
 }
@@ -143,6 +143,12 @@ type ProfileInfo struct {
 	MaxSize      string   `json:"max_size"`      // 单个文件大小
 	Verification string   `json:"verification"`  // 安全验证
 	Referer      string   `json:"referer"`       // 网盘主页iframe链接
+}
+
+// Task12Response task=12 获取文件描述响应
+type Task12Response struct {
+	Zt   int    `json:"zt"`
+	Info string `json:"info"`
 }
 
 // Task11Response task=11 设置文件描述响应
