@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { fileAPI } from '../api'
+import { generateEncryptionKey, encryptFile, exportKey } from '../utils/crypto'
 
 export const useSyncStore = defineStore('sync', () => {
   const syncTasks = ref([])
@@ -108,22 +110,66 @@ export const useSyncStore = defineStore('sync', () => {
         onProgress?.(task)
       }
 
-      return new Blob(chunks)
+      task.downloadedBlob = new Blob(chunks)
+      return task.downloadedBlob
     } else {
       // 蓝奏云分享解析
       throw new Error('蓝奏云分享同步待实现')
     }
   }
 
-  // 上传到蓝奏云 (通过后端中转)
+  // 上传到蓝奏云 (通过后端API)
   async function uploadToLanzou(task, onProgress) {
-    // 实际上传通过后端API
-    // 这里只是模拟进度
-    for (let i = 0; i <= 100; i += 10) {
-      task.progress = 50 + Math.round(i * 0.5)
-      onProgress?.(task)
-      await new Promise(r => setTimeout(r, 100))
+    if (!task.downloadedBlob) {
+      throw new Error('没有可上传的文件')
     }
+
+    const blob = task.downloadedBlob
+    const chunkSize = 2 * 1024 * 1024 // 2MB
+    const totalChunks = Math.ceil(blob.size / chunkSize)
+
+    // 生成随机加密密钥
+    const key = await generateEncryptionKey()
+    const encryptedBlob = await encryptFile(blob, key)
+
+    // 初始化上传
+    const sessionResponse = await fileAPI.initializeUpload({
+      file_name: task.name,
+      file_size: encryptedBlob.size,
+      mime_type: 'application/octet-stream',
+      folder_id: task.folderId,
+    })
+
+    const { session_id, total_chunks } = sessionResponse
+
+    // 上传分块
+    let uploadedBytes = 0
+    for (let i = 0; i < total_chunks; i++) {
+      const start = i * chunkSize
+      const end = Math.min(start + chunkSize, encryptedBlob.size)
+      const chunk = encryptedBlob.slice(start, end)
+
+      const formData = new FormData()
+      formData.append('file', chunk)
+      formData.append('chunk_index', String(i))
+      formData.append('folder_id', String(task.folderId || -1))
+
+      await fileAPI.uploadChunk(session_id, formData)
+
+      uploadedBytes += chunk.size
+      task.progress = 50 + Math.round((uploadedBytes / encryptedBlob.size) * 50)
+      onProgress?.(task)
+    }
+
+    // 完成上传
+    const exportedKey = await exportKey(key)
+    await fileAPI.completeUpload(session_id, {
+      encryption_key: exportedKey.key,
+      encryption_nonce: exportedKey.iv,
+    })
+
+    // 清理临时数据
+    task.downloadedBlob = null
   }
 
   // 删除任务
