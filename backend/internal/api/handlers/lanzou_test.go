@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"bytes"
 	"errors"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -1206,5 +1208,128 @@ func TestLanZouHandler_GetProfile_HTTPError(t *testing.T) {
 	// Let's just verify the response format
 	if w.Code != http.StatusOK {
 		t.Logf("note: got %d, profile may have failed at network layer", w.Code)
+	}
+}
+
+// mockUploadSessionRepoForChunk 模拟上传会话仓库支持UploadChunk
+type mockUploadSessionRepoForChunk struct {
+	mockUploadSessionRepoForHandler
+}
+
+func (m *mockUploadSessionRepoForChunk) FindByID(id uint) (*model.UploadSession, error) {
+	return &model.UploadSession{ID: id, UserID: 1, FileName: "test.txt", FileSize: 1024, ChunksTotal: 1, ChunksUploaded: 0, Status: "uploading"}, nil
+}
+
+// TestLanZouHandler_UploadChunk_Success 测试上传分块成功（mock HTTP）
+func TestLanZouHandler_UploadChunk_Success(t *testing.T) {
+	// Mock上传服务器
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseMultipartForm(32 << 20)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"zt":1,"text":[{"id":"12345","is_newd":"https://down.example.com/file/xyz","name":"test.txt"}],"info":"ok"}`))
+	}))
+	defer server.Close()
+
+	tokenRepo := &mockLanzouTokenRepoForLanzouHandler{}
+	lanzouSvc := service.NewLanZouService(tokenRepo)
+	uploadRepo := &mockUploadSessionRepoForChunk{}
+	fileSvc := &mockFileSvcForLanzou{}
+
+	// 创建mock客户端提供者，注入测试服务器URL
+	lanzouProvider := &mockLanzouProviderForChunk{mockURL: server.URL}
+
+	uploadSvc := service.NewUploadService(uploadRepo, lanzouProvider, fileSvc)
+	handler := NewLanZouHandler(lanzouSvc, uploadSvc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/lanzou/upload/chunk/:id", handler.UploadChunk)
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, _ := writer.CreateFormFile("file", "test.txt")
+	part.Write([]byte("test file content"))
+	writer.WriteField("chunk_index", "0")
+	writer.WriteField("folder_id", "-1")
+	writer.Close()
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/lanzou/upload/chunk/1", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d, body: %s", w.Code, w.Body.String())
+	}
+}
+
+// mockLanzouProviderForChunk mock蓝奏云客户端提供者
+type mockLanzouProviderForChunk struct {
+	mockLanzouClientProviderForUpload
+	mockURL string
+}
+
+func (m *mockLanzouProviderForChunk) GetClient(uint) (*lanzou.Client, error) {
+	client := lanzou.NewClient("test-cookie")
+	client.SetBaseURL(m.mockURL)
+	client.SetUploadBaseURL(m.mockURL)
+	return client, nil
+}
+
+// TestLanZouHandler_UploadChunk_MissingFile 测试缺少文件参数
+func TestLanZouHandler_UploadChunk_MissingFile(t *testing.T) {
+	tokenRepo := &mockLanzouTokenRepoForLanzouHandler{}
+	lanzouSvc := service.NewLanZouService(tokenRepo)
+	uploadRepo := &mockUploadSessionRepoForHandler{}
+	fileSvc := &mockFileSvcForLanzou{}
+	lanzouProvider := &mockLanzouClientProviderForUpload{}
+	uploadSvc := service.NewUploadService(uploadRepo, lanzouProvider, fileSvc)
+	handler := NewLanZouHandler(lanzouSvc, uploadSvc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/lanzou/upload/chunk/:id", handler.UploadChunk)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/lanzou/upload/chunk/1", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+// TestLanZouHandler_UploadChunk_InvalidSessionID 测试无效session ID
+func TestLanZouHandler_UploadChunk_InvalidSessionID(t *testing.T) {
+	tokenRepo := &mockLanzouTokenRepoForLanzouHandler{}
+	lanzouSvc := service.NewLanZouService(tokenRepo)
+	uploadRepo := &mockUploadSessionRepoForHandler{}
+	fileSvc := &mockFileSvcForLanzou{}
+	lanzouProvider := &mockLanzouClientProviderForUpload{}
+	uploadSvc := service.NewUploadService(uploadRepo, lanzouProvider, fileSvc)
+	handler := NewLanZouHandler(lanzouSvc, uploadSvc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/lanzou/upload/chunk/:id", handler.UploadChunk)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/lanzou/upload/chunk/abc", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
 	}
 }

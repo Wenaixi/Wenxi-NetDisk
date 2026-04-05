@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"io"
 	"strconv"
 
 	"github.com/wenaixi/wenxi-cloud/backend/internal/service"
@@ -254,6 +255,66 @@ func (h *LanZouHandler) CreateShare(c *gin.Context) {
 	}
 
 	response.Success(c, resp)
+}
+
+// UploadChunk 上传文件分块到蓝奏云
+func (h *LanZouHandler) UploadChunk(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	sessionID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		response.BadRequest(c, "invalid session id")
+		return
+	}
+
+	// 解析multipart表单
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		response.BadRequest(c, "file is required")
+		return
+	}
+	defer file.Close()
+
+	// 读取文件数据
+	data, err := io.ReadAll(file)
+	if err != nil {
+		response.InternalError(c, "failed to read file")
+		return
+	}
+
+	// 获取分块索引和文件夹ID
+	chunkIndexStr := c.PostForm("chunk_index")
+	folderIDStr := c.PostForm("folder_id")
+
+	chunkIndex := 0
+	if chunkIndexStr != "" {
+		chunkIndex, _ = strconv.Atoi(chunkIndexStr)
+	}
+
+	folderID := -1
+	if folderIDStr != "" {
+		folderID, _ = strconv.Atoi(folderIDStr)
+	}
+
+	req := &service.UploadChunkRequest{
+		ChunkIndex: chunkIndex,
+		Data:       data,
+		FolderID:   folderID,
+	}
+
+	resp, err := h.uploadSvc.UploadChunk(uid, uint(sessionID), req)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, gin.H{
+		"lanzou_file_id": resp.LanZouFileID,
+		"download_url":   resp.DownloadURL,
+		"file_name":      resp.FileName,
+		"original_name":  header.Filename,
+	})
 }
 
 // GetFileURL 获取文件下载直链
