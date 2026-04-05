@@ -58,6 +58,7 @@
               ]"
               @dblclick="!selectMode && navigateToFolder(folder)"
               @click="selectMode ? toggleSelect(folder.folder_id) : navigateToFolder(folder)"
+              @contextmenu.prevent="openFolderContextMenu($event, folder)"
             >
               <div class="flex items-center gap-2">
                 <n-checkbox
@@ -79,6 +80,7 @@
                 selectMode && selectedItems.includes(file.file_id) ? 'ring-2 ring-blue-500' : ''
               ]"
               @click="selectMode ? toggleSelect(file.file_id) : handleFileClick(file)"
+              @contextmenu.prevent="openFileContextMenu($event, file)"
             >
               <div class="flex items-center gap-2 mb-2">
                 <n-checkbox
@@ -102,8 +104,44 @@
         <div class="space-y-2">
           <n-button block type="primary" @click="downloadFile">下载</n-button>
           <n-button block @click="createShare">创建分享链接</n-button>
+          <n-button block @click="openAccessModal('file')">设置访问密码</n-button>
           <n-button block @click="showFileMenu = false">取消</n-button>
         </div>
+      </n-card>
+    </n-modal>
+
+    <n-modal v-model:show="showFolderMenu" v-if="selectedFolder">
+      <n-card :title="selectedFolder.name" style="width: 400px;">
+        <div class="space-y-2">
+          <n-button block type="primary" @click="navigateToFolder(selectedFolder)">打开</n-button>
+          <n-button block @click="openAccessModal('folder')">设置访问密码</n-button>
+          <n-button block @click="showFolderMenu = false">取消</n-button>
+        </div>
+      </n-card>
+    </n-modal>
+
+    <n-modal v-model:show="showAccessModal">
+      <n-card title="设置访问密码" style="width: 400px;">
+        <div class="space-y-4">
+          <n-radio-group v-model:value="accessForm.type">
+            <n-space>
+              <n-radio value="2">密码访问</n-radio>
+              <n-radio value="1">公开访问</n-radio>
+            </n-space>
+          </n-radio-group>
+          <n-input
+            v-if="accessForm.type === '2'"
+            v-model:value="accessForm.password"
+            placeholder="请输入访问密码"
+            maxlength="20"
+          />
+        </div>
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <n-button @click="showAccessModal = false">取消</n-button>
+            <n-button type="primary" @click="submitAccess">确定</n-button>
+          </div>
+        </template>
       </n-card>
     </n-modal>
 
@@ -157,6 +195,17 @@ const showFileMenu = ref(false)
 const selectedFile = ref(null)
 const showShareModal = ref(false)
 const shareResult = ref(null)
+
+const showFolderMenu = ref(false)
+const selectedFolder = ref(null)
+
+const showAccessModal = ref(false)
+const accessForm = ref({
+  type: '2',
+  password: '',
+  targetId: null,
+  targetType: 'file',
+})
 
 // 选择模式相关
 const selectMode = ref(false)
@@ -240,6 +289,53 @@ function navigateToBreadcrumb(idx) {
 function handleFileClick(file) {
   selectedFile.value = file
   showFileMenu.value = true
+}
+
+function openFileContextMenu(event, file) {
+  if (selectMode.value) return
+  selectedFile.value = file
+  showFileMenu.value = true
+}
+
+function openFolderContextMenu(event, folder) {
+  if (selectMode.value) return
+  selectedFolder.value = folder
+  showFolderMenu.value = true
+}
+
+function openAccessModal(type) {
+  if (type === 'file' && selectedFile.value) {
+    accessForm.value.targetId = selectedFile.value.file_id
+    accessForm.value.targetType = 'file'
+  } else if (type === 'folder' && selectedFolder.value) {
+    accessForm.value.targetId = selectedFolder.value.folder_id
+    accessForm.value.targetType = 'folder'
+  }
+  accessForm.value.type = '2'
+  accessForm.value.password = ''
+  showAccessModal.value = true
+  showFileMenu.value = false
+  showFolderMenu.value = false
+}
+
+async function submitAccess() {
+  if (accessForm.value.type === '2' && !accessForm.value.password.trim()) {
+    message.warning('请输入访问密码')
+    return
+  }
+  try {
+    await lanzouAPI.setAccess({
+      id: accessForm.value.targetId,
+      type: accessForm.value.targetType,
+      shows: parseInt(accessForm.value.type),
+      shownames: accessForm.value.type === '2' ? accessForm.value.password : '',
+    })
+    message.success('访问密码设置成功')
+    showAccessModal.value = false
+    accessForm.value = { targetId: null, targetType: 'file', type: '2', password: '' }
+  } catch (err) {
+    message.error(err.message || '设置访问密码失败')
+  }
 }
 
 async function downloadFile() {

@@ -32,6 +32,34 @@
 
 ## 开发历史
 
+### 2026-04-05 - 蓝奏云浏览器访问密码设置 + 前端419测试
+
+**新增功能 - 访问密码管理 (Task #16):**
+- LanZouBrowser.vue 添加文件和文件夹访问密码设置功能
+- 文件右键菜单增加"设置访问密码"选项
+- 文件夹右键菜单增加"打开"+"设置访问密码"选项
+- SetAccessModal: 密码访问/公开访问切换, 密码输入框
+- lanzou.js: 新增 setAccess API 方法 (PUT /lanzou/access)
+- 9个新测试用例 (LanZouBrowser.test.js)
+- 后端已完成 (Task23/Task16 client方法 + service层 + handler + 路由)
+
+**测试统计: 前端 32 文件, 419 用例全部通过 (+9)**
+
+### 2026-04-05 - 拖拽上传 + 流量追踪 + 前端410测试
+
+**新增功能 - 拖拽上传:**
+- Dashboard.vue 添加拖拽遮罩层 (dragover/dragleave/drop 事件)
+- 拖入文件直接加密上传到当前文件夹
+- 4个新测试用例 (Dashboard.test.js)
+
+**新增功能 - 上传流量追踪:**
+- stores/calculate.js: 每日上传流量记录, 30天自动过期清理
+- 流量警告系统: 默认7GB阈值, 可配置, 可开关
+- Settings.vue 新增流量管理面板 (今日上传/警告阈值/记录清理)
+- 12个 store 测试 + 7个 view 测试 (calculate.test.js + Settings.test.js 更新)
+
+**测试统计: 前端 32 文件, 410 用例全部通过 (+16)**
+
 ### 2026-04-05 - 主题切换系统 + 任务历史页面 + 前端383测试
 
 **新增功能 - 主题切换系统:**
@@ -957,9 +985,9 @@ references/lanzouyun-disk/
 | RecycleBin | 16 | ✅ |
 | Sync | 16 | ✅ |
 | ShareParse | 15 | ✅ |
-| LanZouBrowser | 26 | ✅ |
+| LanZouBrowser | 35 (+9 访问密码/右键菜单) | ✅ |
 
-**总测试数: 434 (222 Go + 212 Vue) 全部通过**
+**总测试数: ~675 (~402 Go + 419 Vue) 全部通过**
 
 ## 测试规范记录
 

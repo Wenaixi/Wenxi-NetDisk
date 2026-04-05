@@ -37,6 +37,15 @@ export const lanzouAPI = {
 
   // 创建分享链接
   createShare: (data) => api.post('/lanzou/share', data),
+
+  // 设置访问密码 (文件或文件夹)
+  setAccess: (data) => api.put('/lanzou/access', data),
+
+  // 获取文件详情 (蓝奏云)
+  getFileDetail: (id) => api.get(`/lanzou/files/${id}`),
+
+  // 批量删除
+  batchDelete: (data) => api.post('/lanzou/batch/delete', data),
 }
 
 export default lanzouAPI

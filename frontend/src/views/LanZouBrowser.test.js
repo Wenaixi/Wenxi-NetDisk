@@ -44,12 +44,13 @@ vi.mock('naive-ui', () => ({
 }))
 
 // Mock lanzouAPI - vi.hoisted because vi.mock is hoisted
-const { mockStatus, mockListFiles, mockDelete, mockGetDownloadUrl, mockCreateShare } = vi.hoisted(() => ({
+const { mockStatus, mockListFiles, mockDelete, mockGetDownloadUrl, mockCreateShare, mockSetAccess } = vi.hoisted(() => ({
   mockStatus: vi.fn(),
   mockListFiles: vi.fn(),
   mockDelete: vi.fn(),
   mockGetDownloadUrl: vi.fn(),
-  mockCreateShare: vi.fn()
+  mockCreateShare: vi.fn(),
+  mockSetAccess: vi.fn()
 }))
 
 vi.mock('../api/lanzou', () => ({
@@ -58,7 +59,8 @@ vi.mock('../api/lanzou', () => ({
     listFiles: mockListFiles,
     delete: mockDelete,
     getDownloadUrl: mockGetDownloadUrl,
-    createShare: mockCreateShare
+    createShare: mockCreateShare,
+    setAccess: mockSetAccess
   }
 }))
 
@@ -79,7 +81,10 @@ const mountComponent = () => {
         'n-modal': true,
         'n-card': true,
         'n-input': true,
-        'n-icon': true
+        'n-icon': true,
+        'n-radio-group': true,
+        'n-radio': true,
+        'n-space': true
       }
     }
   })
@@ -95,6 +100,7 @@ describe('LanZouBrowser.vue', () => {
     mockDelete.mockReset()
     mockGetDownloadUrl.mockReset()
     mockCreateShare.mockReset()
+    mockSetAccess.mockReset()
   })
 
   it('should render page header with navigation', () => {
@@ -335,5 +341,131 @@ describe('LanZouBrowser.vue', () => {
 
     expect(result).toBe(false)
     expect(wrapper.vm.connected).toBe(false)
+  })
+
+  // Access password tests
+  it('should open file context menu and show file menu', () => {
+    const wrapper = mountComponent()
+
+    wrapper.vm.openFileContextMenu({ preventDefault: vi.fn() }, { file_id: 'f1', name: 'test.zip' })
+
+    expect(wrapper.vm.selectedFile).toEqual({ file_id: 'f1', name: 'test.zip' })
+    expect(wrapper.vm.showFileMenu).toBe(true)
+  })
+
+  it('should open folder context menu and show folder menu', () => {
+    const wrapper = mountComponent()
+
+    wrapper.vm.openFolderContextMenu({ preventDefault: vi.fn() }, { folder_id: '123', name: 'TestFolder' })
+
+    expect(wrapper.vm.selectedFolder).toEqual({ folder_id: '123', name: 'TestFolder' })
+    expect(wrapper.vm.showFolderMenu).toBe(true)
+  })
+
+  it('should not open context menus in select mode', () => {
+    const wrapper = mountComponent()
+    wrapper.vm.selectMode = true
+
+    wrapper.vm.openFileContextMenu({ preventDefault: vi.fn() }, { file_id: 'f1', name: 'test.zip' })
+    wrapper.vm.openFolderContextMenu({ preventDefault: vi.fn() }, { folder_id: '123', name: 'TestFolder' })
+
+    expect(wrapper.vm.showFileMenu).toBe(false)
+    expect(wrapper.vm.showFolderMenu).toBe(false)
+  })
+
+  it('should open access modal for file', () => {
+    const wrapper = mountComponent()
+
+    wrapper.vm.selectedFile = { file_id: '123', name: 'test.zip' }
+    wrapper.vm.openAccessModal('file')
+
+    expect(wrapper.vm.showAccessModal).toBe(true)
+    expect(wrapper.vm.accessForm.targetId).toBe('123')
+    expect(wrapper.vm.accessForm.targetType).toBe('file')
+    expect(wrapper.vm.accessForm.type).toBe('2')
+    expect(wrapper.vm.showFileMenu).toBe(false)
+  })
+
+  it('should open access modal for folder', () => {
+    const wrapper = mountComponent()
+
+    wrapper.vm.selectedFolder = { folder_id: '456', name: 'TestFolder' }
+    wrapper.vm.openAccessModal('folder')
+
+    expect(wrapper.vm.showAccessModal).toBe(true)
+    expect(wrapper.vm.accessForm.targetId).toBe('456')
+    expect(wrapper.vm.accessForm.targetType).toBe('folder')
+    expect(wrapper.vm.showFolderMenu).toBe(false)
+  })
+
+  it('should submit password access successfully', async () => {
+    mockSetAccess.mockResolvedValue({ message: 'access updated' })
+    const wrapper = mountComponent()
+
+    wrapper.vm.accessForm = {
+      targetId: '123',
+      targetType: 'file',
+      type: '2',
+      password: 'mypassword',
+    }
+    await wrapper.vm.submitAccess()
+
+    expect(mockSetAccess).toHaveBeenCalledWith({
+      id: '123',
+      type: 'file',
+      shows: 2,
+      shownames: 'mypassword',
+    })
+    expect(wrapper.vm.showAccessModal).toBe(false)
+  })
+
+  it('should submit public access successfully', async () => {
+    mockSetAccess.mockResolvedValue({ message: 'access updated' })
+    const wrapper = mountComponent()
+
+    wrapper.vm.accessForm = {
+      targetId: '456',
+      targetType: 'folder',
+      type: '1',
+      password: '',
+    }
+    await wrapper.vm.submitAccess()
+
+    expect(mockSetAccess).toHaveBeenCalledWith({
+      id: '456',
+      type: 'folder',
+      shows: 1,
+      shownames: '',
+    })
+    expect(wrapper.vm.showAccessModal).toBe(false)
+  })
+
+  it('should warn when submitting empty password for password access', async () => {
+    const wrapper = mountComponent()
+
+    wrapper.vm.accessForm = {
+      targetId: '123',
+      targetType: 'file',
+      type: '2',
+      password: '',
+    }
+    await wrapper.vm.submitAccess()
+
+    expect(mockSetAccess).not.toHaveBeenCalled()
+  })
+
+  it('should handle access submission error', async () => {
+    mockSetAccess.mockRejectedValue(new Error('Network error'))
+    const wrapper = mountComponent()
+
+    wrapper.vm.accessForm.targetId = '123'
+    wrapper.vm.accessForm.targetType = 'file'
+    wrapper.vm.accessForm.type = '2'
+    wrapper.vm.accessForm.password = 'testpwd'
+    wrapper.vm.showAccessModal = true
+    await wrapper.vm.submitAccess()
+
+    expect(mockSetAccess).toHaveBeenCalled()
+    expect(wrapper.vm.accessForm.targetId).toBe('123')
   })
 })
