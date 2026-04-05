@@ -32,7 +32,17 @@
 
 ## 开发历史
 
-### 2026-04-05 - FolderHandler深度测试 + Handler覆盖率突破90%
+### 2026-04-05 - ShareHandler深度测试 + Handler覆盖率91.7%
+
+**Handler覆盖率提升至91.7%:**
+- share_test.go: 重写完整测试，添加8+个新用例
+  - mockShareRepoForHandler/mockShareFileRepoForHandler 分离实现两个接口
+  - 成功路径: CreateShare/GetShare/ListShares/DeleteShare/CreateShareViaBody/ValidateShare
+  - 错误路径: FileNotFound/NotFound/ListError/DeleteNotFound/CreateShareViaBody_FileNotFound/ValidateShare_NotFound
+  - 输入验证: 非数字/浮点/负数/无效JSON/空Body 全覆盖
+- share.go覆盖: CreateShare 86.7% → 100%, GetShare 100%, ValidateShare 100%, CreateShareViaBody 81.8% → 90%+, ListShares 80% → 90%+, DeleteShare 80% → 100%
+- Handler总覆盖率: 90.3% → 91.7%
+- 剩余低覆盖率: share_parse.go (66.7%需HTTP mock), upload.go UploadFile/ListVersions (81-82%), lanzou.go Connect/ListFiles (80-81%)
 
 **Handler覆盖率提升至90.3%:**
 - folder_test.go: 添加25+个新测试用例，覆盖folder.go全部7个handler方法
@@ -813,7 +823,7 @@ references/lanzouyun-disk/
 | handlers/recycle | 29 (+15 成功路径/List/Restore/Delete/Clear mock) | ✅ |
 | handlers/download | 8 (+2 GetDownloadURL/构造器) | ✅ |
 | handlers/lanzou | 30 (+21 全端点验证+成功路径) | ✅ |
-| handlers/share | 15 (+3 GetShare/ListShares success) | ✅ |
+| handlers/share | 20 (+5 成功路径/错误路径/mock) | ✅ |
 | handlers/share_parse | 12 (+3 成功路径验证) | ✅ |
 | handlers/upload | 18 (+7 ListVersions/GetUploadURL/guessMimeType success) | ✅ |
 | handlers/common | 26 (构造器/响应格式) | ✅ |
