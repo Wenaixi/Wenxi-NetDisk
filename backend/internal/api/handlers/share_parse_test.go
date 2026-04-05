@@ -443,3 +443,156 @@ func TestShareParseHandler_GetShareDownloadURL_MockError(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
+
+// TestShareParseHandler_BatchParseShare_EmptyBody 测试批量解析空请求体
+func TestShareParseHandler_BatchParseShare_EmptyBody(t *testing.T) {
+	svc := service.NewShareParseService(nil)
+	handler := NewShareParseHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/share/batch-parse", handler.BatchParseShare)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/share/batch-parse", strings.NewReader(`{}`))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+// TestShareParseHandler_BatchParseShare_InvalidJSON 测试批量解析无效JSON
+func TestShareParseHandler_BatchParseShare_InvalidJSON(t *testing.T) {
+	svc := service.NewShareParseService(nil)
+	handler := NewShareParseHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/share/batch-parse", handler.BatchParseShare)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/share/batch-parse", strings.NewReader(`invalid`))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+// TestShareParseHandler_BatchParseShare_EmptyURLs 测试批量解析空URL列表
+func TestShareParseHandler_BatchParseShare_EmptyURLs(t *testing.T) {
+	svc := service.NewShareParseService(nil)
+	handler := NewShareParseHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/share/batch-parse", handler.BatchParseShare)
+
+	w := httptest.NewRecorder()
+	body := `{"urls":["","  ",""]}`
+	req := httptest.NewRequest("POST", "/share/batch-parse", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+// TestShareParseHandler_BatchParseShare_SomeEmptyURLs 测试部分URL为空被过滤
+func TestShareParseHandler_BatchParseShare_SomeEmptyURLs(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`<html><iframe src="https://pc.woozooo.com/file.php"></iframe></html>`))
+	}))
+	defer server.Close()
+
+	client := lanzou.NewClient("")
+	svc := service.NewShareParseService(client)
+	handler := NewShareParseHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/share/batch-parse", handler.BatchParseShare)
+
+	w := httptest.NewRecorder()
+	body := `{"urls":["` + server.URL + `/i1","  ","` + server.URL + `/i2"]}`
+	req := httptest.NewRequest("POST", "/share/batch-parse", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// TestShareParseHandler_BatchParseShare_MockSuccess 测试批量解析成功
+func TestShareParseHandler_BatchParseShare_MockSuccess(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`<html><iframe src="https://pc.woozooo.com/file.php"></iframe></html>`))
+	}))
+	defer server.Close()
+
+	client := lanzou.NewClient("")
+	svc := service.NewShareParseService(client)
+	handler := NewShareParseHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/share/batch-parse", handler.BatchParseShare)
+
+	w := httptest.NewRecorder()
+	body := `{"urls":["` + server.URL + `/i1","` + server.URL + `/i2"],"pwd":"1234"}`
+	req := httptest.NewRequest("POST", "/share/batch-parse", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	t.Logf("response: %s", w.Body.String())
+}
+
+// TestShareParseHandler_BatchParseShare_MixedResults 测试混合成功和失败
+func TestShareParseHandler_BatchParseShare_MixedResults(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`<html><iframe src="https://pc.woozooo.com/file.php"></iframe></html>`))
+	}))
+	defer server.Close()
+
+	client := lanzou.NewClient("")
+	svc := service.NewShareParseService(client)
+	handler := NewShareParseHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/share/batch-parse", handler.BatchParseShare)
+
+	w := httptest.NewRecorder()
+	body := `{"urls":["` + server.URL + `/good","https://invalid-domain-xyz.com/bad"]}`
+	req := httptest.NewRequest("POST", "/share/batch-parse", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	t.Logf("response: %s", w.Body.String())
+}

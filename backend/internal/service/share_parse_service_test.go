@@ -69,3 +69,35 @@ func TestShareParseService_GetShareDownloadLink(t *testing.T) {
 		t.Log("unexpected success - lanzou returned download URL")
 	}
 }
+
+func TestShareParseService_BatchParseShareLinks(t *testing.T) {
+	client := lanzou.NewClient("test-cookie")
+	svc := NewShareParseService(client)
+
+	urls := []string{
+		"https://abc.lanzous.com/test1",
+		"https://abc.lanzous.com/test2",
+		"",
+	}
+
+	results, errors := svc.BatchParseShareLinks(urls, "")
+
+	// Both will fail due to real HTTP calls, but we should have results and errors
+	if len(results)+len(errors) != 2 {
+		t.Errorf("expected 2 results+errors, got %d", len(results)+len(errors))
+	}
+}
+
+func TestShareParseService_BatchParseShareLinks_Empty(t *testing.T) {
+	client := lanzou.NewClient("test-cookie")
+	svc := NewShareParseService(client)
+
+	results, errors := svc.BatchParseShareLinks([]string{"", "  ", ""}, "")
+
+	if len(results) != 0 {
+		t.Errorf("expected 0 results, got %d", len(results))
+	}
+	if len(errors) != 0 {
+		t.Errorf("expected 0 errors for empty URLs, got %d", len(errors))
+	}
+}

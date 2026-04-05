@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"strings"
+
 	"github.com/wenaixi/wenxi-cloud/backend/internal/pkg/response"
 	"github.com/wenaixi/wenxi-cloud/backend/internal/service"
 	"github.com/gin-gonic/gin"
@@ -74,4 +76,40 @@ func (h *ShareParseHandler) ValidateShareURL(c *gin.Context) {
 	}
 
 	response.Success(c, gin.H{"valid": true})
+}
+
+// BatchParseShare 批量解析分享链接
+func (h *ShareParseHandler) BatchParseShare(c *gin.Context) {
+	var req struct {
+		URLs  []string `json:"urls" binding:"required"`
+		Pwd   string   `json:"pwd"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "分享链接列表不能为空")
+		return
+	}
+
+	// 过滤空URL
+	validURLs := make([]string, 0, len(req.URLs))
+	for _, u := range req.URLs {
+		u = strings.TrimSpace(u)
+		if u != "" {
+			validURLs = append(validURLs, u)
+		}
+	}
+
+	if len(validURLs) == 0 {
+		response.BadRequest(c, "没有有效的分享链接")
+		return
+	}
+
+	results, errors := h.parseSvc.BatchParseShareLinks(validURLs, req.Pwd)
+
+	response.Success(c, gin.H{
+		"results": results,
+		"errors":  errors,
+		"total":   len(results),
+		"failed":  len(errors),
+	})
 }

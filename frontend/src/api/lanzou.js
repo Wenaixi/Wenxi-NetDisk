@@ -55,6 +55,12 @@ export const lanzouAPI = {
 
   // 批量删除
   batchDelete: (data) => api.post('/lanzou/batch/delete', data),
+
+  // 批量解析分享链接
+  batchParse: (data) => api.post('/lanzou/share/batch-parse', data),
+
+  // 解析分享链接
+  parseShare: (data) => api.post('/lanzou/share/parse', data),
 }
 
 export default lanzouAPI

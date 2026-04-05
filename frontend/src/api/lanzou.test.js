@@ -73,4 +73,12 @@ describe('lanzouAPI', () => {
   it('should have batchMove method', () => {
     expect(typeof lanzouAPI.batchMove).toBe('function')
   })
+
+  it('should have parseShare method', () => {
+    expect(typeof lanzouAPI.parseShare).toBe('function')
+  })
+
+  it('should have batchParse method', () => {
+    expect(typeof lanzouAPI.batchParse).toBe('function')
+  })
 })

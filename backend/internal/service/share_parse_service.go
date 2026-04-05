@@ -17,6 +17,25 @@ func (s *ShareParseService) ParseShareLink(shareURL, pwd string) (interface{}, e
 	return s.client.ParseShareURL(shareURL, pwd)
 }
 
+// BatchParseShareLinks 批量解析分享链接
+func (s *ShareParseService) BatchParseShareLinks(urls []string, pwd string) ([]interface{}, []string) {
+	results := make([]interface{}, 0, len(urls))
+	errors := make([]string, 0)
+
+	for _, url := range urls {
+		if url == "" {
+			continue
+		}
+		result, err := s.ParseShareLink(url, pwd)
+		if err != nil {
+			errors = append(errors, err.Error())
+		} else {
+			results = append(results, result)
+		}
+	}
+	return results, errors
+}
+
 // GetShareDownloadLink 获取分享文件的下载直链
 func (s *ShareParseService) GetShareDownloadLink(shareURL, pwd string) (string, error) {
 	return s.client.GetShareDownloadURL(shareURL, pwd)

@@ -151,6 +151,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 		shareParse.Use(middleware.AuthRequired(jwtManager))
 		{
 			shareParse.POST("/parse", shareParseHandler.ParseShare)
+			shareParse.POST("/batch-parse", shareParseHandler.BatchParseShare)
 			shareParse.POST("/validate", shareParseHandler.ValidateShareURL)
 			shareParse.POST("/download", shareParseHandler.GetShareDownloadURL)
 		}

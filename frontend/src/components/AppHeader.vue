@@ -21,6 +21,9 @@
         <n-button text @click="$router.push('/task-history')" :type="isActive('/task-history')">
           任务历史
         </n-button>
+        <n-button text @click="$router.push('/completed-tasks')" :type="isActive('/completed-tasks')">
+          已完成
+        </n-button>
       </nav>
     </div>
     <div class="flex items-center gap-4">
