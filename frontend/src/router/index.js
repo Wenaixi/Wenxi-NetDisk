@@ -65,6 +65,18 @@ const routes = [
     name: 'TaskHistory',
     component: () => import('../views/TaskHistory.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/split-merge',
+    name: 'SplitMerge',
+    component: () => import('../views/SplitMerge.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/upload-tasks',
+    name: 'UploadTasks',
+    component: () => import('../views/UploadTasks.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
