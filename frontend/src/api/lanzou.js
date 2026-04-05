@@ -56,6 +56,14 @@ export const lanzouAPI = {
   // 批量删除
   batchDelete: (data) => api.post('/lanzou/batch/delete', data),
 
+  // 删除文件/文件夹 (统一接口)
+  delete: (id, type) => {
+    if (type === 'folder') {
+      return api.delete(`/lanzou/folders/${id}`)
+    }
+    return api.delete(`/lanzou/files/${id}`)
+  },
+
   // 批量解析分享链接
   batchParse: (data) => api.post('/lanzou/share/batch-parse', data),
 

@@ -44,7 +44,7 @@ vi.mock('naive-ui', () => ({
 }))
 
 // Mock lanzouAPI - vi.hoisted because vi.mock is hoisted
-const { mockStatus, mockListFiles, mockDelete, mockGetDownloadUrl, mockCreateShare, mockSetAccess, mockRename, mockGetFileDescription, mockSetFileDescription } = vi.hoisted(() => ({
+const { mockStatus, mockListFiles, mockDelete, mockGetDownloadUrl, mockCreateShare, mockSetAccess, mockRename, mockGetFileDescription, mockSetFileDescription, mockBatchDelete, mockBatchMove } = vi.hoisted(() => ({
   mockStatus: vi.fn(),
   mockListFiles: vi.fn(),
   mockDelete: vi.fn(),
@@ -53,7 +53,9 @@ const { mockStatus, mockListFiles, mockDelete, mockGetDownloadUrl, mockCreateSha
   mockSetAccess: vi.fn(),
   mockRename: vi.fn(),
   mockGetFileDescription: vi.fn(),
-  mockSetFileDescription: vi.fn()
+  mockSetFileDescription: vi.fn(),
+  mockBatchDelete: vi.fn(),
+  mockBatchMove: vi.fn()
 }))
 
 vi.mock('../api/lanzou', () => ({
@@ -66,7 +68,9 @@ vi.mock('../api/lanzou', () => ({
     setAccess: mockSetAccess,
     rename: mockRename,
     getFileDescription: mockGetFileDescription,
-    setFileDescription: mockSetFileDescription
+    setFileDescription: mockSetFileDescription,
+    batchDelete: mockBatchDelete,
+    batchMove: mockBatchMove
   }
 }))
 
@@ -108,6 +112,8 @@ describe('LanZouBrowser.vue', () => {
     mockCreateShare.mockReset()
     mockSetAccess.mockReset()
     mockRename.mockReset()
+    mockBatchDelete.mockReset()
+    mockBatchMove.mockReset()
     mockGetFileDescription.mockReset()
     mockSetFileDescription.mockReset()
   })
@@ -280,14 +286,21 @@ describe('LanZouBrowser.vue', () => {
   })
 
   it('should batch delete items', async () => {
-    mockDelete.mockResolvedValue(true)
+    mockBatchDelete.mockResolvedValue({ deleted: 2 })
     mockListFiles.mockResolvedValue({ folders: [], files: [] })
     const wrapper = mountComponent()
 
-    wrapper.vm.selectedItems = ['f1', 'f2']
+    wrapper.vm.folders = [{ folder_id: 'd1', name: 'dir1' }]
+    wrapper.vm.files = [{ file_id: 'f1', name: 'file1.zip' }]
+    wrapper.vm.selectedItems = ['f1', 'd1']
     await wrapper.vm.batchDelete()
 
-    expect(mockDelete).toHaveBeenCalledTimes(2)
+    expect(mockBatchDelete).toHaveBeenCalledWith({
+      items: [
+        { id: 'f1', type: 'file' },
+        { id: 'd1', type: 'folder' }
+      ]
+    })
     expect(wrapper.vm.selectedItems).toHaveLength(0)
   })
 
@@ -631,33 +644,39 @@ describe('LanZouBrowser.vue', () => {
   })
 
   it('should submit move for single file', async () => {
-    const mockMove = vi.fn().mockResolvedValue({ zt: 1 })
-    const { lanzouAPI: api } = await import('../api/lanzou')
-    api.move = mockMove
+    mockBatchMove.mockResolvedValue({ moved: 1 })
     mockListFiles.mockResolvedValue({ folders: [], files: [] })
     const wrapper = mountComponent()
     wrapper.vm.folders = [{ folder_id: 'f1', name: 'Folder1' }]
     wrapper.vm.files = [{ file_id: 'f2', name: 'File1.zip' }]
     wrapper.vm.selectedItems = ['f2']
-    wrapper.vm.moveTargetId = '123'
+    wrapper.vm.showMoveModal = true
+    wrapper.vm.moveTargetId = 123
     await wrapper.vm.submitMove()
-    expect(mockMove).toHaveBeenCalledWith('f2', { type: 'file', target: '123' })
+    expect(mockBatchMove).toHaveBeenCalledWith({
+      items: [{ id: 'f2', type: 'file' }],
+      target: 123
+    })
     expect(wrapper.vm.showMoveModal).toBe(false)
     expect(wrapper.vm.selectedItems).toHaveLength(0)
   })
 
   it('should submit move for multiple items', async () => {
-    const mockMove = vi.fn().mockResolvedValue({ zt: 1 })
-    const { lanzouAPI: api } = await import('../api/lanzou')
-    api.move = mockMove
+    mockBatchMove.mockResolvedValue({ moved: 2 })
     mockListFiles.mockResolvedValue({ folders: [], files: [] })
     const wrapper = mountComponent()
     wrapper.vm.folders = [{ folder_id: 'f1', name: 'Folder1' }]
     wrapper.vm.files = [{ file_id: 'f2', name: 'File1.zip' }]
     wrapper.vm.selectedItems = ['f1', 'f2']
-    wrapper.vm.moveTargetId = '456'
+    wrapper.vm.moveTargetId = 456
     await wrapper.vm.submitMove()
-    expect(mockMove).toHaveBeenCalledTimes(2)
+    expect(mockBatchMove).toHaveBeenCalledWith({
+      items: [
+        { id: 'f1', type: 'folder' },
+        { id: 'f2', type: 'file' }
+      ],
+      target: 456
+    })
     expect(wrapper.vm.selectedItems).toHaveLength(0)
   })
 

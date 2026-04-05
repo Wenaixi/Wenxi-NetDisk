@@ -34,6 +34,10 @@ describe('lanzouAPI', () => {
     expect(typeof lanzouAPI.deleteFolder).toBe('function')
   })
 
+  it('should have delete method', () => {
+    expect(typeof lanzouAPI.delete).toBe('function')
+  })
+
   it('should have rename method', () => {
     expect(typeof lanzouAPI.rename).toBe('function')
   })

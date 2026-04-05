@@ -32,6 +32,28 @@
 
 ## 开发历史
 
+### 2026-04-05 - ShareParse重写 + 批量解析 + 前端509测试
+
+**ShareParse.vue 完全重写 (对齐 references/Parse.tsx):**
+- 文件列表表格展示: 文件名/时间/大小/操作列
+- 行点击多选模式, 选中行高亮显示
+- 自动合并复选框 (检测 part\d+of\d+ 分割文件自动勾选)
+- 下载单个文件/全部/选中 到下载任务队列
+- 多行批量解析, 每行一个链接, 错误逐行显示
+- 显示当前分享信息和文件总数
+- 26个前端测试覆盖 (ShareParse.test.js)
+
+**后端批量解析功能:**
+- share_parse_service.go: BatchParseShareLinks 方法
+- share_parse.go: BatchParseShare handler (POST /lanzou/share/batch-parse)
+- 6个后端测试 (EmptyBody/InvalidJSON/EmptyURLs/SomeEmpty/MockSuccess/MixedResults)
+
+**API层增强:**
+- lanzou.js: 新增 parseShare / batchParse API 方法
+- lanzou.test.js: +2 方法存在性测试
+
+**测试统计: 前端 37 文件, 509 用例全部通过**
+
 ### 2026-04-05 - 文件描述功能 + 移动功能 + 前端479测试
 
 **新增功能 - 文件描述 (Task11/Task12):**

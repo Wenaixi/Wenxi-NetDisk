@@ -402,7 +402,98 @@ func (h *LanZouHandler) Rename(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// Move 移动文件/文件夹
+// BatchDelete 批量删除文件/文件夹
+func (h *LanZouHandler) BatchDelete(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	var req struct {
+		Items []struct {
+			ID   int    `json:"id"`
+			Type string `json:"type"` // "file" or "folder"
+		} `json:"items" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "请求参数错误")
+		return
+	}
+
+	client, err := h.lanzouSvc.GetClient(uid)
+	if err != nil {
+		response.Unauthorized(c, err.Error())
+		return
+	}
+
+	var deletedCount int
+	var errs []string
+	for _, item := range req.Items {
+		if item.Type == "file" {
+			_, err = client.Task6(item.ID)
+		} else if item.Type == "folder" {
+			_, err = client.Task46(item.ID)
+		} else {
+			errs = append(errs, "invalid type for item "+strconv.Itoa(item.ID))
+			continue
+		}
+		if err != nil {
+			errs = append(errs, "item "+strconv.Itoa(item.ID)+": "+err.Error())
+		} else {
+			deletedCount++
+		}
+	}
+
+	response.Success(c, gin.H{
+		"deleted": deletedCount,
+		"errors":  errs,
+	})
+}
+
+// BatchMove 批量移动文件/文件夹
+func (h *LanZouHandler) BatchMove(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	var req struct {
+		Items []struct {
+			ID   int    `json:"id"`
+			Type string `json:"type"` // "file" or "folder"
+		} `json:"items" binding:"required"`
+		Target int `json:"target" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "请求参数错误")
+		return
+	}
+
+	client, err := h.lanzouSvc.GetClient(uid)
+	if err != nil {
+		response.Unauthorized(c, err.Error())
+		return
+	}
+
+	var movedCount int
+	var errs []string
+	for _, item := range req.Items {
+		if item.Type == "file" {
+			_, err = client.Task15(item.ID, req.Target)
+		} else if item.Type == "folder" {
+			_, err = client.Task48(item.ID, req.Target)
+		} else {
+			errs = append(errs, "invalid type for item "+strconv.Itoa(item.ID))
+			continue
+		}
+		if err != nil {
+			errs = append(errs, "item "+strconv.Itoa(item.ID)+": "+err.Error())
+		} else {
+			movedCount++
+		}
+	}
+
+	response.Success(c, gin.H{
+		"moved":  movedCount,
+		"errors": errs,
+	})
+}
 func (h *LanZouHandler) Move(c *gin.Context) {
 	userID, _ := c.Get("user_id")
 	uid := userID.(uint)

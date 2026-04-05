@@ -318,13 +318,16 @@ async function batchDelete() {
   if (!confirm(`确定删除选中的 ${selectedItems.value.length} 个项目吗?`)) return
 
   try {
-    const ids = [...selectedItems.value]
-    let deletedCount = 0
-    for (const id of ids) {
-      await lanzouAPI.delete(id)
-      deletedCount++
-    }
-    message.success(`成功删除 ${deletedCount} 个项目`)
+    const items = selectedItems.value.map(id => {
+      const folder = folders.value.find(f => f.folder_id === id)
+      const file = files.value.find(f => f.file_id === id)
+      if (folder) return { id: folder.folder_id, type: 'folder' }
+      if (file) return { id: file.file_id, type: 'file' }
+      return null
+    }).filter(Boolean)
+
+    const res = await lanzouAPI.batchDelete({ items })
+    message.success(`成功删除 ${res.deleted} 个项目`)
     selectedItems.value = []
     selectMode.value = false
     await fetchContents(currentFolderId.value)
@@ -609,20 +612,13 @@ async function submitMove() {
     const items = selectedItems.value.map(id => {
       const folder = folders.value.find(f => f.folder_id === id)
       const file = files.value.find(f => f.file_id === id)
-      if (folder) return { id: folder.folder_id, name: folder.name, type: 'folder' }
-      if (file) return { id: file.file_id, name: file.name, type: 'file' }
+      if (folder) return { id: folder.folder_id, type: 'folder' }
+      if (file) return { id: file.file_id, type: 'file' }
       return null
     }).filter(Boolean)
 
-    let movedCount = 0
-    for (const item of items) {
-      await lanzouAPI.move(item.id, {
-        type: item.type,
-        target: moveTargetId.value,
-      })
-      movedCount++
-    }
-    message.success(`成功移动 ${movedCount} 个项目`)
+    const res = await lanzouAPI.batchMove({ items, target: moveTargetId.value })
+    message.success(`成功移动 ${res.moved} 个项目`)
     showMoveModal.value = false
     selectedItems.value = []
     selectMode.value = false
