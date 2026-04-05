@@ -32,6 +32,33 @@
 
 ## 开发历史
 
+### 2026-04-05 - FolderHandler深度测试 + Handler覆盖率突破90%
+
+**Handler覆盖率提升至90.3%:**
+- folder_test.go: 添加25+个新测试用例，覆盖folder.go全部7个handler方法
+  - mockFolderRepoForHandlerTest (完整FolderRepository接口实现)
+  - 成功路径: CreateFolder/CreateFolder_WithParent/ListFolders/GetFolder/DeleteFolder/UpdateFolder/MoveFolder/UpdateFolderDescription
+  - 错误路径: ParentNotFound/NotFound/AccessDenied/ListError/UpdateFolder_NotFound/MoveFolder_NotFound/MoveFolder_Self/UpdateFolderDescription_NotFound
+  - 边界测试: CreateFolder_EmptyBody/InvalidJSON/UpdateFolder_Description/UpdateFolder_InvalidJSON/MoveFolder_NoParent/MoveFolder_InvalidJSON/ListFolders_InvalidParentID/ListFolders_WithParentID
+  - ID验证: 非数字/浮点/负数 全覆盖
+- folder.go覆盖: CreateFolder 81.8% → 100%, GetFolder 100%, DeleteFolder 100%, MoveFolder 100%, UpdateFolderDescription 100%, UpdateFolder 84% → 92%, ListFolders 87.5%
+- 总Handler测试数: ~355 → ~380
+- Handler总覆盖率: 88.4% → 90.3%
+- 剩余低覆盖率: share_parse.go ParseShare/GetShareDownloadURL (66.7%需HTTP mock), share.go ListShares/DeleteShare (80%), upload.go UploadFile/ListVersions (81-82%), lanzou.go Connect/ListFiles (80-81%)
+
+### 2026-04-05 - Handler层深度测试 + recycle全覆盖 (覆盖率87.7%)
+
+**Handler覆盖率提升至87.7%:**
+- recycle_test.go: 添加List/Clear/Delete/Restore错误路径测试 (+4)
+  - mockRecycleRepoListError / mockRecycleRepoDeleteError / mockRecycleRepoRestoreError
+- share_parse_test.go: 添加ValidateShareURL_Invalid测试 (+1)
+- recycle.go List: 71.4% → 100%
+- recycle.go Clear: 66.7% → 100%
+- recycle.go Delete/Restore: 100%
+- 剩余低覆盖率: share_parse (66.7%需HTTP), file/folder (81-87%需成功路径)
+
+**总Go测试数: ~560**
+
 ### 2026-04-05 - Repository层全量测试 + lanzou包测试完善
 
 **Repository层测试 (glebarez/sqlite纯Go驱动, 覆盖率90.4%):**
@@ -145,7 +172,7 @@
 - 额外边界测试: UpdateFileDescription_InvalidIDExtra/RenameFile_MissingNameExtra/MoveFile_InvalidIDExtra
 
 **Go后端测试数: 501 → 513 (净增12个, 全部通过)**
-**总测试数: 766 (513 Go + 253 Vue) 全部通过**
+**总测试数: ~780 (~560 Go + ~253 Vue) 全部通过**
 
 **Handler成功路径测试 (handler_success_test.go, 新增~36个测试用例):**
 - 新增完整的Mock架构: MockUserRepository, MockLanZouTokenRepository, MockShareRepository, MockRecycleBinRepository, MockUploadSessionRepository, MockLanZouClientProvider, MockFileMetadataCreator, MockFileVersionRepository
@@ -782,6 +809,7 @@ references/lanzouyun-disk/
 | handlers/auth | 18 (+10 GetCurrentUser success/Register/Login/构造器) | ✅ |
 | handlers/file | 21 (+2 ListFiles/CreateFileMetadata) | ✅ |
 | handlers/folder | 21 | ✅ |
+| handlers/folder | 46 (+25 成功路径/错误路径/边界测试/mock) | ✅ |
 | handlers/recycle | 29 (+15 成功路径/List/Restore/Delete/Clear mock) | ✅ |
 | handlers/download | 8 (+2 GetDownloadURL/构造器) | ✅ |
 | handlers/lanzou | 30 (+21 全端点验证+成功路径) | ✅ |
