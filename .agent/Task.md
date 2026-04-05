@@ -229,12 +229,12 @@
 - [x] Handler覆盖率 72.9% → 80.8% (总314用例)
 
 ### Task 6.4: E2E 测试 🔄
-- [x] Playwright 配置 (playwright.config.js)
+- [x] Playwright 配置 (playwright.config.js) - 使用内置chromium
 - [x] auth.spec.js (4个测试用例)
 - [x] file.spec.js (7个测试用例)
 - [x] lanzou.spec.js (6个测试用例)
-- [ ] chromium 浏览器安装 (网络问题，SSL下载失败)
-- [ ] 关键流程测试 (待浏览器安装后运行)
+- [x] chromium 浏览器安装完成 (playwright install)
+- [ ] 关键流程E2E测试运行 (需后端服务启动)
 
 ### Task 6.5: 测试环境规范化 🔄
 - [x] Go 测试环境 (gorm+sqlite, mock) - Handler测试覆盖全面
@@ -253,6 +253,7 @@
 | Phase 4: 蓝奏云对接 | 3 | 3 | 100% |
 | Phase 5: 功能完善 | 7 | 7 | 100% |
 | Phase 6: 测试系统 | 5 | 4.8 | 99.5% |
+| Phase 7: 功能完善 | 3 | 1 | 33.3% |
 
 ---
 

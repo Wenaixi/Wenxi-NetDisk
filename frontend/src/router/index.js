@@ -27,6 +27,12 @@ const routes = [
   {
     path: '/settings',
     name: 'Settings',
+    component: () => import('../views/Settings.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/lanzou-settings',
+    name: 'LanzouSettings',
     component: () => import('../views/LanzouSettings.vue'),
     meta: { requiresAuth: true }
   },
@@ -52,6 +58,12 @@ const routes = [
     path: '/sync',
     name: 'Sync',
     component: () => import('../views/Sync.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/task-history',
+    name: 'TaskHistory',
+    component: () => import('../views/TaskHistory.vue'),
     meta: { requiresAuth: true }
   }
 ]

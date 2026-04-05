@@ -32,6 +32,32 @@
 
 ## 开发历史
 
+### 2026-04-05 - 主题切换系统 + 任务历史页面 + 前端383测试
+
+**新增功能 - 主题切换系统:**
+- stores/theme.js: 支持 dark/light/auto 三种主题模式
+- 自动检测系统主题变化 (prefers-color-scheme)
+- CSS 变量驱动主题切换 (--bg-primary, --bg-card, --text-primary 等)
+- main.js 初始化时应用保存的主题
+- 4个单元测试 (theme.test.js)
+
+**新增功能 - 设置页面:**
+- views/Settings.vue: 通用设置页面（主题/上传路径/并发数/分块大小/回收站自动清理）
+- 6个单元测试 (Settings.test.js)
+
+**新增功能 - 任务历史:**
+- stores/taskHistory.js: 记录上传/下载/同步任务历史 (localStorage 持久化)
+- views/TaskHistory.vue: 任务历史查看页面，支持筛选和清理
+- 10个 store 测试 + 7个 view 测试 (taskHistory.test.js + TaskHistory.test.js)
+
+**路由更新:**
+- /settings → Settings.vue (通用设置，含主题切换)
+- /lanzou-settings → LanzouSettings.vue (蓝奏云专用设置)
+- /task-history → TaskHistory.vue (任务历史)
+
+**测试统计: 前端 30 文件, 383 用例全部通过 (+27)**
+- theme store (4) + Settings view (6) + taskHistory store (10) + TaskHistory view (7)
+
 ### 2026-04-05 - 前端API层全覆盖 + 前端356测试达成
 
 **前端API层测试补齐:**
