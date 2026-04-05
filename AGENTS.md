@@ -32,18 +32,28 @@
 
 ## 开发历史
 
-### 2026-04-05 - LanZouBrowser重命名 + 一键分享 + 前端468测试
+### 2026-04-05 - 文件描述功能 + 移动功能 + 前端479测试
 
-**新增功能 - LanZouBrowser重命名:**
-- LanZouBrowser.vue: 文件/文件夹右键菜单增加"重命名"选项
-- 工具栏增加"重命名"按钮(选中1个时显示)和"一键分享"按钮(选中>0时显示)
-- 新增Rename handler: PUT /lanzou/rename/:id (支持文件Task14和文件夹Task4)
-- Task48FolderRename: 新增文件夹重命名client方法(task=4)
-- Task4Response: 新增文件夹重命名响应类型
-- lanzou.js: rename API路径对齐新路由
-- 11个新测试用例 (LanZouBrowser.test.js: 重命名+一键分享)
+**新增功能 - 文件描述 (Task11/Task12):**
+- lanzou client: Task12(获取描述) + Task11(设置描述)
+- service 层: GetFileDescription / SetFileDescription
+- handler: GET/PUT /lanzou/files/:id/description
+- LanZouBrowser: 文件右键菜单增加"文件描述"入口, textarea弹窗
+- 4个后端Go测试 + 4个前端测试
+- lanzou.js: getFileDescription + setFileDescription API
 
-**测试统计: 前端 36 文件, 468 用例全部通过 (+11)**
+**新增功能 - 文件移动 (Task15/Task48):**
+- handler: PUT /lanzou/move/:id (支持文件Task15和文件夹Task48)
+- LanZouBrowser: 工具栏增加"移动到"按钮(选中>0时显示)
+- 文件夹选择下拉框(从面包屑+根目录构建)
+- lanzou.js: batchMove API
+
+**前端导航增强 - AppHeader:**
+- 新增: 同步任务/链接解析/分割合并/任务历史/上传任务/下载任务/回收站
+- 对齐references/lanzouyun-disk菜单结构
+
+**测试统计: 前端 36 文件, 479 用例全部通过**
+- lanzou.test.js: 从12个补齐到18个API方法存在性测试
 
 ### 2026-04-05 - 上传/下载任务管理页面 + 前端457测试
 
