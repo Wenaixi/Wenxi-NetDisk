@@ -44,14 +44,16 @@ vi.mock('naive-ui', () => ({
 }))
 
 // Mock lanzouAPI - vi.hoisted because vi.mock is hoisted
-const { mockStatus, mockListFiles, mockDelete, mockGetDownloadUrl, mockCreateShare, mockSetAccess, mockRename } = vi.hoisted(() => ({
+const { mockStatus, mockListFiles, mockDelete, mockGetDownloadUrl, mockCreateShare, mockSetAccess, mockRename, mockGetFileDescription, mockSetFileDescription } = vi.hoisted(() => ({
   mockStatus: vi.fn(),
   mockListFiles: vi.fn(),
   mockDelete: vi.fn(),
   mockGetDownloadUrl: vi.fn(),
   mockCreateShare: vi.fn(),
   mockSetAccess: vi.fn(),
-  mockRename: vi.fn()
+  mockRename: vi.fn(),
+  mockGetFileDescription: vi.fn(),
+  mockSetFileDescription: vi.fn()
 }))
 
 vi.mock('../api/lanzou', () => ({
@@ -62,7 +64,9 @@ vi.mock('../api/lanzou', () => ({
     getDownloadUrl: mockGetDownloadUrl,
     createShare: mockCreateShare,
     setAccess: mockSetAccess,
-    rename: mockRename
+    rename: mockRename,
+    getFileDescription: mockGetFileDescription,
+    setFileDescription: mockSetFileDescription
   }
 }))
 
@@ -104,6 +108,8 @@ describe('LanZouBrowser.vue', () => {
     mockCreateShare.mockReset()
     mockSetAccess.mockReset()
     mockRename.mockReset()
+    mockGetFileDescription.mockReset()
+    mockSetFileDescription.mockReset()
   })
 
   it('should render page header with navigation', () => {
@@ -575,5 +581,42 @@ describe('LanZouBrowser.vue', () => {
     wrapper.vm.selectedItems = []
     await wrapper.vm.oneClickShare()
     expect(mockCreateShare).not.toHaveBeenCalled()
+  })
+
+  // File description tests
+  it('should open file description modal', () => {
+    const wrapper = mountComponent()
+    wrapper.vm.selectedFile = { file_id: 'f1', name: 'test.zip' }
+    wrapper.vm.showFileMenu = true
+    wrapper.vm.openFileDescModal()
+    expect(wrapper.vm.showFileDescModal).toBe(true)
+    expect(wrapper.vm.fileDescForm.fileId).toBe('f1')
+    expect(wrapper.vm.showFileMenu).toBe(false)
+  })
+
+  it('should submit file description successfully', async () => {
+    mockSetFileDescription.mockResolvedValue({ zt: 1, info: 'success' })
+    const wrapper = mountComponent()
+    wrapper.vm.fileDescForm = { description: 'This is a test file', fileId: 'f1' }
+    await wrapper.vm.submitFileDesc()
+    expect(mockSetFileDescription).toHaveBeenCalledWith('f1', { description: 'This is a test file' })
+    expect(wrapper.vm.showFileDescModal).toBe(false)
+  })
+
+  it('should warn when submitting empty description', async () => {
+    const wrapper = mountComponent()
+    wrapper.vm.fileDescForm = { description: '', fileId: 'f1' }
+    await wrapper.vm.submitFileDesc()
+    expect(mockSetFileDescription).not.toHaveBeenCalled()
+  })
+
+  it('should handle file description error', async () => {
+    mockSetFileDescription.mockRejectedValue(new Error('Network error'))
+    const wrapper = mountComponent()
+    wrapper.vm.fileDescForm = { description: 'test desc', fileId: 'f1' }
+    wrapper.vm.showFileDescModal = true
+    await wrapper.vm.submitFileDesc()
+    expect(mockSetFileDescription).toHaveBeenCalled()
+    expect(wrapper.vm.showFileDescModal).toBe(true)
   })
 })

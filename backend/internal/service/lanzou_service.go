@@ -128,3 +128,21 @@ func (s *LanZouService) SetFolderAccess(userID uint, folderId int, shows int, sh
 	}
 	return client.Task16(folderId, shows, shownames)
 }
+
+// GetFileDescription 获取文件描述
+func (s *LanZouService) GetFileDescription(userID uint, fileId int) (*lanzou.Task12Response, error) {
+	client, err := s.GetClient(userID)
+	if err != nil {
+		return nil, err
+	}
+	return client.Task12(fileId)
+}
+
+// SetFileDescription 设置文件描述
+func (s *LanZouService) SetFileDescription(userID uint, fileId int, desc string) (*lanzou.Task11Response, error) {
+	client, err := s.GetClient(userID)
+	if err != nil {
+		return nil, err
+	}
+	return client.Task11(fileId, desc)
+}

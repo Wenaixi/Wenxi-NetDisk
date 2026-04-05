@@ -108,6 +108,7 @@
           <n-button block @click="createShare">创建分享链接</n-button>
           <n-button block @click="openRenameModal('file')">重命名</n-button>
           <n-button block @click="openAccessModal('file')">设置访问密码</n-button>
+          <n-button block @click="openFileDescModal()">文件描述</n-button>
           <n-button block @click="showFileMenu = false">取消</n-button>
         </div>
       </n-card>
@@ -163,6 +164,26 @@
           <div class="flex justify-end gap-2">
             <n-button @click="showAccessModal = false">取消</n-button>
             <n-button type="primary" @click="submitAccess">确定</n-button>
+          </div>
+        </template>
+      </n-card>
+    </n-modal>
+
+    <n-modal v-model:show="showFileDescModal">
+      <n-card title="文件描述" style="width: 400px;">
+        <div class="space-y-4">
+          <n-input
+            v-model:value="fileDescForm.description"
+            type="textarea"
+            placeholder="请输入文件描述"
+            :autosize="{ minRows: 3, maxRows: 6 }"
+            maxlength="500"
+          />
+        </div>
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <n-button @click="showFileDescModal = false">取消</n-button>
+            <n-button type="primary" @click="submitFileDesc" :loading="descSubmitting">确定</n-button>
           </div>
         </template>
       </n-card>
@@ -235,6 +256,13 @@ const renameForm = ref({
   name: '',
   targetId: null,
   targetType: 'file',
+})
+
+const showFileDescModal = ref(false)
+const descSubmitting = ref(false)
+const fileDescForm = ref({
+  description: '',
+  fileId: null,
 })
 
 // 选择模式相关
@@ -490,6 +518,45 @@ async function copyShareLink() {
     message.success('链接已复制')
   } catch {
     message.error('复制失败')
+  }
+}
+
+async function openFileDescModal() {
+  showFileMenu.value = false
+  if (!selectedFile.value) return
+
+  fileDescForm.value.fileId = selectedFile.value.file_id
+  fileDescForm.value.description = ''
+  showFileDescModal.value = true
+
+  // Fetch existing description
+  try {
+    const res = await lanzouAPI.getFileDescription(selectedFile.value.file_id)
+    if (res.info) {
+      fileDescForm.value.description = res.info
+    }
+  } catch {
+    // Ignore fetch errors
+  }
+}
+
+async function submitFileDesc() {
+  if (!fileDescForm.value.description.trim()) {
+    message.warning('请输入文件描述')
+    return
+  }
+  descSubmitting.value = true
+  try {
+    await lanzouAPI.setFileDescription(fileDescForm.value.fileId, {
+      description: fileDescForm.value.description,
+    })
+    message.success('文件描述设置成功')
+    showFileDescModal.value = false
+    fileDescForm.value = { description: '', fileId: null }
+  } catch (err) {
+    message.error(err.message || '设置文件描述失败')
+  } finally {
+    descSubmitting.value = false
   }
 }
 

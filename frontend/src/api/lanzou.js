@@ -44,6 +44,12 @@ export const lanzouAPI = {
   // 获取文件详情 (蓝奏云)
   getFileDetail: (id) => api.get(`/lanzou/files/${id}`),
 
+  // 获取文件描述
+  getFileDescription: (id) => api.get(`/lanzou/files/${id}/description`),
+
+  // 设置文件描述
+  setFileDescription: (id, data) => api.put(`/lanzou/files/${id}/description`, data),
+
   // 批量删除
   batchDelete: (data) => api.post('/lanzou/batch/delete', data),
 }

@@ -128,3 +128,15 @@ type Task4Response struct {
 	Zt   int    `json:"zt"`
 	Info string `json:"info"`
 }
+
+// Task12Response task=12 获取文件描述响应
+type Task12Response struct {
+	Zt   int    `json:"zt"`
+	Info string `json:"info"`
+}
+
+// Task11Response task=11 设置文件描述响应
+type Task11Response struct {
+	Zt   int    `json:"zt"`
+	Info string `json:"info"`
+}

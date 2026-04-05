@@ -310,6 +310,54 @@ func (h *LanZouHandler) SetAccess(c *gin.Context) {
 	response.Success(c, gin.H{"message": "access updated"})
 }
 
+// GetFileDescription 获取文件描述
+func (h *LanZouHandler) GetFileDescription(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	fileID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "invalid file id")
+		return
+	}
+
+	resp, err := h.lanzouSvc.GetFileDescription(uid, fileID)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, resp)
+}
+
+// SetFileDescription 设置文件描述
+func (h *LanZouHandler) SetFileDescription(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	fileID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "invalid file id")
+		return
+	}
+
+	var req struct {
+		Description string `json:"description"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	resp, err := h.lanzouSvc.SetFileDescription(uid, fileID, req.Description)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, resp)
+}
+
 // Rename 重命名文件/文件夹
 func (h *LanZouHandler) Rename(c *gin.Context) {
 	userID, _ := c.Get("user_id")

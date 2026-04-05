@@ -433,6 +433,47 @@ func (c *Client) Task23(fileId int, shows int, shownames string) (*Task23Respons
 	return resp, nil
 }
 
+// Task12 获取文件描述
+func (c *Client) Task12(fileId int) (*Task12Response, error) {
+	body := url.Values{
+		"task":    {"12"},
+		"file_id": {strconv.Itoa(fileId)},
+	}
+
+	data, err := c.postForm("doupload.php", body)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &Task12Response{}
+	if err := json.Unmarshal(data, resp); err != nil {
+		resp.Zt = -1
+		resp.Info = string(data)
+	}
+	return resp, nil
+}
+
+// Task11 设置文件描述
+func (c *Client) Task11(fileId int, desc string) (*Task11Response, error) {
+	body := url.Values{
+		"task":    {"11"},
+		"file_id": {strconv.Itoa(fileId)},
+		"desc":    {desc},
+	}
+
+	data, err := c.postForm("doupload.php", body)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &Task11Response{}
+	if err := json.Unmarshal(data, resp); err != nil {
+		resp.Zt = -1
+		resp.Info = string(data)
+	}
+	return resp, nil
+}
+
 // Task16 设置文件夹访问密码
 // folderId: 文件夹ID
 // shows: 访问模式 (1=公开, 2=密码访问)
