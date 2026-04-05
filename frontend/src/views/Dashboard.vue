@@ -249,7 +249,7 @@
     <n-modal v-model:show="showFileMenu" v-if="selectedFileItem">
       <n-card :title="selectedFileItem.name" style="width: 400px;">
         <div class="space-y-2">
-          <n-button block @click="openDetailModal">详情</n-button>
+          <n-button block @click="showDetailModal">详情</n-button>
           <n-button v-if="selectedFileItem.size !== undefined" block @click="downloadFile(selectedFileItem)">下载</n-button>
           <n-button v-if="selectedFileItem.size !== undefined" block type="info" @click="openShareModal">分享</n-button>
           <n-button block @click="openRenameModal">重命名</n-button>
@@ -761,6 +761,11 @@ function openMoveModal() {
   targetFolderId.value = fileStore.currentFolder
   moveMode.value = 'single'
   showMoveModal.value = true
+}
+
+function showDetailModal() {
+  showFileMenu.value = false
+  detailItem.value = selectedFileItem.value
 }
 
 async function confirmSingleMove() {
