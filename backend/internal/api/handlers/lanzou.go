@@ -275,3 +275,81 @@ func (h *LanZouHandler) GetFileURL(c *gin.Context) {
 
 	response.Success(c, gin.H{"url": url})
 }
+
+// SetAccess 设置文件/文件夹访问密码
+func (h *LanZouHandler) SetAccess(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	var req struct {
+		ID        int    `json:"id" binding:"required"`
+		Type      string `json:"type" binding:"required"` // "file" 或 "folder"
+		Shows     int    `json:"shows"`                   // 1=公开, 2=密码
+		Shownames string `json:"shownames"`               // 密码
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	var err error
+	if req.Type == "file" {
+		_, err = h.lanzouSvc.SetFileAccess(uid, req.ID, req.Shows, req.Shownames)
+	} else if req.Type == "folder" {
+		_, err = h.lanzouSvc.SetFolderAccess(uid, req.ID, req.Shows, req.Shownames)
+	} else {
+		response.BadRequest(c, "invalid type, must be 'file' or 'folder'")
+		return
+	}
+
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, gin.H{"message": "access updated"})
+}
+
+// Rename 重命名文件/文件夹
+func (h *LanZouHandler) Rename(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "invalid id")
+		return
+	}
+
+	var req struct {
+		Type string `json:"type" binding:"required"`
+		Name string `json:"name" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	client, err := h.lanzouSvc.GetClient(uid)
+	if err != nil {
+		response.Unauthorized(c, err.Error())
+		return
+	}
+
+	var resp interface{}
+	if req.Type == "file" {
+		resp, err = client.Task14(id, req.Name)
+	} else if req.Type == "folder" {
+		resp, err = client.Task48FolderRename(id, req.Name)
+	} else {
+		response.BadRequest(c, "invalid type, must be 'file' or 'folder'")
+		return
+	}
+
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, resp)
+}

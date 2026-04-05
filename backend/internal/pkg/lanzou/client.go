@@ -260,6 +260,30 @@ func (c *Client) Task48(folderId, targetFolderId int) (*MoveResponse, error) {
 	return resp, nil
 }
 
+// Task48FolderRename 重命名文件夹 (task=4)
+func (c *Client) Task48FolderRename(folderId int, name string) (*Task4Response, error) {
+	name = regexp.MustCompile(`[ ()]`).ReplaceAllString(name, "_")
+
+	body := url.Values{
+		"task":      {"4"},
+		"folder_id": {strconv.Itoa(folderId)},
+		"folder_name": {name},
+		"folder_description": {""},
+	}
+
+	data, err := c.postForm("douupload.php", body)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &Task4Response{}
+	if err := json.Unmarshal(data, resp); err != nil {
+		resp.Zt = -1
+		resp.Info = string(data)
+	}
+	return resp, nil
+}
+
 // Task22 文件详情
 func (c *Client) Task22(fileId int) (map[string]interface{}, error) {
 	body := url.Values{
@@ -382,4 +406,54 @@ func (c *Client) Ping() error {
 	body := url.Values{"task": {"1"}}
 	_, err := c.postForm("douload.php", body)
 	return err
+}
+
+// Task23 设置文件访问密码
+// fileId: 文件ID
+// shows: 访问模式 (1=公开, 2=密码访问)
+// shownames: 访问密码
+func (c *Client) Task23(fileId int, shows int, shownames string) (*Task23Response, error) {
+	body := url.Values{
+		"task":       {"23"},
+		"file_id":    {strconv.Itoa(fileId)},
+		"shows":      {strconv.Itoa(shows)},
+		"shownames":  {shownames},
+	}
+
+	data, err := c.postForm("doupload.php", body)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &Task23Response{}
+	if err := json.Unmarshal(data, resp); err != nil {
+		resp.Zt = -1
+		resp.Info = string(data)
+	}
+	return resp, nil
+}
+
+// Task16 设置文件夹访问密码
+// folderId: 文件夹ID
+// shows: 访问模式 (1=公开, 2=密码访问)
+// shownames: 访问密码
+func (c *Client) Task16(folderId int, shows int, shownames string) (*Task16Response, error) {
+	body := url.Values{
+		"task":       {"16"},
+		"folder_id":  {strconv.Itoa(folderId)},
+		"shows":      {strconv.Itoa(shows)},
+		"shownames":  {shownames},
+	}
+
+	data, err := c.postForm("doupload.php", body)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &Task16Response{}
+	if err := json.Unmarshal(data, resp); err != nil {
+		resp.Zt = -1
+		resp.Info = string(data)
+	}
+	return resp, nil
 }

@@ -27,7 +27,7 @@ export const lanzouAPI = {
   deleteFolder: (id) => api.delete(`/lanzou/folders/${id}`),
 
   // 重命名
-  rename: (id, data) => api.put(`/lanzou/${id}`, data),
+  rename: (id, data) => api.put(`/lanzou/rename/${id}`, data),
 
   // 移动
   move: (id, data) => api.put(`/lanzou/${id}/move`, data),

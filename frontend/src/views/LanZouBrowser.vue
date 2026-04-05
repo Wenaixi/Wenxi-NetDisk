@@ -19,6 +19,8 @@
           <n-button @click="refresh" :loading="loading">
             <template #icon><n-icon><Refresh /></n-icon></template>
           </n-button>
+          <n-button v-if="selectedItems.length === 1" @click="openRenameModalForSelected">重命名</n-button>
+          <n-button v-if="selectedItems.length > 0" @click="oneClickShare">一键分享</n-button>
           <n-checkbox
             v-if="files.length > 0 || folders.length > 0"
             v-model:checked="selectMode"
@@ -104,6 +106,7 @@
         <div class="space-y-2">
           <n-button block type="primary" @click="downloadFile">下载</n-button>
           <n-button block @click="createShare">创建分享链接</n-button>
+          <n-button block @click="openRenameModal('file')">重命名</n-button>
           <n-button block @click="openAccessModal('file')">设置访问密码</n-button>
           <n-button block @click="showFileMenu = false">取消</n-button>
         </div>
@@ -114,9 +117,29 @@
       <n-card :title="selectedFolder.name" style="width: 400px;">
         <div class="space-y-2">
           <n-button block type="primary" @click="navigateToFolder(selectedFolder)">打开</n-button>
+          <n-button block @click="openRenameModal('folder')">重命名</n-button>
           <n-button block @click="openAccessModal('folder')">设置访问密码</n-button>
           <n-button block @click="showFolderMenu = false">取消</n-button>
         </div>
+      </n-card>
+    </n-modal>
+
+    <n-modal v-model:show="showRenameModal">
+      <n-card title="重命名" style="width: 400px;">
+        <div class="space-y-4">
+          <n-input
+            v-model:value="renameForm.name"
+            placeholder="请输入新名称"
+            maxlength="100"
+            @keyup.enter="submitRename"
+          />
+        </div>
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <n-button @click="showRenameModal = false">取消</n-button>
+            <n-button type="primary" @click="submitRename" :disabled="!renameForm.name.trim()">确定</n-button>
+          </div>
+        </template>
       </n-card>
     </n-modal>
 
@@ -203,6 +226,13 @@ const showAccessModal = ref(false)
 const accessForm = ref({
   type: '2',
   password: '',
+  targetId: null,
+  targetType: 'file',
+})
+
+const showRenameModal = ref(false)
+const renameForm = ref({
+  name: '',
   targetId: null,
   targetType: 'file',
 })
@@ -335,6 +365,88 @@ async function submitAccess() {
     accessForm.value = { targetId: null, targetType: 'file', type: '2', password: '' }
   } catch (err) {
     message.error(err.message || '设置访问密码失败')
+  }
+}
+
+function openRenameModal(type) {
+  if (type === 'file' && selectedFile.value) {
+    renameForm.value.targetId = selectedFile.value.file_id
+    renameForm.value.targetType = 'file'
+    renameForm.value.name = selectedFile.value.name
+  } else if (type === 'folder' && selectedFolder.value) {
+    renameForm.value.targetId = selectedFolder.value.folder_id
+    renameForm.value.targetType = 'folder'
+    renameForm.value.name = selectedFolder.value.name
+  }
+  showRenameModal.value = true
+  showFileMenu.value = false
+  showFolderMenu.value = false
+}
+
+function openRenameModalForSelected() {
+  if (selectedItems.value.length !== 1) return
+  const id = selectedItems.value[0]
+  const folder = folders.value.find(f => f.folder_id === id)
+  const file = files.value.find(f => f.file_id === id)
+
+  if (folder) {
+    renameForm.value.targetId = folder.folder_id
+    renameForm.value.targetType = 'folder'
+    renameForm.value.name = folder.name
+  } else if (file) {
+    renameForm.value.targetId = file.file_id
+    renameForm.value.targetType = 'file'
+    renameForm.value.name = file.name
+  }
+  showRenameModal.value = true
+}
+
+async function submitRename() {
+  if (!renameForm.value.name.trim()) {
+    message.warning('请输入名称')
+    return
+  }
+  try {
+    const sanitizedName = renameForm.value.name.replace(/[ ()]/g, '_')
+    await lanzouAPI.rename(renameForm.value.targetId, {
+      type: renameForm.value.targetType,
+      name: sanitizedName,
+    })
+    message.success('重命名成功')
+    showRenameModal.value = false
+    renameForm.value = { name: '', targetId: null, targetType: 'file' }
+    await refresh()
+  } catch (err) {
+    message.error(err.message || '重命名失败')
+  }
+}
+
+async function oneClickShare() {
+  if (selectedItems.value.length === 0) return
+
+  const items = selectedItems.value.map(id => {
+    const folder = folders.value.find(f => f.folder_id === id)
+    const file = files.value.find(f => f.file_id === id)
+    if (folder) return { id: folder.folder_id, name: folder.name, type: 'folder' }
+    if (file) return { id: file.file_id, name: file.name, type: 'file' }
+    return null
+  }).filter(Boolean)
+
+  let shareText = ''
+  for (const item of items) {
+    try {
+      const res = await lanzouAPI.createShare({ file_id: item.id, minutes: 0 })
+      shareText += `${item.name} ${res.url}${res.pwd ? ` 密码:${res.pwd}` : ''}\n`
+    } catch (err) {
+      shareText += `${item.name} 分享失败: ${err.message}\n`
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(shareText.trim())
+    message.success('分享链接已复制')
+  } catch {
+    message.warning('复制失败，请手动复制')
   }
 }
 

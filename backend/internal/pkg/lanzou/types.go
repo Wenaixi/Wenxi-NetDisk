@@ -110,3 +110,21 @@ type ShareResponse struct {
 		Descr string `json:"descr"` // 描述
 	} `json:"text"`
 }
+
+// Task23Response task=23 设置文件访问密码响应
+type Task23Response struct {
+	Zt   int    `json:"zt"`
+	Info string `json:"info"`
+}
+
+// Task16Response task=16 设置文件夹访问密码响应
+type Task16Response struct {
+	Zt   int    `json:"zt"`
+	Info string `json:"info"`
+}
+
+// Task4Response task=4 重命名文件夹响应
+type Task4Response struct {
+	Zt   int    `json:"zt"`
+	Info string `json:"info"`
+}

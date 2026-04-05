@@ -44,13 +44,14 @@ vi.mock('naive-ui', () => ({
 }))
 
 // Mock lanzouAPI - vi.hoisted because vi.mock is hoisted
-const { mockStatus, mockListFiles, mockDelete, mockGetDownloadUrl, mockCreateShare, mockSetAccess } = vi.hoisted(() => ({
+const { mockStatus, mockListFiles, mockDelete, mockGetDownloadUrl, mockCreateShare, mockSetAccess, mockRename } = vi.hoisted(() => ({
   mockStatus: vi.fn(),
   mockListFiles: vi.fn(),
   mockDelete: vi.fn(),
   mockGetDownloadUrl: vi.fn(),
   mockCreateShare: vi.fn(),
-  mockSetAccess: vi.fn()
+  mockSetAccess: vi.fn(),
+  mockRename: vi.fn()
 }))
 
 vi.mock('../api/lanzou', () => ({
@@ -60,7 +61,8 @@ vi.mock('../api/lanzou', () => ({
     delete: mockDelete,
     getDownloadUrl: mockGetDownloadUrl,
     createShare: mockCreateShare,
-    setAccess: mockSetAccess
+    setAccess: mockSetAccess,
+    rename: mockRename
   }
 }))
 
@@ -101,6 +103,7 @@ describe('LanZouBrowser.vue', () => {
     mockGetDownloadUrl.mockReset()
     mockCreateShare.mockReset()
     mockSetAccess.mockReset()
+    mockRename.mockReset()
   })
 
   it('should render page header with navigation', () => {
@@ -467,5 +470,110 @@ describe('LanZouBrowser.vue', () => {
 
     expect(mockSetAccess).toHaveBeenCalled()
     expect(wrapper.vm.accessForm.targetId).toBe('123')
+  })
+
+  // Rename tests
+  it('should open rename modal for file', () => {
+    const wrapper = mountComponent()
+    wrapper.vm.selectedFile = { file_id: '123', name: 'old.zip' }
+    wrapper.vm.openRenameModal('file')
+    expect(wrapper.vm.showRenameModal).toBe(true)
+    expect(wrapper.vm.renameForm.targetId).toBe('123')
+    expect(wrapper.vm.renameForm.targetType).toBe('file')
+    expect(wrapper.vm.renameForm.name).toBe('old.zip')
+  })
+
+  it('should open rename modal for folder', () => {
+    const wrapper = mountComponent()
+    wrapper.vm.selectedFolder = { folder_id: '456', name: 'OldFolder' }
+    wrapper.vm.openRenameModal('folder')
+    expect(wrapper.vm.showRenameModal).toBe(true)
+    expect(wrapper.vm.renameForm.targetId).toBe('456')
+    expect(wrapper.vm.renameForm.targetType).toBe('folder')
+    expect(wrapper.vm.renameForm.name).toBe('OldFolder')
+  })
+
+  it('should open rename modal for selected item', () => {
+    const wrapper = mountComponent()
+    wrapper.vm.folders = [{ folder_id: 'f1', name: 'TestFolder' }]
+    wrapper.vm.selectedItems = ['f1']
+    wrapper.vm.openRenameModalForSelected()
+    expect(wrapper.vm.showRenameModal).toBe(true)
+    expect(wrapper.vm.renameForm.targetId).toBe('f1')
+    expect(wrapper.vm.renameForm.targetType).toBe('folder')
+    expect(wrapper.vm.renameForm.name).toBe('TestFolder')
+  })
+
+  it('should not open rename modal for selected when multiple items', () => {
+    const wrapper = mountComponent()
+    wrapper.vm.selectedItems = ['f1', 'f2']
+    wrapper.vm.openRenameModalForSelected()
+    expect(wrapper.vm.showRenameModal).toBe(false)
+  })
+
+  it('should submit rename successfully', async () => {
+    mockRename.mockResolvedValue({ zt: 1, info: 'success' })
+    mockListFiles.mockResolvedValue({ folders: [], files: [] })
+    const wrapper = mountComponent()
+    wrapper.vm.renameForm = { name: 'newname.zip', targetId: '123', targetType: 'file' }
+    await wrapper.vm.submitRename()
+    expect(mockRename).toHaveBeenCalledWith('123', { type: 'file', name: 'newname.zip' })
+    expect(wrapper.vm.showRenameModal).toBe(false)
+  })
+
+  it('should warn on empty rename name', async () => {
+    const wrapper = mountComponent()
+    wrapper.vm.renameForm = { name: '', targetId: '123', targetType: 'file' }
+    await wrapper.vm.submitRename()
+    expect(mockRename).not.toHaveBeenCalled()
+  })
+
+  it('should sanitize rename name with spaces', async () => {
+    mockRename.mockResolvedValue({ zt: 1, info: 'success' })
+    mockListFiles.mockResolvedValue({ folders: [], files: [] })
+    const wrapper = mountComponent()
+    wrapper.vm.renameForm = { name: 'new name.zip', targetId: '123', targetType: 'file' }
+    await wrapper.vm.submitRename()
+    expect(mockRename).toHaveBeenCalledWith('123', { type: 'file', name: 'new_name.zip' })
+  })
+
+  it('should handle rename error', async () => {
+    mockRename.mockRejectedValue(new Error('Network error'))
+    const wrapper = mountComponent()
+    wrapper.vm.renameForm = { name: 'test.zip', targetId: '123', targetType: 'file' }
+    wrapper.vm.showRenameModal = true
+    await wrapper.vm.submitRename()
+    expect(mockRename).toHaveBeenCalled()
+  })
+
+  // One-click share tests
+  it('should one click share single item', async () => {
+    mockCreateShare.mockResolvedValue({ url: 'https://lanzoui.com/abc', pwd: '1234' })
+    const mockClipboard = { writeText: vi.fn().mockResolvedValue(undefined) }
+    Object.defineProperty(navigator, 'clipboard', { value: mockClipboard, writable: true })
+    const wrapper = mountComponent()
+    wrapper.vm.files = [{ file_id: 'f1', name: 'test.zip' }]
+    wrapper.vm.selectedItems = ['f1']
+    await wrapper.vm.oneClickShare()
+    expect(mockCreateShare).toHaveBeenCalled()
+  })
+
+  it('should one click share multiple items', async () => {
+    mockCreateShare.mockResolvedValue({ url: 'https://lanzoui.com/abc', pwd: '' })
+    const mockClipboard = { writeText: vi.fn().mockResolvedValue(undefined) }
+    Object.defineProperty(navigator, 'clipboard', { value: mockClipboard, writable: true })
+    const wrapper = mountComponent()
+    wrapper.vm.folders = [{ folder_id: 'f1', name: 'Folder1' }]
+    wrapper.vm.files = [{ file_id: 'f2', name: 'File1.zip' }]
+    wrapper.vm.selectedItems = ['f1', 'f2']
+    await wrapper.vm.oneClickShare()
+    expect(mockCreateShare).toHaveBeenCalledTimes(2)
+  })
+
+  it('should not one click share when no items selected', async () => {
+    const wrapper = mountComponent()
+    wrapper.vm.selectedItems = []
+    await wrapper.vm.oneClickShare()
+    expect(mockCreateShare).not.toHaveBeenCalled()
   })
 })

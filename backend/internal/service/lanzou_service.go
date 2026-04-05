@@ -110,3 +110,21 @@ func (s *LanZouService) GetFileURL(userID uint, fileId int) (string, string, err
 	}
 	return "", "", errors.New("failed to get download URL")
 }
+
+// SetFileAccess 设置文件访问密码
+func (s *LanZouService) SetFileAccess(userID uint, fileId int, shows int, shownames string) (*lanzou.Task23Response, error) {
+	client, err := s.GetClient(userID)
+	if err != nil {
+		return nil, err
+	}
+	return client.Task23(fileId, shows, shownames)
+}
+
+// SetFolderAccess 设置文件夹访问密码
+func (s *LanZouService) SetFolderAccess(userID uint, folderId int, shows int, shownames string) (*lanzou.Task16Response, error) {
+	client, err := s.GetClient(userID)
+	if err != nil {
+		return nil, err
+	}
+	return client.Task16(folderId, shows, shownames)
+}
