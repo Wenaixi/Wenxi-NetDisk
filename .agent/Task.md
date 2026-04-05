@@ -208,27 +208,30 @@
 - [x] 组件测试 - RecycleBin (16)
 - [x] 组件测试 - Sync (16)
 - [x] 组件测试 - ShareParse (15)
-- [x] 组件测试 - LanZouBrowser (26)
+- [x] 组件测试 - LanZouBrowser (35, +9 访问密码/右键菜单)
 
 ### Task 6.3: Handler层测试 ✅
-- [x] AuthHandler: Register/Login验证 (8) + GetCurrentUser成功路径 (+9) + Register成功/NotFound (+3)
-- [x] FileHandler: GetFile/DeleteFile/MoveFile/UpdateFileDescription/RenameFile/CreateFileMetadata (19+6) + BadID处理 (+4)
-- [x] FolderHandler: GetFolder/DeleteFolder/UpdateFolder/MoveFolder/CreateFolder/ListFolders/UpdateFolderDescription (21+1) + 全面成功路径 (+10)
-- [x] RecycleHandler: Restore/Delete/Clear/List (11+3) + Clear验证/List完整 (+2)
-- [x] DownloadHandler: GetDownloadURL (6+2)
-- [x] LanZouHandler: Connect/CreateFolder/InitUpload/CompleteUpload/Status/CreateShare/GetFileURL (9+15) + Disconnect成功/Connect验证/BadID (+4)
-- [x] ShareHandler: CreateShare/GetShare/ValidateShare/DeleteShare/CreateShareViaBody/ListShares (12+4) + ValidateShare全面/GetShare成功/DeleteShare BadID (+6)
-- [x] ShareParseHandler: ParseShare/GetShareDownloadURL/ValidateShareURL (6+3) + 成功路径验证 (+4)
-- [x] UploadHandler: ListVersions/RestoreVersion/GetUploadURL/UploadFile (11+2) + RestoreVersion BadID (+1)
-- [x] Handler成功路径测试 (36用例, Mock架构)
-- [x] Handler额外测试 (20用例, File/Folder/Recycle/Share/Auth)
-- [x] Handler Round3测试 (58用例, 完整成功路径)
-- [x] Handler构造器测试 (9用例)
-- [x] guessMimeType测试 (16用例)
-- [x] Handler响应格式验证 (1)
-- [x] Handler覆盖率 72.9% → 80.8% (总314用例)
+- [x] 全部通过，覆盖率96.4%
 
-### Task 6.4: E2E 测试 🔄
+### Task 6.4: Lanzou包测试增强 ✅
+- [x] Html5Upload测试 (5用例: Success/Failure/NetworkError/Headers/FormFields)
+- [x] 文件名校验测试 (30+子测试: IsSupported/GetExtension/CreateSpecificName)
+- [x] GetDownloadURL完整解析链测试 (iframe→AJAX流程)
+- [x] Task3删除文件夹测试
+- [x] Task46编辑文件夹测试
+
+### Task 6.5: UploadService测试修复 ✅
+- [x] setupMockUploadServer辅助函数
+- [x] mockLanzouService支持client注入
+- [x] 修复所有超时网络测试
+- [x] ResumeUpload/UploadChunk/CompleteUpload全通过
+
+### Task 6.6: DownloadService增强 ✅
+- [x] Task22获取is_newd下载链接
+- [x] share_parse.go跳过真实网络测试
+- [x] 修复Ping方法URL拼写
+
+### Task 6.7: E2E 测试 🔄
 - [x] Playwright 配置 (playwright.config.js) - 使用内置chromium
 - [x] auth.spec.js (4个测试用例)
 - [x] file.spec.js (7个测试用例)
