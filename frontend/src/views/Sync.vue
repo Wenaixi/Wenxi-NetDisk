@@ -145,5 +145,10 @@ function addSyncTask() {
   showAddModal.value = false
   taskUrl.value = ''
   taskName.value = ''
+
+  // 自动开始同步
+  if (!syncStore.isRunning && syncStore.pendingCount > 0) {
+    syncStore.startSync()
+  }
 }
 </script>
