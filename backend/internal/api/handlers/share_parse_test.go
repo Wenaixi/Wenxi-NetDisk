@@ -414,3 +414,32 @@ func TestShareParseHandler_GetShareDownloadURL_MockSuccess(t *testing.T) {
 	// GetShareDownloadURL may still fail due to parsing the iframe src
 	t.Logf("status: %d, body: %s", w.Code, w.Body.String())
 }
+
+// TestShareParseHandler_GetShareDownloadURL_MockError 测试获取下载URL错误(mock)
+func TestShareParseHandler_GetShareDownloadURL_MockError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`Not Found`))
+	}))
+	defer server.Close()
+
+	client := lanzou.NewClient("")
+	svc := service.NewShareParseService(client)
+	handler := NewShareParseHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/share/download", handler.GetShareDownloadURL)
+
+	w := httptest.NewRecorder()
+	body := `{"url":"` + server.URL + `/i12345","pwd":""}`
+	req := httptest.NewRequest("POST", "/share/download", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
