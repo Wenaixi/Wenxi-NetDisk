@@ -2,11 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/wenaixi/wenxi-cloud/backend/internal/model"
+	"github.com/wenaixi/wenxi-cloud/backend/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
@@ -378,4 +381,237 @@ func TestHandler_ResponseFormat(t *testing.T) {
 			t.Error("response should contain 'msg' field")
 		}
 	})
+}
+
+// mockUserRepoCreateError 模拟Create用户返回错误的仓库
+type mockUserRepoCreateError struct{}
+
+func (m *mockUserRepoCreateError) Create(user *model.User) error {
+	return errors.New("db write failed")
+}
+func (m *mockUserRepoCreateError) FindByID(id uint) (*model.User, error) {
+	return nil, errors.New("not found")
+}
+func (m *mockUserRepoCreateError) FindByUsername(username string) (*model.User, error) {
+	return nil, errors.New("not found")
+}
+func (m *mockUserRepoCreateError) FindByEmail(email string) (*model.User, error) {
+	return nil, errors.New("not found")
+}
+func (m *mockUserRepoCreateError) Update(user *model.User) error { return nil }
+func (m *mockUserRepoCreateError) Delete(id uint) error { return nil }
+
+// TestAuthHandler_Register_DBError 测试注册时数据库错误
+func TestAuthHandler_Register_DBError(t *testing.T) {
+	userRepo := &mockUserRepoCreateError{}
+	authSvc := service.NewAuthService(userRepo, nil)
+	handler := NewAuthHandler(authSvc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.POST("/register", handler.Register)
+
+	w := httptest.NewRecorder()
+	body := `{"email":"new@test.com","password":"SecurePass123"}`
+	req := httptest.NewRequest("POST", "/register", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+// TestAuthHandler_Register_WithEmail 测试带邮箱前缀的用户名自动派生
+func TestAuthHandler_Register_WithEmail(t *testing.T) {
+	userRepo := NewMockUserRepository()
+	authSvc := service.NewAuthService(userRepo, nil)
+	handler := NewAuthHandler(authSvc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.POST("/register", handler.Register)
+
+	w := httptest.NewRecorder()
+	body := `{"email":"myuser@test.com","password":"SecurePass123"}`
+	req := httptest.NewRequest("POST", "/register", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w.Code)
+	}
+
+	var resp map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("invalid JSON: %v", err)
+	}
+	data := resp["data"].(map[string]interface{})
+	if data["username"] != "myuser" {
+		t.Errorf("expected username 'myuser', got '%v'", data["username"])
+	}
+}
+
+// TestAuthHandler_Login_WrongCredentials 测试登录密码错误
+func TestAuthHandler_Login_WrongCredentials(t *testing.T) {
+	userRepo := NewMockUserRepository()
+	userRepo.users[1] = &model.User{
+		ID:           1,
+		Username:     "testuser",
+		Email:        "test@example.com",
+		PasswordHash: "$2a$10$hashedpassword",
+	}
+	authSvc := service.NewAuthService(userRepo, nil)
+	handler := NewAuthHandler(authSvc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.POST("/login", handler.Login)
+
+	w := httptest.NewRecorder()
+	body := `{"email":"test@example.com","password":"WrongPassword"}`
+	req := httptest.NewRequest("POST", "/login", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
+	}
+}
+
+// TestAuthHandler_Login_UserNotFound 测试登录用户不存在
+func TestAuthHandler_Login_UserNotFound(t *testing.T) {
+	userRepo := NewMockUserRepository()
+	authSvc := service.NewAuthService(userRepo, nil)
+	handler := NewAuthHandler(authSvc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.POST("/login", handler.Login)
+
+	w := httptest.NewRecorder()
+	body := `{"email":"nouser@example.com","password":"SomePass"}`
+	req := httptest.NewRequest("POST", "/login", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
+	}
+}
+
+// TestAuthHandler_GetCurrentUser_Success_Path 测试获取当前用户成功
+func TestAuthHandler_GetCurrentUser_Success_Path(t *testing.T) {
+	userRepo := NewMockUserRepository()
+	userRepo.users[1] = &model.User{
+		ID:       1,
+		Username: "testuser",
+		Email:    "test@example.com",
+	}
+	authSvc := service.NewAuthService(userRepo, nil)
+	handler := NewAuthHandler(authSvc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.GET("/auth/me", handler.GetCurrentUser)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/auth/me", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w.Code)
+	}
+
+	var resp map[string]interface{}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("invalid JSON: %v", err)
+	}
+	data := resp["data"].(map[string]interface{})
+	if data["username"] != "testuser" {
+		t.Errorf("expected username 'testuser', got '%v'", data["username"])
+	}
+	if data["email"] != "test@example.com" {
+		t.Errorf("expected email 'test@example.com', got '%v'", data["email"])
+	}
+}
+
+// mockUserRepoNotFoundError 模拟FindByID返回错误的仓库
+type mockUserRepoNotFoundError struct{}
+
+func (m *mockUserRepoNotFoundError) Create(user *model.User) error { return nil }
+func (m *mockUserRepoNotFoundError) FindByID(id uint) (*model.User, error) {
+	return nil, errors.New("user not found")
+}
+func (m *mockUserRepoNotFoundError) FindByUsername(username string) (*model.User, error) {
+	return nil, errors.New("not found")
+}
+func (m *mockUserRepoNotFoundError) FindByEmail(email string) (*model.User, error) {
+	return nil, errors.New("not found")
+}
+func (m *mockUserRepoNotFoundError) Update(user *model.User) error { return nil }
+func (m *mockUserRepoNotFoundError) Delete(id uint) error { return nil }
+
+// TestAuthHandler_GetCurrentUser_NotFound_Path 测试获取不存在的用户
+func TestAuthHandler_GetCurrentUser_NotFound_Path(t *testing.T) {
+	userRepo := &mockUserRepoNotFoundError{}
+	authSvc := service.NewAuthService(userRepo, nil)
+	handler := NewAuthHandler(authSvc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(999))
+		c.Next()
+	})
+	r.GET("/auth/me", handler.GetCurrentUser)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/auth/me", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Errorf("expected 404, got %d", w.Code)
+	}
+}
+
+// mockUserRepoDuplicate 模拟邮箱/用户名已存在的仓库
+type mockUserRepoDuplicate struct{}
+
+func (m *mockUserRepoDuplicate) Create(user *model.User) error { return nil }
+func (m *mockUserRepoDuplicate) FindByID(id uint) (*model.User, error) {
+	return nil, errors.New("not found")
+}
+func (m *mockUserRepoDuplicate) FindByUsername(username string) (*model.User, error) {
+	return &model.User{ID: 1, Username: username, Email: "existing@test.com"}, nil
+}
+func (m *mockUserRepoDuplicate) FindByEmail(email string) (*model.User, error) {
+	return &model.User{ID: 1, Username: "existing", Email: email}, nil
+}
+func (m *mockUserRepoDuplicate) Update(user *model.User) error { return nil }
+func (m *mockUserRepoDuplicate) Delete(id uint) error { return nil }
+
+// TestAuthHandler_Register_DuplicateEmail 测试重复邮箱注册
+func TestAuthHandler_Register_DuplicateEmail(t *testing.T) {
+	userRepo := &mockUserRepoDuplicate{}
+	authSvc := service.NewAuthService(userRepo, nil)
+	handler := NewAuthHandler(authSvc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.POST("/register", handler.Register)
+
+	w := httptest.NewRecorder()
+	body := `{"email":"existing@test.com","password":"SecurePass123"}`
+	req := httptest.NewRequest("POST", "/register", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
 }

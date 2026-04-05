@@ -32,6 +32,16 @@
 
 ## 开发历史
 
+### 2026-04-05 - AuthHandler深度测试 + Handler覆盖率92.7%
+
+**Handler覆盖率提升至92.7%:**
+- auth_test.go: 添加7+个新测试用例
+  - 成功路径: Register_WithEmail(用户名自动派生)/Login_Success/GetCurrentUser_Success_Path
+  - 错误路径: Register_DBError/Register_DuplicateEmail/Login_WrongCredentials/Login_UserNotFound/GetCurrentUser_NotFound
+  - mock实现: mockUserRepoCreateError/mockUserRepoNotFoundError/mockUserRepoDuplicate
+- auth.go覆盖: Register 81.8% → 100%, Login 93.3% → 100%, GetCurrentUser 100%
+- Handler总覆盖率: 92.4% → 92.7%
+
 ### 2026-04-05 - UploadHandler深度测试 + Handler覆盖率92.4%
 
 **Handler覆盖率提升至92.4%:**
