@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { encryptFile, generateEncryptionKey, exportKey } from '../utils/crypto'
 import { fileAPI } from '../api'
+import { useUploadTaskStore } from './uploadTask'
 
 // 分块大小 2MB
 const ChunkSize = 2 * 1024 * 1024
@@ -71,6 +72,7 @@ export const useUploadStore = defineStore('upload', () => {
   async function uploadAll(key, folderId = null) {
     if (uploadQueue.value.length === 0) return
 
+    const uploadTaskStore = useUploadTaskStore()
     isQueueUploading.value = true
     queueTotalCount.value = uploadQueue.value.length
     queueUploadedCount.value = 0
@@ -83,6 +85,15 @@ export const useUploadStore = defineStore('upload', () => {
       queueCurrentIndex.value = i
       item.status = 'encrypting'
 
+      // 创建任务记录
+      const taskId = item.id.toString()
+      uploadTaskStore.addTask({
+        id: taskId,
+        name: item.file.name,
+        size: item.file.size,
+        status: 'pending',
+      })
+
       try {
         const file = item.file
         const totalChunks = Math.ceil(file.size / ChunkSize)
@@ -93,12 +104,14 @@ export const useUploadStore = defineStore('upload', () => {
           // 大文件按块加密
           encryptedBlob = await encryptFileInChunks(file, key, totalChunks, (chunkProgress) => {
             item.progress = Math.round(chunkProgress * 30) // 加密占30%进度
+            uploadTaskStore.updateProgress(taskId, chunkProgress * 30)
           })
         } else {
           encryptedBlob = await encryptFile(file, key)
         }
 
         item.status = 'uploading'
+        uploadTaskStore.updateProgress(taskId, 30)
 
         // 初始化上传
         const sessionResponse = await fileAPI.initializeUpload({
@@ -112,9 +125,24 @@ export const useUploadStore = defineStore('upload', () => {
 
         // 上传(分块)
         if (encryptedBlob.size > ChunkSize) {
-          await uploadInChunks(session_id, folderId, encryptedBlob, total_chunks, (uploadProgress) => {
-            item.progress = 30 + Math.round(uploadProgress * 70) // 上传占70%进度
-          })
+          let uploadedBytes = 0
+          for (let i = 0; i < total_chunks; i++) {
+            const start = i * ChunkSize
+            const end = Math.min(start + ChunkSize, encryptedBlob.size)
+            const chunk = encryptedBlob.slice(start, end)
+
+            const formData = new FormData()
+            formData.append('file', chunk)
+            formData.append('chunk_index', String(i))
+            formData.append('folder_id', String(folderId || -1))
+
+            await fileAPI.uploadChunk(session_id, formData)
+
+            uploadedBytes += chunk.size
+            const uploadProgress = 30 + Math.round((uploadedBytes / encryptedBlob.size) * 70)
+            item.progress = uploadProgress
+            uploadTaskStore.updateProgress(taskId, uploadProgress)
+          }
         } else {
           // 小文件直接作为单个分块上传
           const formData = new FormData()
@@ -123,6 +151,7 @@ export const useUploadStore = defineStore('upload', () => {
           formData.append('folder_id', String(folderId || -1))
           await fileAPI.uploadChunk(session_id, formData)
           item.progress = 100
+          uploadTaskStore.updateProgress(taskId, 100)
         }
 
         // 完成上传
@@ -133,10 +162,12 @@ export const useUploadStore = defineStore('upload', () => {
         })
 
         item.status = 'completed'
+        uploadTaskStore.completeTask(taskId)
         queueUploadedCount.value++
       } catch (err) {
         item.status = 'error'
         item.error = err.message || '上传失败'
+        uploadTaskStore.failTask(taskId, err.message)
         queueErrors.value.push({ file: item.file.name, error: item.error })
       }
     }
