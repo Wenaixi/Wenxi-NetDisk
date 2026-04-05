@@ -371,11 +371,21 @@ describe('Dashboard.vue', () => {
     expect(wrapper.vm.uploadStore.uploadQueue.length).toBe(0)
   })
 
-  it('handleFileClick opens file menu', async () => {
+  it('handleFileClick triggers file download', async () => {
     const wrapper = mount(Dashboard)
     const file = { id: 1, name: 'test.txt', size: 1024 }
 
-    wrapper.vm.handleFileClick(file)
+    await wrapper.vm.handleFileClick(file)
+
+    // handleFileClick should trigger download for the file
+    expect(mockFileDownload).toHaveBeenCalled()
+  })
+
+  it('openFileMenu opens file menu', async () => {
+    const wrapper = mount(Dashboard)
+    const file = { id: 1, name: 'test.txt', size: 1024 }
+
+    wrapper.vm.openFileMenu(file)
 
     expect(wrapper.vm.selectedFileItem).toEqual(file)
     expect(wrapper.vm.showFileMenu).toBe(true)

@@ -70,6 +70,29 @@
           />
           <div v-if="task.status === 'error'" class="text-red-400 text-xs mt-1">{{ task.error }}</div>
           <div v-if="task.speed" class="text-gray-500 text-xs mt-1">{{ task.speed }}</div>
+
+          <!-- 子任务列表 (大文件分块上传) -->
+          <div v-if="task.subtasks && task.subtasks.length > 1" class="mt-2 border-t border-gray-700 pt-2">
+            <n-button size="tiny" text @click="toggleSubtasks(task.id)">
+              {{ showSubtaskMap[task.id] ? '收起子任务' : `展开子任务 (${task.subtasks.length})` }}
+            </n-button>
+            <div v-if="showSubtaskMap[task.id]" class="mt-2 space-y-1">
+              <div
+                v-for="(sub, idx) in task.subtasks"
+                :key="idx"
+                class="flex items-center justify-between text-xs"
+              >
+                <span class="text-gray-400">{{ sub.name || `分块 ${idx + 1}` }}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-gray-500">{{ formatSize(sub.size || 0) }}</span>
+                  <n-tag v-if="sub.status === 'completed'" type="success" size="small">完成</n-tag>
+                  <n-tag v-else-if="sub.status === 'error'" type="error" size="small">失败</n-tag>
+                  <n-tag v-else-if="sub.status === 'uploading'" type="warning" size="small">上传中</n-tag>
+                  <n-tag v-else type="default" size="small">等待中</n-tag>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </main>
@@ -77,6 +100,7 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useUploadTaskStore } from '../stores/uploadTask'
 import { useMessage } from 'naive-ui'
 import AppHeader from '../components/AppHeader.vue'
@@ -84,6 +108,7 @@ import { Document, Close } from '@vicons/ionicons5'
 
 const uploadStore = useUploadTaskStore()
 const message = useMessage()
+const showSubtaskMap = ref({})
 
 function formatSize(bytes) {
   if (!bytes) return '0 B'
@@ -99,5 +124,9 @@ function toggleTask(task) {
   } else {
     uploadStore.resumeTask(task.id)
   }
+}
+
+function toggleSubtasks(taskId) {
+  showSubtaskMap.value[taskId] = !showSubtaskMap.value[taskId]
 }
 </script>

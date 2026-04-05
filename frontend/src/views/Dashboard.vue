@@ -732,11 +732,12 @@ async function startBatchUpload() {
 }
 
 function handleFileClick(file) {
-  selectedFileItem.value = file
-  showFileMenu.value = true
+  // 单击文件: 下载
+  downloadFile(file)
 }
 
 function openFileMenu(file) {
+  // 右键菜单: 显示操作选项
   selectedFileItem.value = file
   showFileMenu.value = true
 }
