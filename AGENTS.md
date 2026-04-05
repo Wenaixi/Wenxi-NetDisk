@@ -32,6 +32,20 @@
 
 ## 开发历史
 
+### 2026-04-05 - 关键Bug修复: URL拼写/删除task编号/并发竞态/代理绕过
+
+**P0 Bug修复 (Gap Analysis发现):**
+- 所有蓝奏云API请求URL从`douupload.php`改为`doupload.php`(12处修复)
+- 文件夹删除task编号从46改为3(参考项目确认task=3是删除, task=46是编辑)
+- 新增Task3()方法用于删除文件夹
+- Task46()改为编辑文件夹信息(新增name, desc参数)
+- BatchDelete handler使用Task3替代Task46
+- NewClient添加`Proxy: nil`的Transport配置, 绕过系统HTTP代理(127.0.0.1:10801)
+- Profile()并发竞态修复: 改用顺序请求保证数据正确性
+- handler测试补充lanzouSvc.SetBaseURL(), 确保mock请求指向本地测试服务器
+
+**测试: Go全模块通过(-parallel=1) + 前端510/510通过**
+
 ### 2026-04-05 - Profile功能 + 测试修复 + 前端510测试
 
 **新增功能 - 用户Profile (蓝奏云账号信息):**

@@ -2,6 +2,8 @@ package service
 
 import (
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/wenaixi/wenxi-cloud/backend/internal/model"
@@ -67,6 +69,7 @@ func (m *mockUploadRepo) DeleteByUserID(userID uint) error {
 // mockLanzouService 模拟蓝奏云服务
 type mockLanzouService struct {
 	connected bool
+	client    *lanzou.Client
 }
 
 func (m *mockLanzouService) IsConnected(userID uint) bool {
@@ -77,7 +80,27 @@ func (m *mockLanzouService) GetClient(userID uint) (*lanzou.Client, error) {
 	if !m.connected {
 		return nil, errors.New("lanzou not connected")
 	}
+	if m.client != nil {
+		return m.client, nil
+	}
 	return lanzou.NewClient("test-cookie"), nil
+}
+
+// setupMockUploadServer 创建模拟上传服务器并返回配置好的客户端
+func setupMockUploadServer(t *testing.T) (*httptest.Server, *lanzou.Client) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/html5up.php" {
+			w.Write([]byte(`{"zt":1,"info":"上传成功","text":[{"f_id":"123","is_newd":"https://wwn.lanzouf.com","downs":"0","icon":"txt","id":"456","name":"test.txt","size":"1024","time":"2024-01-01","onof":"0"}]}`))
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	t.Cleanup(server.Close)
+
+	client := lanzou.NewClient("test-cookie")
+	client.SetBaseURL(server.URL)
+	client.SetUploadBaseURL(server.URL)
+	return server, client
 }
 
 // mockFileService 模拟文件服务
@@ -288,7 +311,8 @@ func TestUploadService_ResumeUpload(t *testing.T) {
 
 	t.Run("should fail if upload already completed", func(t *testing.T) {
 		repo := newMockUploadRepo()
-		lanzouSvc := &mockLanzouService{connected: true}
+		_, client := setupMockUploadServer(t)
+		lanzouSvc := &mockLanzouService{connected: true, client: client}
 		fileSvc := &mockFileService{}
 
 		svc := NewUploadService(repo, lanzouSvc, fileSvc)
@@ -300,7 +324,7 @@ func TestUploadService_ResumeUpload(t *testing.T) {
 		resp, _ := svc.InitializeUpload(1, req)
 
 		// Upload the only chunk to complete
-		_ = svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+_, _ = svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
 			ChunkIndex: 0,
 			Data:       []byte("data"),
 		})
@@ -334,7 +358,8 @@ func TestUploadService_CalculateFileHash(t *testing.T) {
 func TestUploadService_UploadChunk(t *testing.T) {
 	t.Run("should increment chunks uploaded", func(t *testing.T) {
 		repo := newMockUploadRepo()
-		lanzouSvc := &mockLanzouService{connected: true}
+		_, client := setupMockUploadServer(t)
+		lanzouSvc := &mockLanzouService{connected: true, client: client}
 		fileSvc := &mockFileService{}
 
 		svc := NewUploadService(repo, lanzouSvc, fileSvc)
@@ -345,7 +370,7 @@ func TestUploadService_UploadChunk(t *testing.T) {
 
 		resp, _ := svc.InitializeUpload(1, req)
 
-		err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+_, err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
 			ChunkIndex: 0,
 			Data:       []byte("chunk data"),
 		})
@@ -367,7 +392,7 @@ func TestUploadService_UploadChunk(t *testing.T) {
 
 		svc := NewUploadService(repo, lanzouSvc, fileSvc)
 
-		err := svc.UploadChunk(1, 999, &UploadChunkRequest{
+_, err := svc.UploadChunk(1, 999, &UploadChunkRequest{
 			ChunkIndex: 0,
 			Data:       []byte("data"),
 		})
@@ -390,7 +415,7 @@ func TestUploadService_UploadChunk(t *testing.T) {
 
 		resp, _ := svc.InitializeUpload(1, req)
 
-		err := svc.UploadChunk(999, resp.SessionID, &UploadChunkRequest{
+_, err := svc.UploadChunk(999, resp.SessionID, &UploadChunkRequest{
 			ChunkIndex: 0,
 			Data:       []byte("data"),
 		})
@@ -414,13 +439,13 @@ func TestUploadService_UploadChunk(t *testing.T) {
 		resp, _ := svc.InitializeUpload(1, req)
 
 		// Upload the only chunk to complete
-		_ = svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+_, _ = svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
 			ChunkIndex: 0,
 			Data:       []byte("data"),
 		})
 
 		// Try to upload again
-		err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+_, err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
 			ChunkIndex: 0,
 			Data:       []byte("data"),
 		})
@@ -443,7 +468,7 @@ func TestUploadService_UploadChunk(t *testing.T) {
 
 		resp, _ := svc.InitializeUpload(1, req)
 
-		err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+_, err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
 			ChunkIndex: 5,
 			Data:       []byte("data"),
 		})
@@ -455,7 +480,8 @@ func TestUploadService_UploadChunk(t *testing.T) {
 
 	t.Run("should mark completed when all chunks uploaded", func(t *testing.T) {
 		repo := newMockUploadRepo()
-		lanzouSvc := &mockLanzouService{connected: true}
+		_, client := setupMockUploadServer(t)
+		lanzouSvc := &mockLanzouService{connected: true, client: client}
 		fileSvc := &mockFileService{}
 
 		svc := NewUploadService(repo, lanzouSvc, fileSvc)
@@ -466,7 +492,7 @@ func TestUploadService_UploadChunk(t *testing.T) {
 
 		resp, _ := svc.InitializeUpload(1, req)
 
-		err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+_, err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
 			ChunkIndex: 0,
 			Data:       []byte("data"),
 		})
@@ -486,7 +512,8 @@ func TestUploadService_UploadChunk(t *testing.T) {
 func TestUploadService_CompleteUpload(t *testing.T) {
 	t.Run("should create file metadata after all chunks uploaded", func(t *testing.T) {
 		repo := newMockUploadRepo()
-		lanzouSvc := &mockLanzouService{connected: true}
+		_, client := setupMockUploadServer(t)
+		lanzouSvc := &mockLanzouService{connected: true, client: client}
 		fileSvc := &mockFileService{}
 
 		svc := NewUploadService(repo, lanzouSvc, fileSvc)
@@ -498,7 +525,7 @@ func TestUploadService_CompleteUpload(t *testing.T) {
 		resp, _ := svc.InitializeUpload(1, req)
 
 		// Upload the chunk
-		_ = svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+_, _ = svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
 			ChunkIndex: 0,
 			Data:       []byte("data"),
 		})
@@ -651,7 +678,7 @@ func TestUploadService_UploadChunk_NegativeIndex(t *testing.T) {
 	req := &InitializeUploadRequest{FileName: "test.txt", FileSize: 1024}
 	resp, _ := svc.InitializeUpload(1, req)
 
-	err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+_, err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
 		ChunkIndex: -1,
 		Data:       []byte("data"),
 	})
@@ -671,7 +698,7 @@ func TestUploadService_CompleteUpload_FileSvcError(t *testing.T) {
 	resp, _ := svc.InitializeUpload(1, req)
 
 	// Upload chunk to make it completable
-	_ = svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{ChunkIndex: 0, Data: []byte("data")})
+	_, _ = svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{ChunkIndex: 0, Data: []byte("data")})
 
 	_, err := svc.CompleteUpload(1, resp.SessionID, &CompleteUploadRequest{
 		EncryptionKey: "key", EncryptionNonce: "nonce", LanZouFileID: "id",
@@ -697,7 +724,8 @@ func TestUploadService_GetUploadStatus_SessionNotFound(t *testing.T) {
 // TestUploadService_ResumeUpload_CompletedViaChunks 测试通过分块上传完成后恢复
 func TestUploadService_ResumeUpload_CompletedViaChunks(t *testing.T) {
 	repo := newMockUploadRepo()
-	lanzouSvc := &mockLanzouService{connected: true}
+	_, client := setupMockUploadServer(t)
+	lanzouSvc := &mockLanzouService{connected: true, client: client}
 	fileSvc := &mockFileService{}
 
 	svc := NewUploadService(repo, lanzouSvc, fileSvc)
@@ -705,7 +733,7 @@ func TestUploadService_ResumeUpload_CompletedViaChunks(t *testing.T) {
 	resp, _ := svc.InitializeUpload(1, req)
 
 	// Complete the upload
-	_ = svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{ChunkIndex: 0, Data: []byte("data")})
+	_, _ = svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{ChunkIndex: 0, Data: []byte("data")})
 
 	// Try to resume
 	hash := calculateFileHash("test.txt", 1024)
@@ -780,7 +808,7 @@ func TestUploadService_UploadChunk_OutOfRange(t *testing.T) {
 	resp, _ := svc.InitializeUpload(1, req)
 
 	// Try to upload chunk index 2 (should only be 0, 1)
-	err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
+_, err := svc.UploadChunk(1, resp.SessionID, &UploadChunkRequest{
 		ChunkIndex: 2,
 		Data:       []byte("data"),
 	})

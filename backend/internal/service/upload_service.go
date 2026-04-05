@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -78,6 +79,7 @@ type InitializeUploadResponse struct {
 	UploadURL  string `json:"upload_url"`
 	ChunkSize  int    `json:"chunk_size"`
 	TotalChunks int   `json:"total_chunks"`
+	FinalName   string `json:"final_name"` // 最终上传的文件名（可能被混淆）
 }
 
 // InitializeUpload 初始化上传会话
@@ -94,89 +96,139 @@ func (s *UploadService) InitializeUpload(userID uint, req *InitializeUploadReque
 	existingSession, err := s.uploadRepo.FindByUserIDAndHash(userID, hash)
 	if err == nil && existingSession != nil && existingSession.Status != StatusCompleted {
 		// 返回已有的上传会话
+		finalName := existingSession.FinalFileName
+		if finalName == "" {
+			finalName = existingSession.FileName
+		}
 		return &InitializeUploadResponse{
 			SessionID:   existingSession.ID,
-			UploadURL:   existingSession.LanZouUploadURL,
 			ChunkSize:   ChunkSize,
 			TotalChunks: existingSession.ChunksTotal,
+			FinalName:   finalName,
 		}, nil
 	}
 
 	// 计算分块数量
 	totalChunks := int(math.Ceil(float64(req.FileSize) / float64(ChunkSize)))
 
+	// 处理文件名：检查扩展名是否支持，不支持则添加混淆后缀
+	finalFileName := req.FileName
+	ext := lanzou.GetFileExtension(req.FileName)
+	if ext != "" && !lanzou.IsSupportedExtension(ext) {
+		finalFileName = lanzou.CreateSpecificName(req.FileName)
+	}
+
 	// 创建新的上传会话
 	session := &model.UploadSession{
 		UserID:         userID,
 		FileName:       req.FileName,
+		FinalFileName:  finalFileName,
 		FileSize:       req.FileSize,
 		FileHash:       hash,
 		ChunksTotal:    totalChunks,
 		ChunksUploaded: 0,
-		Status:         StatusPending,
+		Status:         StatusUploading,
 	}
 
 	if err := s.uploadRepo.Create(session); err != nil {
 		return nil, fmt.Errorf("failed to create upload session: %w", err)
 	}
 
-	// 获取蓝奏云上传URL（这里简化处理，实际需要调用蓝奏云API）
-	// TODO: 实现真正的蓝奏云上传URL获取
-	uploadURL := fmt.Sprintf("https://pc.woozooo.com/fileup.php?task=1&session=%d", session.ID)
-	session.LanZouUploadURL = uploadURL
-	session.Status = StatusUploading
-	if err := s.uploadRepo.Update(session); err != nil {
-		return nil, err
-	}
-
 	return &InitializeUploadResponse{
 		SessionID:   session.ID,
-		UploadURL:   uploadURL,
 		ChunkSize:   ChunkSize,
 		TotalChunks: totalChunks,
+		FinalName:   finalFileName,
 	}, nil
 }
 
 // UploadChunkRequest 上传分块请求
 type UploadChunkRequest struct {
-	ChunkIndex int  `json:"chunk_index" binding:"required"`
+	ChunkIndex int    `json:"chunk_index" binding:"required"`
 	Data       []byte `json:"data" binding:"required"`
+	FolderID   int    `json:"folder_id"` // 目标文件夹ID
+}
+
+// UploadChunkResponse 上传分块响应
+type UploadChunkResponse struct {
+	LanZouFileID  string `json:"lanzou_file_id"`
+	DownloadURL   string `json:"download_url"`
+	FileName      string `json:"file_name"`
 }
 
 // UploadChunk 处理分块上传
-func (s *UploadService) UploadChunk(userID uint, sessionID uint, req *UploadChunkRequest) error {
+func (s *UploadService) UploadChunk(userID uint, sessionID uint, req *UploadChunkRequest) (*UploadChunkResponse, error) {
 	session, err := s.uploadRepo.FindByID(sessionID)
 	if err != nil {
-		return errors.New("upload session not found")
+		return nil, errors.New("upload session not found")
 	}
 
 	if session.UserID != userID {
-		return errors.New("access denied")
+		return nil, errors.New("access denied")
 	}
 
 	if session.Status == StatusCompleted {
-		return errors.New("upload already completed")
+		return nil, errors.New("upload already completed")
 	}
 
 	// 验证分块索引
 	if req.ChunkIndex < 0 || req.ChunkIndex >= session.ChunksTotal {
-		return errors.New("invalid chunk index")
+		return nil, errors.New("invalid chunk index")
 	}
 
-	// TODO: 实际上传分块到蓝奏云
-	// 这里简化处理，实际应该调用蓝奏云的分块上传API
+	// 获取蓝奏云客户端
+	client, err := s.lanzouSvc.GetClient(userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get lanzou client: %w", err)
+	}
+
+	// 使用最终文件名（可能已被混淆）
+	fileName := session.FinalFileName
+	if fileName == "" {
+		fileName = session.FileName
+	}
+
+	// 目标文件夹ID
+	folderID := req.FolderID
+	if folderID == 0 {
+		folderID = -1 // 默认根目录
+	}
+
+	// 调用Html5Upload上传
+	reader := bytes.NewReader(req.Data)
+	resp, err := client.Html5Upload(reader, fileName, int64(len(req.Data)), folderID)
+	if err != nil {
+		return nil, fmt.Errorf("upload to lanzou failed: %w", err)
+	}
+
+	if resp.Zt == 0 {
+		return nil, fmt.Errorf("upload failed: %s", resp.Info)
+	}
+
+	// 提取上传结果
+	if len(resp.Text) == 0 {
+		return nil, errors.New("upload succeeded but no file info returned")
+	}
+
+	fileInfo := resp.Text[0]
 
 	// 更新已上传分块数
 	session.ChunksUploaded++
 	if session.ChunksUploaded >= session.ChunksTotal {
 		session.Status = StatusCompleted
+		// 保存蓝奏云文件ID
+		session.LanZouUploadURL = fileInfo.ID
 	}
 
 	if err := s.uploadRepo.Update(session); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &UploadChunkResponse{
+		LanZouFileID: fileInfo.ID,
+		DownloadURL:  fileInfo.IsNew,
+		FileName:     fileInfo.Name,
+	}, nil
 }
 
 // CompleteUploadRequest 完成上传请求

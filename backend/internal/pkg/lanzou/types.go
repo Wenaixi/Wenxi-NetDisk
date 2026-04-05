@@ -156,3 +156,23 @@ type Task11Response struct {
 	Zt   int    `json:"zt"`
 	Info string `json:"info"`
 }
+
+// Html5UploadFileInfo 上传返回的文件信息
+type Html5UploadFileInfo struct {
+	FID   string `json:"f_id"`    // 文件ID
+	IsNew string `json:"is_newd"` // 域名
+	Downs string `json:"downs"`   // 下载次数
+	Icon  string `json:"icon"`    // 扩展名
+	ID    string `json:"id"`      // 文件ID
+	Name  string `json:"name"`    // 文件名
+	Size  string `json:"size"`    // 文件大小
+	Time  string `json:"time"`    // 上传时间
+	Onof  string `json:"onof"`    // 是否需要密码
+}
+
+// Html5UploadResponse html5up.php 上传响应
+type Html5UploadResponse struct {
+	Zt   int                    `json:"zt"`
+	Info string                 `json:"info"`
+	Text []Html5UploadFileInfo `json:"text"`
+}

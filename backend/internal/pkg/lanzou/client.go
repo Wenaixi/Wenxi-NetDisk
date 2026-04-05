@@ -1,9 +1,11 @@
 package lanzou
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -15,10 +17,11 @@ import (
 
 // Client 蓝奏云API客户端
 type Client struct {
-	baseURL    string        // 基础URL，如 https://pc.woozooo.com
-	httpClient *http.Client  // HTTP客户端
-	cookie     string        // Cookie字符串
-	userAgent  string        // User-Agent
+	baseURL      string        // 基础URL，如 https://pc.woozooo.com
+	uploadBaseURL string        // 上传URL，如 https://up.woozooo.com
+	httpClient   *http.Client  // HTTP客户端
+	cookie       string        // Cookie字符串
+	userAgent    string        // User-Agent
 }
 
 // NewClient 创建蓝奏云客户端
@@ -28,7 +31,8 @@ func NewClient(cookie string) *Client {
 		Proxy: nil, // 不使用代理
 	}
 	return &Client{
-		baseURL: "https://pc.woozooo.com",
+		baseURL:      "https://pc.woozooo.com",
+		uploadBaseURL: "https://up.woozooo.com",
 		httpClient: &http.Client{
 			Timeout:   30 * time.Second,
 			Jar:       jar,
@@ -47,6 +51,11 @@ func (c *Client) SetCookie(cookie string) {
 // SetBaseURL 设置基础URL（用于测试）
 func (c *Client) SetBaseURL(baseURL string) {
 	c.baseURL = baseURL
+}
+
+// SetUploadBaseURL 设置上传基础URL（用于测试）
+func (c *Client) SetUploadBaseURL(baseURL string) {
+	c.uploadBaseURL = baseURL
 }
 
 // SetHTTPClient 设置自定义HTTP客户端（用于测试时绕过代理）
@@ -637,4 +646,66 @@ func (c *Client) Task16(folderId int, shows int, shownames string) (*Task16Respo
 		resp.Info = string(data)
 	}
 	return resp, nil
+}
+
+// Html5Upload 通过 html5up.php 上传文件到蓝奏云
+// fileReader: 文件内容读取器
+// fileName: 文件名（已处理扩展名校验）
+// fileSize: 文件大小（字节）
+// folderId: 目标文件夹ID（-1表示根目录）
+func (c *Client) Html5Upload(fileReader io.Reader, fileName string, fileSize int64, folderId int) (*Html5UploadResponse, error) {
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	// 写入表单字段
+	_ = writer.WriteField("task", "1")
+	_ = writer.WriteField("vie", "2")
+	_ = writer.WriteField("ve", "2")
+	_ = writer.WriteField("folder_id_bb_n", strconv.Itoa(folderId))
+	_ = writer.WriteField("size", strconv.FormatInt(fileSize, 10))
+	_ = writer.WriteField("name", fileName)
+
+	// 写入文件内容
+	part, err := writer.CreateFormFile("upload_file", fileName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create form file: %w", err)
+	}
+	if _, err := io.Copy(part, fileReader); err != nil {
+		return nil, fmt.Errorf("failed to copy file content: %w", err)
+	}
+
+	if err := writer.Close(); err != nil {
+		return nil, fmt.Errorf("failed to close multipart writer: %w", err)
+	}
+
+	// 构建请求 - 使用 uploadBaseURL
+	reqURL := c.uploadBaseURL + "/html5up.php"
+	req, err := http.NewRequest("POST", reqURL, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("User-Agent", c.userAgent)
+	req.Header.Set("Referer", c.baseURL+"/")
+	if c.cookie != "" {
+		req.Header.Set("Cookie", c.cookie)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &Html5UploadResponse{}
+	if err := json.Unmarshal(respBody, result); err != nil {
+		result.Zt = -1
+		result.Info = string(respBody)
+	}
+	return result, nil
 }
