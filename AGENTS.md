@@ -56,9 +56,9 @@
 
 **Repository覆盖率: 0% → 90.4%**
 **lanzou覆盖率: 24.6% → 60.4%**
-**总Go测试数: ~520**
+**总Go测试数: ~540**
 
-### 2026-04-05 - Service层深度测试完善 (覆盖率85.2% → 91.6%)
+### 2026-04-05 - Service层深度测试完善 (覆盖率85.2% → 92.1%)
 
 **folder_service_test.go (新增12用例, 总计~32):**
 - CreateFolder空名称、UpdateFolder_NotFound、DeleteFolder_NotFound
@@ -764,7 +764,7 @@ references/lanzouyun-disk/
 | 模块 | 测试数 | 状态 |
 |------|--------|------|
 | pkg/crypto | 5 | ✅ |
-| pkg/jwt | 7 | ✅ |
+| pkg/jwt | 14 (+7 过期token/错误密钥/畸形token/空密钥/特殊字符) | ✅ |
 | pkg/lanzou | 44 (Client基础5+Task方法18+辅助函数7+GetDownloadURL3+解析27) | ✅ |
 | pkg/response | 15 (5结构+10HTTP) | ✅ |
 | pkg/middleware | 20 (10Auth+4Logger+6CORS) | ✅ |
@@ -772,7 +772,7 @@ references/lanzouyun-disk/
 | service/file | 26 (+14 FindByID/FindByLanZouFileID) | ✅ |
 | service/folder | 32 (+10 深层嵌套isDescendant/NotFound/错误路径) | ✅ |
 | service/lanzou | 13 (+4 CreateShare/GetFileURL) | ✅ |
-| service/upload | 13 (+7 UploadChunk/CompleteUpload/ResumeUpload/GetLanZouClient) | ✅ |
+| service/upload | 22 (+9 大文件分块/负索引/零字节/服务错误) | ✅ |
 | service/share_parse | 4 (+2 ParseShareLink/GetShareDownloadLink) | ✅ |
 | service/share | 26 (+5 FileNotFound/AccessDenied/DeleteShare) | ✅ |
 | service/download | 6 (+1 getDownloadLink_NoLanZouFileID) | ✅ |
