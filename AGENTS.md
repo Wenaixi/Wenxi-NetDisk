@@ -32,6 +32,14 @@
 
 ## 开发历史
 
+### 2026-04-05 - FileHandler错误路径全覆盖 + Handler覆盖率94.8%
+
+**Handler覆盖率提升至94.8%:**
+- file_test.go: +4个错误路径测试 (mockFileRepoUpdateError/mockFileRepoCreateError)
+  - UpdateFileDescription_Error/RenameFile_Error/MoveFile_Error/CreateFileMetadata_Error
+- file.go覆盖: 全部方法达到100% (CreateFileMetadata 81.8%→100%, UpdateFileDescription 86.7%→100%, RenameFile 86.7%→100%, MoveFile 86.7%→100%)
+- Handler总覆盖率: 93.4% → 94.8%
+
 ### 2026-04-05 - ShareParseHandler mock测试 + Handler覆盖率93.4%
 
 **Handler覆盖率提升至93.4%:**

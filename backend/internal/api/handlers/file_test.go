@@ -385,7 +385,158 @@ func TestFileHandler_RenameFile_InvalidJSON(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
-// mockFileRepoNotFoundError 模拟FindByID返回错误的仓库
+// mockFileRepoUpdateError 模拟Update返回错误的仓库
+type mockFileRepoUpdateError struct {
+	files map[uint]*model.File
+}
+
+func newMockFileRepoUpdateError() *mockFileRepoUpdateError {
+	return &mockFileRepoUpdateError{
+		files: map[uint]*model.File{
+			1: {ID: 1, UserID: 1, Name: "test.txt", Size: 1024},
+		},
+	}
+}
+func (m *mockFileRepoUpdateError) Create(file *model.File) error { return nil }
+func (m *mockFileRepoUpdateError) FindByUserID(userID uint) ([]model.File, error) {
+	return []model.File{*m.files[1]}, nil
+}
+func (m *mockFileRepoUpdateError) FindByID(id uint) (*model.File, error) {
+	if f, ok := m.files[id]; ok {
+		return f, nil
+	}
+	return nil, errors.New("not found")
+}
+func (m *mockFileRepoUpdateError) FindByFolderID(userID uint, folderID *uint) ([]model.File, error) {
+	return m.FindByUserID(userID)
+}
+func (m *mockFileRepoUpdateError) FindByLanZouFileID(lanzouFileID string) (*model.File, error) {
+	return nil, errors.New("not found")
+}
+func (m *mockFileRepoUpdateError) Delete(id uint) error { return nil }
+func (m *mockFileRepoUpdateError) Update(file *model.File) error {
+	return errors.New("update failed")
+}
+
+// TestFileHandler_UpdateFileDescription_Error 测试更新描述失败
+func TestFileHandler_UpdateFileDescription_Error(t *testing.T) {
+	repo := newMockFileRepoUpdateError()
+	svc := service.NewFileService(repo)
+	handler := NewFileHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.PUT("/files/:id/description", handler.UpdateFileDescription)
+
+	w := httptest.NewRecorder()
+	body := `{"description":"new desc"}`
+	req := httptest.NewRequest("PUT", "/files/1/description", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
+// TestFileHandler_RenameFile_Error 测试重命名失败
+func TestFileHandler_RenameFile_Error(t *testing.T) {
+	repo := newMockFileRepoUpdateError()
+	svc := service.NewFileService(repo)
+	handler := NewFileHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.PUT("/files/:id", handler.RenameFile)
+
+	w := httptest.NewRecorder()
+	body := `{"name":"new.txt"}`
+	req := httptest.NewRequest("PUT", "/files/1", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
+// TestFileHandler_MoveFile_Error 测试移动失败
+func TestFileHandler_MoveFile_Error(t *testing.T) {
+	repo := newMockFileRepoUpdateError()
+	svc := service.NewFileService(repo)
+	handler := NewFileHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.PUT("/files/:id/move", handler.MoveFile)
+
+	w := httptest.NewRecorder()
+	body := `{"folder_id":1}`
+	req := httptest.NewRequest("PUT", "/files/1/move", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
+// mockFileRepoCreateError 模拟Create返回错误的仓库
+type mockFileRepoCreateError struct {
+	files map[uint]*model.File
+}
+
+func newMockFileRepoCreateError() *mockFileRepoCreateError {
+	return &mockFileRepoCreateError{
+		files: map[uint]*model.File{},
+	}
+}
+func (m *mockFileRepoCreateError) Create(file *model.File) error {
+	return errors.New("db write failed")
+}
+func (m *mockFileRepoCreateError) FindByUserID(userID uint) ([]model.File, error) {
+	return []model.File{}, nil
+}
+func (m *mockFileRepoCreateError) FindByID(id uint) (*model.File, error) {
+	return nil, errors.New("not found")
+}
+func (m *mockFileRepoCreateError) FindByFolderID(userID uint, folderID *uint) ([]model.File, error) {
+	return []model.File{}, nil
+}
+func (m *mockFileRepoCreateError) FindByLanZouFileID(lanzouFileID string) (*model.File, error) {
+	return nil, errors.New("not found")
+}
+func (m *mockFileRepoCreateError) Delete(id uint) error { return nil }
+func (m *mockFileRepoCreateError) Update(file *model.File) error { return nil }
+
+// TestFileHandler_CreateFileMetadata_Error 测试创建元数据失败
+func TestFileHandler_CreateFileMetadata_Error(t *testing.T) {
+	repo := newMockFileRepoCreateError()
+	svc := service.NewFileService(repo)
+	handler := NewFileHandler(svc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/files", handler.CreateFileMetadata)
+
+	w := httptest.NewRecorder()
+	body := `{"name":"test.txt","size":100,"lanzou_file_id":"lz1","encryption_key":"k","encryption_nonce":"n"}`
+	req := httptest.NewRequest("POST", "/files", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
 type mockFileRepoNotFoundError struct{}
 
 func (m *mockFileRepoNotFoundError) Create(file *model.File) error { return nil }
