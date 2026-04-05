@@ -77,6 +77,12 @@ const routes = [
     name: 'UploadTasks',
     component: () => import('../views/UploadTasks.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/download-tasks',
+    name: 'DownloadTasks',
+    component: () => import('../views/DownloadTasks.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

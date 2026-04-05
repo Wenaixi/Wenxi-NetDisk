@@ -32,6 +32,22 @@
 
 ## 开发历史
 
+### 2026-04-05 - 上传/下载任务管理页面 + 前端457测试
+
+**新增功能 - 上传任务管理:**
+- UploadTasks.vue: 上传任务列表页面, 参考references/Upload.tsx
+- uploadTask.js store: 任务状态管理(暂停/恢复/完成/失败/进度/速度)
+- /upload-tasks 路由
+
+**新增功能 - 下载任务管理:**
+- DownloadTasks.vue: 下载任务列表页面, 参考references/Download.tsx
+- downloadTask.js store: 下载任务状态管理
+- 批量下载模态框: 支持多链接解析添加
+- /download-tasks 路由
+
+**测试统计: 前端 36 文件, 457 用例全部通过 (+38)**
+- uploadTask store (14) + UploadTasks view (6) + downloadTask store (13) + DownloadTasks view (6)
+
 ### 2026-04-05 - 蓝奏云浏览器访问密码设置 + 前端419测试
 
 **新增功能 - 访问密码管理 (Task #16):**
