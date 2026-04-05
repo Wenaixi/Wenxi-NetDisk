@@ -21,6 +21,7 @@
           </n-button>
           <n-button v-if="selectedItems.length === 1" @click="openRenameModalForSelected">重命名</n-button>
           <n-button v-if="selectedItems.length > 0" @click="oneClickShare">一键分享</n-button>
+          <n-button v-if="selectedItems.length > 0" @click="openMoveModal">移动到</n-button>
           <n-checkbox
             v-if="files.length > 0 || folders.length > 0"
             v-model:checked="selectMode"
@@ -189,6 +190,24 @@
       </n-card>
     </n-modal>
 
+    <n-modal v-model:show="showMoveModal">
+      <n-card title="移动到" style="width: 400px;">
+        <div class="space-y-4">
+          <n-select
+            v-model:value="moveTargetId"
+            :options="folderSelectOptions"
+            placeholder="选择目标文件夹"
+          />
+        </div>
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <n-button @click="showMoveModal = false">取消</n-button>
+            <n-button type="primary" @click="submitMove" :disabled="!moveTargetId">确定</n-button>
+          </div>
+        </template>
+      </n-card>
+    </n-modal>
+
     <n-modal v-model:show="showShareModal" v-if="shareResult">
       <n-card title="分享链接" style="width: 400px;">
         <div class="space-y-4">
@@ -214,7 +233,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { lanzouAPI } from '../api/lanzou'
@@ -264,6 +283,22 @@ const fileDescForm = ref({
   description: '',
   fileId: null,
 })
+
+const showMoveModal = ref(false)
+const moveTargetId = ref(null)
+
+// 文件夹选择下拉选项 (从面包屑构建 + 根目录)
+const folderSelectOptions = computed(() => {
+  const opts = [{ label: '根目录', value: -1 }]
+  for (const crumb of breadcrumbs.value) {
+    if (crumb.id !== -1) {
+      opts.push({ label: crumb.name, value: crumb.id })
+    }
+  }
+  return opts
+})
+
+// 选择模式相关
 
 // 选择模式相关
 const selectMode = ref(false)
@@ -557,6 +592,43 @@ async function submitFileDesc() {
     message.error(err.message || '设置文件描述失败')
   } finally {
     descSubmitting.value = false
+  }
+}
+
+function openMoveModal() {
+  moveTargetId.value = currentFolderId.value
+  showMoveModal.value = true
+}
+
+async function submitMove() {
+  if (!moveTargetId.value) {
+    message.warning('请选择目标文件夹')
+    return
+  }
+  try {
+    const items = selectedItems.value.map(id => {
+      const folder = folders.value.find(f => f.folder_id === id)
+      const file = files.value.find(f => f.file_id === id)
+      if (folder) return { id: folder.folder_id, name: folder.name, type: 'folder' }
+      if (file) return { id: file.file_id, name: file.name, type: 'file' }
+      return null
+    }).filter(Boolean)
+
+    let movedCount = 0
+    for (const item of items) {
+      await lanzouAPI.move(item.id, {
+        type: item.type,
+        target: moveTargetId.value,
+      })
+      movedCount++
+    }
+    message.success(`成功移动 ${movedCount} 个项目`)
+    showMoveModal.value = false
+    selectedItems.value = []
+    selectMode.value = false
+    await refresh()
+  } catch (err) {
+    message.error(err.message || '移动失败')
   }
 }
 

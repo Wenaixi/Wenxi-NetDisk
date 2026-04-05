@@ -32,6 +32,9 @@ export const lanzouAPI = {
   // 移动
   move: (id, data) => api.put(`/lanzou/${id}/move`, data),
 
+  // 批量移动
+  batchMove: (data) => api.post('/lanzou/batch/move', data),
+
   // 获取下载链接
   getDownloadUrl: (id) => api.get(`/lanzou/files/${id}/url`),
 

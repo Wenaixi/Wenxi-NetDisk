@@ -401,3 +401,47 @@ func (h *LanZouHandler) Rename(c *gin.Context) {
 
 	response.Success(c, resp)
 }
+
+// Move 移动文件/文件夹
+func (h *LanZouHandler) Move(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		response.BadRequest(c, "invalid id")
+		return
+	}
+
+	var req struct {
+		Type   string `json:"type" binding:"required"`
+		Target int    `json:"target" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	client, err := h.lanzouSvc.GetClient(uid)
+	if err != nil {
+		response.Unauthorized(c, err.Error())
+		return
+	}
+
+	var resp interface{}
+	if req.Type == "file" {
+		resp, err = client.Task15(id, req.Target)
+	} else if req.Type == "folder" {
+		resp, err = client.Task48(id, req.Target)
+	} else {
+		response.BadRequest(c, "invalid type, must be 'file' or 'folder'")
+		return
+	}
+
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, resp)
+}

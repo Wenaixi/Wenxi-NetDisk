@@ -49,4 +49,28 @@ describe('lanzouAPI', () => {
   it('should have createShare method', () => {
     expect(typeof lanzouAPI.createShare).toBe('function')
   })
+
+  it('should have setAccess method', () => {
+    expect(typeof lanzouAPI.setAccess).toBe('function')
+  })
+
+  it('should have getFileDetail method', () => {
+    expect(typeof lanzouAPI.getFileDetail).toBe('function')
+  })
+
+  it('should have batchDelete method', () => {
+    expect(typeof lanzouAPI.batchDelete).toBe('function')
+  })
+
+  it('should have getFileDescription method', () => {
+    expect(typeof lanzouAPI.getFileDescription).toBe('function')
+  })
+
+  it('should have setFileDescription method', () => {
+    expect(typeof lanzouAPI.setFileDescription).toBe('function')
+  })
+
+  it('should have batchMove method', () => {
+    expect(typeof lanzouAPI.batchMove).toBe('function')
+  })
 })
