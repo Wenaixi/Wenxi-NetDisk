@@ -32,6 +32,21 @@
 
 ## 开发历史
 
+### 2026-04-05 - 前端API层全覆盖 + 前端356测试达成
+
+**前端API层测试补齐:**
+- lanzou.test.js: 12个方法存在性测试 (connect, status, disconnect, listFiles, listFolders, createFolder, deleteFile, deleteFolder, rename, move, getDownloadUrl, createShare)
+- recycle.test.js: 5个方法存在性测试 (list, restoreFile, restoreFolder, permanentDelete, clearAll)
+- 前端测试文件总数: 26个
+- **前端总测试数: 253 → 356 (+103)**
+- 仅 src/main.js 无测试 (app入口，惯例排除)
+- 前端API层100%覆盖: auth API, file API, folder API, share API, lanzou API, recycle API, interceptors, router
+
+**测试策略:**
+- API方法测试: 验证导出函数存在且为function类型
+- 拦截器测试: Token注入/401处理/URL构造/响应格式
+- Router测试: 导航守卫(未认证跳转登录/已认证跳转仪表盘)/路由定义/元信息
+
 ### 2026-04-05 - Handler全覆盖96.4% + 蓝奏云HTTP Mock测试
 
 **Handler覆盖率提升至96.4% (目标90%+ 已超越):**
