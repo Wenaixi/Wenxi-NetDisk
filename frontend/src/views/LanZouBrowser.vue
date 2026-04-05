@@ -34,6 +34,12 @@
             clearable
             style="width: 150px"
           />
+          <n-select
+            v-if="files.length > 0 || folders.length > 0"
+            v-model:value="sortBy"
+            :options="sortOptions"
+            style="width: 120px"
+          />
           <n-button
             v-if="selectedItems.length > 0"
             type="error"
@@ -53,42 +59,51 @@
           </n-result>
         </div>
 
-        <div v-else-if="folders.length === 0 && files.length === 0" class="text-center py-12">
-          <n-empty description="文件夹为空" />
+        <div v-else-if="filteredFolders.length === 0 && filteredFiles.length === 0" class="text-center py-12">
+          <n-empty :description="searchQuery ? '未找到匹配的文件' : '文件夹为空'" />
         </div>
 
         <div v-else>
-          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            <div
-              v-for="folder in folders"
-              :key="folder.folder_id"
-              :class="[
-                'bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]',
-                selectMode && selectedItems.includes(folder.folder_id) ? 'ring-2 ring-blue-500' : ''
-              ]"
-              @dblclick="!selectMode && navigateToFolder(folder)"
-              @click="selectMode ? toggleSelect(folder.folder_id) : navigateToFolder(folder)"
-              @contextmenu.prevent="openFolderContextMenu($event, folder)"
-            >
-              <div class="flex items-center gap-2">
-                <n-checkbox
-                  v-if="selectMode"
-                  :checked="selectedItems.includes(folder.folder_id)"
-                  @click.stop
-                  @update:checked="toggleSelect(folder.folder_id)"
-                />
-                <n-icon size="24" color="#60a5fa"><Folder /></n-icon>
-                <span class="text-white truncate">{{ folder.name }}</span>
+          <!-- 文件夹区域 -->
+          <div v-if="filteredFolders.length > 0" class="mb-6">
+            <div class="text-gray-400 text-sm mb-3">文件夹 ({{ filteredFolders.length }})</div>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div
+                v-for="folder in filteredFolders"
+                :key="folder.folder_id"
+                :class="[
+                  'bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]',
+                  selectMode && selectedItems.includes(folder.folder_id) ? 'ring-2 ring-blue-500' : ''
+                ]"
+                @dblclick="!selectMode && navigateToFolder(folder)"
+                @click="selectMode ? toggleSelect(folder.folder_id) : navigateToFolder(folder)"
+                @contextmenu.prevent="openFolderContextMenu($event, folder)"
+              >
+                <div class="flex items-center gap-2">
+                  <n-checkbox
+                    v-if="selectMode"
+                    :checked="selectedItems.includes(folder.folder_id)"
+                    @click.stop
+                    @update:checked="toggleSelect(folder.folder_id)"
+                  />
+                  <n-icon size="24" color="#60a5fa"><Folder /></n-icon>
+                  <span class="text-white truncate">{{ folder.name }}</span>
+                </div>
               </div>
             </div>
+          </div>
 
-            <div
-              v-for="file in files"
-              :key="file.file_id"
-              :class="[
-                'bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]',
-                selectMode && selectedItems.includes(file.file_id) ? 'ring-2 ring-blue-500' : ''
-              ]"
+          <!-- 文件区域 -->
+          <div v-if="filteredFiles.length > 0">
+            <div class="text-gray-400 text-sm mb-3">文件 ({{ filteredFiles.length }})</div>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <div
+                v-for="file in filteredFiles"
+                :key="file.file_id"
+                :class="[
+                  'bg-[#1a1a1a] p-4 cursor-pointer hover:bg-[#252525]',
+                  selectMode && selectedItems.includes(file.file_id) ? 'ring-2 ring-blue-500' : ''
+                ]"
               @click="selectMode ? toggleSelect(file.file_id) : handleFileClick(file)"
               @contextmenu.prevent="openFileContextMenu($event, file)"
             >
@@ -105,6 +120,7 @@
               <div class="text-gray-500 text-sm">{{ formatSize(file.size) }}</div>
             </div>
           </div>
+        </div>
         </div>
       </n-spin>
     </main>
@@ -261,6 +277,12 @@ const files = ref([])
 const breadcrumbs = ref([{ id: -1, name: '首页' }])
 const currentFolderId = ref(-1)
 const searchQuery = ref('')
+const sortBy = ref('name')
+const sortOptions = [
+  { label: '名称', value: 'name' },
+  { label: '大小', value: 'size' },
+  { label: '时间', value: 'time' }
+]
 
 const showFileMenu = ref(false)
 const selectedFile = ref(null)
@@ -311,6 +333,36 @@ const folderSelectOptions = computed(() => {
 // 选择模式相关
 const selectMode = ref(false)
 const selectedItems = ref([])
+
+// 过滤和排序后的文件/文件夹列表
+const filteredFolders = computed(() => {
+  let result = [...folders.value]
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    result = result.filter(f => f.name.toLowerCase().includes(q))
+  }
+  result.sort((a, b) => {
+    if (sortBy.value === 'name') return a.name.localeCompare(b.name)
+    if (sortBy.value === 'time') return new Date(b.time || 0) - new Date(a.time || 0)
+    return 0
+  })
+  return result
+})
+
+const filteredFiles = computed(() => {
+  let result = [...files.value]
+  if (searchQuery.value) {
+    const q = searchQuery.value.toLowerCase()
+    result = result.filter(f => f.name.toLowerCase().includes(q))
+  }
+  result.sort((a, b) => {
+    if (sortBy.value === 'name') return a.name.localeCompare(b.name)
+    if (sortBy.value === 'size') return (b.size || 0) - (a.size || 0)
+    if (sortBy.value === 'time') return new Date(b.time || 0) - new Date(a.time || 0)
+    return 0
+  })
+  return result
+})
 
 function toggleSelect(id) {
   const idx = selectedItems.value.indexOf(id)
