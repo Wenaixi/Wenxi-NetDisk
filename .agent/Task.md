@@ -172,7 +172,7 @@
 
 ### Task 6.1: 后端单元测试 ✅
 - [x] pkg/crypto 密码测试 (5)
-- [x] pkg/jwt JWT测试 (7)
+- [x] pkg/jwt JWT测试 (14, +7 过期token/错误密钥/畸形token/空密钥/特殊字符)
 - [x] pkg/response 响应测试 (15)
 - [x] pkg/lanzou 蓝奏云测试 (44, mock HTTP全覆盖)
 - [x] pkg/middleware 中间件测试 (20)
@@ -181,7 +181,7 @@
 - [x] service/file 测试 (26, +FindByID/FindByLanZouFileID)
 - [x] service/folder 测试 (22)
 - [x] service/lanzou 测试 (13, +CreateShare/GetFileURL)
-- [x] service/upload 测试 (6)
+- [x] service/upload 测试 (22, +9 大文件分块/负索引/零字节/服务错误)
 - [x] service/share 测试 (21)
 - [x] service/download 测试 (5)
 - [x] service/recycle 测试 (11)
