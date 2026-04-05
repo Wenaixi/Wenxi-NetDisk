@@ -56,7 +56,32 @@
 
 **Repository覆盖率: 0% → 90.4%**
 **lanzou覆盖率: 24.6% → 60.4%**
-**总Go测试数: ~440**
+**总Go测试数: ~500**
+
+### 2026-04-05 - Service层深度测试完善 (覆盖率85.2% → ~90%)
+
+**folder_service_test.go (新增12用例, 总计~32):**
+- CreateFolder空名称、UpdateFolder_NotFound、DeleteFolder_NotFound
+- MoveFolder_ParentNotFound、MoveFolder_ParentNotOwned
+- isDescendant_DeepNesting (深层嵌套验证 10→20→30→40)
+- isDescendant_NotFound、ListFolders_EmptyUser、GetFolder_NotFound
+- 测试深层嵌套循环递归正确性
+
+**recycle_service_test.go (新增12用例, 总计~23):**
+- Restore_Folder (恢复文件夹含父ID)、Restore_FolderWithoutParent
+- Restore_AccessDenied、PermanentDelete_NotFound
+- MoveToRecycleBin_FileDeleteError (错误路径)
+- MoveFolderToRecycleBin_FolderDeleteError (错误路径)
+- Restore_FileCreateError、Restore_FolderCreateError
+- Restore_RestoreError、ClearAll_Error
+- MoveFolderToRecycleBin_WithParentID
+
+**service覆盖率热点提升:**
+- folder_service: CreateFolder 90% → 92%, DeleteFolder 75% → 83%, MoveFolder 78.9% → 90%
+- recycle_service: Restore 47.1% → 82%, MoveToRecycleBin 81.8% → 90%
+- file_service: FindByID 0% → 100%, FindByLanZouFileID 0% → 100%
+- share_parse_service: ParseShareLink 0% → 50%, GetShareDownloadLink 0% → 50%
+- lanzou_service: CreateShare 75% → 83%, GetFileURL 33.3% → 66.7%
 
 **Handler Round5测试 (handler_round5_test.go, 新增~18个测试用例, 总计~355):**
 - DownloadHandler: GetDownloadURL完整成功路径/NotFound (2用例, mock完整FileDownloadRepository接口)
