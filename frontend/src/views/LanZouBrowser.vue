@@ -26,6 +26,7 @@
           <n-button v-if="selectedItems.length === 1" @click="openRenameModalForSelected">重命名</n-button>
           <n-button v-if="selectedItems.length > 0" @click="oneClickShare">一键分享</n-button>
           <n-button v-if="selectedItems.length > 0" @click="openMoveModal">移动到</n-button>
+          <n-button v-if="selectedItems.length > 0" @click="openBatchAccessModal">设置密码</n-button>
           <n-checkbox
             v-if="files.length > 0 || folders.length > 0"
             v-model:checked="selectMode"
@@ -197,6 +198,35 @@
       </n-card>
     </n-modal>
 
+    <n-modal v-model:show="showBatchAccessModal">
+      <n-card title="批量设置访问密码" style="width: 450px;">
+        <div class="space-y-4">
+          <n-alert type="info" :show-icon="false">
+            将为 {{ selectedItems.length }} 个选中项设置访问密码
+          </n-alert>
+          <n-radio-group v-model:value="batchAccessForm.type">
+            <n-space>
+              <n-radio value="2">密码访问</n-radio>
+              <n-radio value="1">公开访问</n-radio>
+            </n-space>
+          </n-radio-group>
+          <n-input
+            v-if="batchAccessForm.type === '2'"
+            v-model:value="batchAccessForm.password"
+            placeholder="请输入访问密码（将应用于所有选中项）"
+            maxlength="20"
+            show-password-on="click"
+          />
+        </div>
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <n-button @click="showBatchAccessModal = false">取消</n-button>
+            <n-button type="primary" @click="submitBatchAccess">确定</n-button>
+          </div>
+        </template>
+      </n-card>
+    </n-modal>
+
     <n-modal v-model:show="showFileDescModal">
       <n-card title="文件描述" style="width: 400px;">
         <div class="space-y-4">
@@ -321,6 +351,13 @@ const accessForm = ref({
   password: '',
   targetId: null,
   targetType: 'file',
+})
+
+const showBatchAccessModal = ref(false)
+const batchAccessForm = ref({
+  type: '2',
+  password: '',
+  useGlobal: ref(true),
 })
 
 const showRenameModal = ref(false)
@@ -537,6 +574,60 @@ async function submitAccess() {
   } catch (err) {
     message.error(err.message || '设置访问密码失败')
   }
+}
+
+function openBatchAccessModal() {
+  batchAccessForm.value.type = '2'
+  batchAccessForm.value.password = ''
+  batchAccessForm.value.useGlobal = true
+  showBatchAccessModal.value = true
+}
+
+async function submitBatchAccess() {
+  const items = selectedItems.value.map(id => {
+    const folder = folders.value.find(f => f.folder_id === id)
+    const file = files.value.find(f => f.file_id === id)
+    if (folder) return { id: folder.folder_id, type: 'folder' }
+    if (file) return { id: file.file_id, type: 'file' }
+    return null
+  }).filter(Boolean)
+
+  if (items.length === 0) {
+    message.warning('没有选中的项目')
+    return
+  }
+
+  if (batchAccessForm.value.type === '2' && !batchAccessForm.value.password.trim()) {
+    message.warning('请输入访问密码')
+    return
+  }
+
+  let successCount = 0
+  let failCount = 0
+  for (const item of items) {
+    try {
+      await lanzouAPI.setAccess({
+        id: item.id,
+        type: item.type,
+        shows: parseInt(batchAccessForm.value.type),
+        shownames: batchAccessForm.value.type === '2' ? batchAccessForm.value.password : '',
+      })
+      successCount++
+    } catch {
+      failCount++
+    }
+  }
+
+  if (failCount === 0) {
+    message.success(`已为 ${successCount} 个项目设置访问密码`)
+  } else {
+    message.warning(`成功 ${successCount} 个，失败 ${failCount} 个`)
+  }
+
+  showBatchAccessModal.value = false
+  selectedItems.value = []
+  selectMode.value = false
+  await refresh()
 }
 
 function openRenameModal(type) {
