@@ -429,3 +429,77 @@ func TestFileService_MoveFile(t *testing.T) {
 		}
 	})
 }
+
+// TestFileService_FindByID tests the FindByID helper method
+func TestFileService_FindByID(t *testing.T) {
+	t.Run("should find existing file", func(t *testing.T) {
+		repo := newMockFileRepo()
+		svc := NewFileService(repo)
+
+		file, err := svc.FindByID(1)
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if file == nil {
+			t.Error("expected file, got nil")
+			return
+		}
+		if file.ID != 1 {
+			t.Errorf("expected ID 1, got %d", file.ID)
+		}
+	})
+
+	t.Run("should return error for non-existent file", func(t *testing.T) {
+		repo := newMockFileRepo()
+		svc := NewFileService(repo)
+
+		file, err := svc.FindByID(999)
+
+		if err == nil {
+			t.Error("expected error for non-existent file")
+		}
+		if file != nil {
+			t.Error("expected nil file for non-existent file")
+		}
+	})
+}
+
+// TestFileService_FindByLanZouFileID tests the FindByLanZouFileID helper method
+func TestFileService_FindByLanZouFileID(t *testing.T) {
+	t.Run("should find file by lanzou ID", func(t *testing.T) {
+		repo := newMockFileRepo()
+		// Add a file with lanzou_file_id
+		repo.files = append(repo.files, &model.File{
+			ID: 10, UserID: 1, Name: "lanzou-file.txt", LanZouFileID: "lz-123",
+		})
+		svc := NewFileService(repo)
+
+		file, err := svc.FindByLanZouFileID("lz-123")
+
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if file == nil {
+			t.Error("expected file, got nil")
+			return
+		}
+		if file.LanZouFileID != "lz-123" {
+			t.Errorf("expected lanzou ID 'lz-123', got '%s'", file.LanZouFileID)
+		}
+	})
+
+	t.Run("should return error for non-existent lanzou ID", func(t *testing.T) {
+		repo := newMockFileRepo()
+		svc := NewFileService(repo)
+
+		file, err := svc.FindByLanZouFileID("non-existent")
+
+		if err == nil {
+			t.Error("expected error for non-existent lanzou ID")
+		}
+		if file != nil {
+			t.Error("expected nil file for non-existent lanzou ID")
+		}
+	})
+}

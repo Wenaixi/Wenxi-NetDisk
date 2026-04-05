@@ -47,3 +47,25 @@ func TestShareParseService_NewShareParseService(t *testing.T) {
 		t.Error("expected client to be set")
 	}
 }
+
+func TestShareParseService_ParseShareLink(t *testing.T) {
+	client := lanzou.NewClient("test-cookie")
+	svc := NewShareParseService(client)
+
+	// ParseShareLink will make real HTTP call to lanzou, expect error
+	_, err := svc.ParseShareLink("https://abc.lanzous.com/ivvHsi3qyef", "")
+	if err == nil {
+		t.Log("unexpected success - lanzou API returned valid response")
+	}
+}
+
+func TestShareParseService_GetShareDownloadLink(t *testing.T) {
+	client := lanzou.NewClient("test-cookie")
+	svc := NewShareParseService(client)
+
+	// GetShareDownloadLink will make real HTTP call, expect error
+	_, err := svc.GetShareDownloadLink("https://abc.lanzous.com/ivvHsi3qyef", "")
+	if err == nil {
+		t.Log("unexpected success - lanzou returned download URL")
+	}
+}

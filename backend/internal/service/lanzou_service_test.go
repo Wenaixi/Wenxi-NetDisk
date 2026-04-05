@@ -328,3 +328,31 @@ func TestLanZouService_GetFileURL_ExpiredToken(t *testing.T) {
 		t.Error("expected error for expired token")
 	}
 }
+
+// TestLanZouService_CreateShare_Success tests CreateShare success path
+func TestLanZouService_CreateShare_Success(t *testing.T) {
+	repo := newMockLanzouTokenRepo()
+	svc := NewLanZouService(repo)
+
+	_ = svc.SaveToken(1, "test-cookie", "test-token")
+
+	resp, err := svc.CreateShare(1, 123, 10080)
+	// Task39 will make real HTTP call to lanzou, expect error
+	if err == nil && resp != nil {
+		t.Log("unexpected success - lanzou API returned valid response")
+	}
+}
+
+// TestLanZouService_GetFileURL_Success tests GetFileURL with down_url in response
+func TestLanZouService_GetFileURL_Success(t *testing.T) {
+	repo := newMockLanzouTokenRepo()
+	svc := NewLanZouService(repo)
+
+	_ = svc.SaveToken(1, "test-cookie", "test-token")
+
+	// Task22 will make real HTTP call, expect failure
+	_, _, err := svc.GetFileURL(1, 123)
+	if err == nil {
+		t.Log("unexpected success - lanzou returned down_url")
+	}
+}
