@@ -19,6 +19,10 @@
           <n-button @click="refresh" :loading="loading">
             <template #icon><n-icon><Refresh /></n-icon></template>
           </n-button>
+          <n-button @click="showNewFolderModal = true">
+            <template #icon><n-icon><Create /></n-icon></template>
+            新建文件夹
+          </n-button>
           <n-button v-if="selectedItems.length === 1" @click="openRenameModalForSelected">重命名</n-button>
           <n-button v-if="selectedItems.length > 0" @click="oneClickShare">一键分享</n-button>
           <n-button v-if="selectedItems.length > 0" @click="openMoveModal">移动到</n-button>
@@ -231,6 +235,25 @@
       </n-card>
     </n-modal>
 
+    <n-modal v-model:show="showNewFolderModal">
+      <n-card title="新建文件夹" style="width: 400px;">
+        <div class="space-y-4">
+          <n-input
+            v-model:value="newFolderName"
+            placeholder="请输入文件夹名称"
+            maxlength="100"
+            @keyup.enter="submitNewFolder"
+          />
+        </div>
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <n-button @click="showNewFolderModal = false">取消</n-button>
+            <n-button type="primary" @click="submitNewFolder" :disabled="!newFolderName?.trim()">确定</n-button>
+          </div>
+        </template>
+      </n-card>
+    </n-modal>
+
     <n-modal v-model:show="showShareModal" v-if="shareResult">
       <n-card title="分享链接" style="width: 400px;">
         <div class="space-y-4">
@@ -263,7 +286,7 @@ import { lanzouAPI } from '../api/lanzou'
 import { useMessage } from 'naive-ui'
 import AppHeader from '../components/AppHeader.vue'
 import {
-  ArrowBack, Refresh, Folder, Document
+  ArrowBack, Refresh, Folder, Document, Create
 } from '@vicons/ionicons5'
 
 const router = useRouter()
@@ -316,6 +339,9 @@ const fileDescForm = ref({
 
 const showMoveModal = ref(false)
 const moveTargetId = ref(null)
+
+const showNewFolderModal = ref(false)
+const newFolderName = ref('')
 
 // 文件夹选择下拉选项 (从面包屑构建 + 根目录)
 const folderSelectOptions = computed(() => {
@@ -472,6 +498,25 @@ function openAccessModal(type) {
   showAccessModal.value = true
   showFileMenu.value = false
   showFolderMenu.value = false
+}
+
+async function submitNewFolder() {
+  if (!newFolderName.value?.trim()) {
+    message.warning('请输入文件夹名称')
+    return
+  }
+  try {
+    await lanzouAPI.createFolder({
+      name: newFolderName.value.trim(),
+      parent_id: currentFolderId.value,
+    })
+    message.success('文件夹创建成功')
+    showNewFolderModal.value = false
+    newFolderName.value = ''
+    await refresh()
+  } catch (err) {
+    message.error(err.message || '创建文件夹失败')
+  }
 }
 
 async function submitAccess() {
