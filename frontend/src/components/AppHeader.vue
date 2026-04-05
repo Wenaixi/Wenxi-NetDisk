@@ -9,9 +9,30 @@
         <n-button text @click="$router.push('/lanzou')" :type="isActive('/lanzou')">
           蓝奏云
         </n-button>
+        <n-button text @click="$router.push('/sync')" :type="isActive('/sync')">
+          同步任务
+        </n-button>
+        <n-button text @click="$router.push('/share-parse')" :type="isActive('/share-parse')">
+          链接解析
+        </n-button>
+        <n-button text @click="$router.push('/split-merge')" :type="isActive('/split-merge')">
+          分割/合并
+        </n-button>
+        <n-button text @click="$router.push('/task-history')" :type="isActive('/task-history')">
+          任务历史
+        </n-button>
       </nav>
     </div>
     <div class="flex items-center gap-4">
+      <n-button text @click="$router.push('/upload-tasks')">
+        上传任务
+      </n-button>
+      <n-button text @click="$router.push('/download-tasks')">
+        下载任务
+      </n-button>
+      <n-button text @click="$router.push('/recycle')" :type="isActive('/recycle')">
+        回收站
+      </n-button>
       <n-dropdown :options="menuOptions" @select="handleMenuSelect">
         <n-button text class="text-gray-300">
           {{ user?.email || '用户' }}

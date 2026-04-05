@@ -78,6 +78,18 @@ describe('AppHeader', () => {
 
     expect(wrapper.text()).toContain('本地文件')
     expect(wrapper.text()).toContain('蓝奏云')
+    expect(wrapper.text()).toContain('同步任务')
+    expect(wrapper.text()).toContain('链接解析')
+    expect(wrapper.text()).toContain('分割/合并')
+    expect(wrapper.text()).toContain('任务历史')
+  })
+
+  it('should have utility navigation buttons', () => {
+    const wrapper = mountComponent()
+
+    expect(wrapper.text()).toContain('上传任务')
+    expect(wrapper.text()).toContain('下载任务')
+    expect(wrapper.text()).toContain('回收站')
   })
 
   it('should display user email', () => {

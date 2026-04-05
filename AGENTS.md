@@ -32,6 +32,19 @@
 
 ## 开发历史
 
+### 2026-04-05 - LanZouBrowser重命名 + 一键分享 + 前端468测试
+
+**新增功能 - LanZouBrowser重命名:**
+- LanZouBrowser.vue: 文件/文件夹右键菜单增加"重命名"选项
+- 工具栏增加"重命名"按钮(选中1个时显示)和"一键分享"按钮(选中>0时显示)
+- 新增Rename handler: PUT /lanzou/rename/:id (支持文件Task14和文件夹Task4)
+- Task48FolderRename: 新增文件夹重命名client方法(task=4)
+- Task4Response: 新增文件夹重命名响应类型
+- lanzou.js: rename API路径对齐新路由
+- 11个新测试用例 (LanZouBrowser.test.js: 重命名+一键分享)
+
+**测试统计: 前端 36 文件, 468 用例全部通过 (+11)**
+
 ### 2026-04-05 - 上传/下载任务管理页面 + 前端457测试
 
 **新增功能 - 上传任务管理:**
