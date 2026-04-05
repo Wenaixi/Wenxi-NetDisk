@@ -119,8 +119,8 @@
               </div>
               <div class="text-gray-500 text-sm">{{ formatSize(file.size) }}</div>
             </div>
+            </div>
           </div>
-        </div>
         </div>
       </n-spin>
     </main>
