@@ -397,10 +397,27 @@ RecycleFolderRepo         - 回收站用文件夹仓库 (recycle_service)
 | Utils | crypto | 4 | ✅ |
 | Utils | fileSplit | 22 | ✅ |
 | Component | FileDetailModal | 17 | ✅ |
+| Component | AppHeader | 8 | ✅ |
+| Component | Login | 8 | ✅ |
+| Component | Register | 10 | ✅ |
+| Component | LanzouSettings | 12 | ✅ |
+| Component | RecycleBin | 16 | ✅ |
+| Component | Sync | 16 | ✅ |
+| Component | ShareParse | 15 | ✅ |
+| Component | LanZouBrowser | 26 | ✅ |
+| View | Dashboard | 27 | ✅ |
+| API | auth/index | 3 | ✅ |
+| API | file/index | 12 | ✅ |
+| API | folder/index | 7 | ✅ |
+| API | share/index | 5 | ✅ |
+| API | lanzou | 12 | ✅ |
+| API | recycle | 5 | ✅ |
+| API | interceptors | 15 | ✅ |
+| Router | guards | 17 | ✅ |
 | E2E | Playwright | 15 | ⏭️ |
 
 ---
 
-**文档版本**: 6.0.0
+**文档版本**: 7.0.0
 **最后更新**: 2026-04-05
-**状态**: Phase 6 完成, 测试 380 全部通过 (212 Go + 168 Vue)
+**状态**: Phase 6 完成, 测试 923 全部通过 (~567 Go + 356 Vue), Handler覆盖率 96.4%
