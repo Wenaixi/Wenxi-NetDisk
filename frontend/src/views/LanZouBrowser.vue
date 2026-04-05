@@ -27,6 +27,13 @@
             v-model:checked="selectMode"
             label="选择模式"
           />
+          <n-input
+            v-if="files.length > 0 || folders.length > 0"
+            v-model:value="searchQuery"
+            placeholder="搜索..."
+            clearable
+            style="width: 150px"
+          />
           <n-button
             v-if="selectedItems.length > 0"
             type="error"
@@ -253,6 +260,7 @@ const folders = ref([])
 const files = ref([])
 const breadcrumbs = ref([{ id: -1, name: '首页' }])
 const currentFolderId = ref(-1)
+const searchQuery = ref('')
 
 const showFileMenu = ref(false)
 const selectedFile = ref(null)
