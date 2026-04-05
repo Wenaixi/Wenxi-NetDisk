@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"bytes"
 	"errors"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -540,4 +542,80 @@ func TestUploadHandler_GetUploadURL_WithFolderID_Path(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+// mockFileRepoCreateErrorForUpload implements FileRepository with Create error
+type mockFileRepoCreateErrorForUpload struct{}
+func (m *mockFileRepoCreateErrorForUpload) Create(file *model.File) error {
+	return errors.New("create failed")
+}
+func (m *mockFileRepoCreateErrorForUpload) FindByID(id uint) (*model.File, error) {
+	return nil, errors.New("not found")
+}
+func (m *mockFileRepoCreateErrorForUpload) FindByUserID(userID uint) ([]model.File, error) {
+	return nil, nil
+}
+func (m *mockFileRepoCreateErrorForUpload) FindByFolderID(userID uint, folderID *uint) ([]model.File, error) {
+	return nil, nil
+}
+func (m *mockFileRepoCreateErrorForUpload) FindByLanZouFileID(lanzouFileID string) (*model.File, error) {
+	return nil, errors.New("not found")
+}
+func (m *mockFileRepoCreateErrorForUpload) Delete(id uint) error { return nil }
+func (m *mockFileRepoCreateErrorForUpload) Update(file *model.File) error { return nil }
+
+// TestUploadHandler_UploadFile_CreateError 测试创建文件元数据失败
+func TestUploadHandler_UploadFile_CreateError(t *testing.T) {
+	repo := &mockFileRepoCreateErrorForUpload{}
+	fileSvc := service.NewFileService(repo)
+	versionSvc := service.NewFileVersionService(nil, nil)
+	handler := NewUploadHandler(fileSvc, versionSvc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/files/upload", handler.UploadFile)
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("file", "test.txt")
+	if err != nil {
+		t.Fatalf("failed to create form file: %v", err)
+	}
+	part.Write([]byte("hello world"))
+	writer.Close()
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("POST", "/files/upload", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+}
+
+// TestUploadHandler_GetUploadURL_CreateError 测试获取上传URL时创建元数据失败
+func TestUploadHandler_GetUploadURL_CreateError(t *testing.T) {
+	repo := &mockFileRepoCreateErrorForUpload{}
+	fileSvc := service.NewFileService(repo)
+	versionSvc := service.NewFileVersionService(nil, nil)
+	handler := NewUploadHandler(fileSvc, versionSvc)
+
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		c.Set("user_id", uint(1))
+		c.Next()
+	})
+	r.POST("/files/upload-url", handler.GetUploadURL)
+
+	w := httptest.NewRecorder()
+	body := `{"file_name":"test.txt","size":100}`
+	req := httptest.NewRequest("POST", "/files/upload-url", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }

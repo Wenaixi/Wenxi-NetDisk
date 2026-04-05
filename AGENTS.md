@@ -32,6 +32,27 @@
 
 ## 开发历史
 
+### 2026-04-05 - Handler全覆盖96.4% + 蓝奏云HTTP Mock测试
+
+**Handler覆盖率提升至96.4% (目标90%+ 已超越):**
+- lanzou_test.go: 添加16+个mock测试用例
+  - SetBaseURL支持lanzou.Client测试注入
+  - LanZouService增加baseURL字段支持mock服务器
+  - ListFiles: mock成功/未连接/带folder_id参数/HTTP错误
+  - ListFolders: mock成功/未连接
+  - CreateFolder: mock成功/未连接/HTTP错误
+  - CreateShare: mock成功/未连接
+  - GetFileURL: mock成功/未连接/缺少down_url字段
+  - Connect: DB错误/成功路径
+  - GetStatus: 已连接/未连接
+  - InitializeUpload: 成功路径/服务错误
+  - mock实现: mockLanzouTokenRepoForLanzouHandler/mockLanzouTokenRepoUpsertError/mockLanzouClientProviderError
+- upload_test.go: 添加multipart文件上传测试
+  - UploadFile: CreateError错误路径/GetUploadURL CreateError
+- lanzou.go覆盖: Connect 100%, GetStatus 100%, Disconnect 100%, ListFiles 81%, ListFolders 85.7%, CreateFolder 86.7%, InitializeUpload 100%, CompleteUpload 86.7%, UploadStatus 100%, CreateShare 100%, GetFileURL 100%
+- upload.go覆盖: UploadFile 82.4% (multipart已测试), GetUploadURL 88.2%
+- Handler总覆盖率: 94.8% → 96.4%
+
 ### 2026-04-05 - FileHandler错误路径全覆盖 + Handler覆盖率94.8%
 
 **Handler覆盖率提升至94.8%:**

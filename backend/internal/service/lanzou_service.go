@@ -17,10 +17,16 @@ type LanZouTokenRepository interface {
 
 type LanZouService struct {
 	tokenRepo LanZouTokenRepository
+	baseURL   string // 用于测试覆盖默认baseURL
 }
 
 func NewLanZouService(tokenRepo LanZouTokenRepository) *LanZouService {
 	return &LanZouService{tokenRepo: tokenRepo}
+}
+
+// SetBaseURL 设置蓝奏云API基础URL（用于测试）
+func (s *LanZouService) SetBaseURL(url string) {
+	s.baseURL = url
 }
 
 func (s *LanZouService) SaveToken(userID uint, cookie, tokenValue string) error {
@@ -60,6 +66,9 @@ func (s *LanZouService) GetClient(userID uint) (*lanzou.Client, error) {
 	if err != nil {
 		return nil, errors.New("lanzou not connected")
 	}
+	if token == nil {
+		return nil, errors.New("lanzou not connected")
+	}
 
 	// 检查token是否过期
 	if time.Now().After(token.ExpiresAt) {
@@ -67,6 +76,9 @@ func (s *LanZouService) GetClient(userID uint) (*lanzou.Client, error) {
 	}
 
 	client := lanzou.NewClient(token.Cookie)
+	if s.baseURL != "" {
+		client.SetBaseURL(s.baseURL)
+	}
 	return client, nil
 }
 

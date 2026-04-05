@@ -40,6 +40,11 @@ func (c *Client) SetCookie(cookie string) {
 	c.cookie = cookie
 }
 
+// SetBaseURL 设置基础URL（用于测试）
+func (c *Client) SetBaseURL(baseURL string) {
+	c.baseURL = baseURL
+}
+
 // buildRequest 构建请求
 func (c *Client) buildRequest(method, path string, body url.Values) (*http.Request, error) {
 	reqURL := c.baseURL + "/" + path
