@@ -138,6 +138,7 @@
                   selectMode && selectedItems.includes(file.id) ? 'ring-2 ring-blue-500' : ''
                 ]"
                 @click="selectMode ? toggleSelect(file.id) : handleFileClick(file)"
+                @contextmenu.prevent="!selectMode && openFileMenu(file)"
               >
                 <div class="flex items-center gap-2 mb-2">
                   <n-checkbox
@@ -731,6 +732,11 @@ async function startBatchUpload() {
 }
 
 function handleFileClick(file) {
+  selectedFileItem.value = file
+  showFileMenu.value = true
+}
+
+function openFileMenu(file) {
   selectedFileItem.value = file
   showFileMenu.value = true
 }
