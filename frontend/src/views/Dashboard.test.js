@@ -463,4 +463,48 @@ describe('Dashboard.vue', () => {
 
     expect(wrapper.vm.shareResult).not.toBeNull()
   })
+
+  it('has drag-and-drop overlay state', () => {
+    const wrapper = mount(Dashboard)
+    wrapper.vm.isDragging = true
+    expect(wrapper.vm.isDragging).toBe(true)
+    // currentFolderName reflects the current breadcrumb name
+    expect(wrapper.vm.currentFolderName).toBeDefined()
+  })
+
+  it('handleDrop processes dropped files', async () => {
+    const wrapper = mount(Dashboard)
+    const mockFile = new File(['content'], 'test.txt', { type: 'text/plain' })
+    const dataTransfer = { files: [mockFile] }
+
+    wrapper.vm.isDragging = true
+    await wrapper.vm.handleDrop({ dataTransfer })
+
+    expect(wrapper.vm.isDragging).toBe(false)
+    expect(wrapper.vm.uploadStore.uploadQueue.length).toBe(1)
+  })
+
+  it('handleDragLeave hides overlay when leaving target', () => {
+    const wrapper = mount(Dashboard)
+    wrapper.vm.isDragging = true
+
+    const mockEvent = {
+      currentTarget: { contains: () => false },
+      relatedTarget: null
+    }
+    wrapper.vm.handleDragLeave(mockEvent)
+
+    expect(wrapper.vm.isDragging).toBe(false)
+  })
+
+  it('handleDrop ignores folder-like files', async () => {
+    const wrapper = mount(Dashboard)
+    const mockFolder = new File(['content'], 'folder', { type: '' })
+    Object.defineProperty(mockFolder, 'webkitRelativePath', { value: 'folder' })
+    const dataTransfer = { files: [mockFolder] }
+
+    await wrapper.vm.handleDrop({ dataTransfer })
+
+    expect(wrapper.vm.uploadStore.uploadQueue.length).toBe(0)
+  })
 })

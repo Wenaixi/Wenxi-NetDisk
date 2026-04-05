@@ -33,6 +33,25 @@
       <n-input-number :value="settings.recycleRetentionDays" @update:value="updateSetting('recycleRetentionDays', $event)" :min="1" :max="365" />
       <n-text depth="3" class="ml-2">天</n-text>
     </n-form-item>
+
+    <n-divider>流量管理</n-divider>
+
+    <n-form-item label="流量警告">
+      <n-switch :value="calculateStore.warningEnabled" @update:value="calculateStore.setWarningEnabled" />
+    </n-form-item>
+    <n-form-item label="警告阈值" v-if="calculateStore.warningEnabled">
+      <n-input-number :value="Math.round(calculateStore.warningSize / (1024 * 1024 * 1024))"
+                      @update:value="v => calculateStore.setWarningSize(v * 1024 * 1024 * 1024)"
+                      :min="1" :max="100" />
+      <n-text depth="3" class="ml-2">GB</n-text>
+    </n-form-item>
+    <n-form-item label="今日上传">
+      <n-text>{{ formatSize(calculateStore.todayBytes) }}</n-text>
+      <n-text depth="3" class="ml-2">/ {{ formatSize(calculateStore.warningSize) }}</n-text>
+    </n-form-item>
+    <n-form-item>
+      <n-button size="small" type="error" @click="calculateStore.clearHistory">清空流量记录</n-button>
+    </n-form-item>
   </n-form>
 </template>
 
@@ -40,9 +59,16 @@
 import { ref, onMounted } from 'vue'
 import { useThemeStore } from '../stores/theme'
 import { useUploadStore } from '../stores/upload'
+import { useCalculateStore } from '../stores/calculate'
+import { formatFileSize } from '../utils/fileSplit'
 
 const themeStore = useThemeStore()
 const uploadStore = useUploadStore()
+const calculateStore = useCalculateStore()
+
+function formatSize(bytes) {
+  return formatFileSize(bytes)
+}
 
 const DEFAULT_SETTINGS = {
   uploadPath: '',

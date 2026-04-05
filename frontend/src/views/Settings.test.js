@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
 import Settings from '../views/Settings.vue'
 
 // Mock stores
@@ -17,6 +18,18 @@ vi.mock('../stores/upload', () => ({
   })
 }))
 
+vi.mock('../stores/calculate', () => {
+  const mockStore = {
+    warningEnabled: true,
+    warningSize: 7 * 1024 * 1024 * 1024,
+    todayBytes: 0,
+    setWarningEnabled: vi.fn(),
+    setWarningSize: vi.fn(),
+    clearHistory: vi.fn()
+  }
+  return { useCalculateStore: () => mockStore }
+})
+
 // Mock naive-ui components
 vi.mock('naive-ui', () => ({
   NForm: { name: 'NForm', template: '<div><slot /></div>' },
@@ -29,11 +42,13 @@ vi.mock('naive-ui', () => ({
   NButton: { name: 'NButton', template: '<button><slot /></button>', props: ['type'] },
   NInputNumber: { name: 'NInputNumber', template: '<input type="number" />', props: ['value', 'min', 'max'] },
   NSwitch: { name: 'NSwitch', template: '<input type="checkbox" />', props: ['value'], emits: ['update:value'] },
-  NText: { name: 'NText', template: '<span><slot /></span>', props: ['depth'] }
+  NText: { name: 'NText', template: '<span><slot /></span>', props: ['depth'] },
+  NDivider: { name: 'NDivider', template: '<hr />' }
 }))
 
 describe('Settings.vue', () => {
   beforeEach(() => {
+    setActivePinia(createPinia())
     localStorage.clear()
   })
 
@@ -70,7 +85,6 @@ describe('Settings.vue', () => {
   })
 
   it('has theme selection radios', () => {
-    // Theme options exist in template, mock components mean we verify vm exists
     const wrapper = mount(Settings)
     expect(wrapper.vm.settings).toBeDefined()
     expect(['dark', 'light', 'auto']).toContain(wrapper.vm.settings.autoCleanRecycle ? 'dark' : 'light')
@@ -78,11 +92,7 @@ describe('Settings.vue', () => {
 
   it('chooses upload path via file picker', async () => {
     const wrapper = mount(Settings)
-    // Mock file picker
     const mockFiles = [{ webkitRelativePath: 'test-folder/file.txt' }]
-    const event = { target: { files: mockFiles } }
-
-    // Manually trigger the handler
     wrapper.vm.updateSetting('uploadPath', 'test-folder')
     expect(wrapper.vm.settings.uploadPath).toBe('test-folder')
   })

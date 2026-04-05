@@ -1,5 +1,19 @@
 <template>
-  <div class="min-h-screen bg-[#0f0f0f]">
+  <div class="min-h-screen bg-[#0f0f0f]"
+       @dragover.prevent="isDragging = true"
+       @dragleave="handleDragLeave"
+       @drop.prevent="handleDrop">
+
+    <!-- 拖拽上传遮罩 -->
+    <div v-if="isDragging"
+         class="fixed inset-0 z-50 bg-[rgba(0,0,0,0.8)] flex items-center justify-center pointer-events-none">
+      <div class="border-4 border-dashed border-[#00D4FF] rounded-none p-12 text-center bg-[#1a1a1a]">
+        <n-icon size="64" color="#00D4FF"><CloudUpload /></n-icon>
+        <div class="text-white text-xl mt-4">拖拽文件到此处上传</div>
+        <div class="text-gray-400 text-sm mt-2">上传到: {{ currentFolderName }}</div>
+      </div>
+    </div>
+
     <AppHeader />
 
     <main class="p-6">
@@ -417,6 +431,37 @@ const expiresOptions = [
 // 重命名相关
 const showRenameModal = ref(false)
 const renameName = ref('')
+
+// 拖拽上传相关
+const isDragging = ref(false)
+
+function handleDragLeave(e) {
+  // 只有当拖拽目标确实是当前元素时才关闭遮罩
+  if (e.currentTarget.contains(e.relatedTarget)) return
+  isDragging.value = false
+}
+
+async function handleDrop(e) {
+  isDragging.value = false
+  const files = Array.from(e.dataTransfer?.files || [])
+  if (files.length === 0) return
+
+  // 过滤掉文件夹
+  const validFiles = files.filter(f => f.type && !f.webkitRelativePath)
+  if (validFiles.length === 0) return
+
+  uploadStore.addToQueue(validFiles)
+  showUploadModal.value = true
+  if (!uploadStore.isQueueUploading) {
+    const key = await generateEncryptionKey()
+    await uploadStore.uploadAll(key, fileStore.currentFolder)
+  }
+}
+
+const currentFolderName = computed(() => {
+  const crumbs = fileStore.breadcrumbs
+  return crumbs.length > 0 ? crumbs[crumbs.length - 1].name : '根目录'
+})
 
 // 选择模式相关
 const selectMode = ref(false)
