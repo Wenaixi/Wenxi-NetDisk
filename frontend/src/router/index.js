@@ -83,6 +83,12 @@ const routes = [
     name: 'DownloadTasks',
     component: () => import('../views/DownloadTasks.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/completed-tasks',
+    name: 'CompletedTasks',
+    component: () => import('../views/CompletedTasks.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
