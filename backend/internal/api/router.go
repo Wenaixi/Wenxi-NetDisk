@@ -136,6 +136,7 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 			lanzou.POST("/upload/init", lanzouHandler.InitializeUpload)
 			lanzou.POST("/upload/complete/:id", lanzouHandler.CompleteUpload)
 			lanzou.GET("/upload/status/:id", lanzouHandler.UploadStatus)
+			lanzou.GET("/profile", lanzouHandler.GetProfile)
 		}
 
 		// Recycle bin routes (protected)

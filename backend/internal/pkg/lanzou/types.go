@@ -135,6 +135,16 @@ type Task12Response struct {
 	Info string `json:"info"`
 }
 
+// ProfileInfo 用户个人信息
+type ProfileInfo struct {
+	Domain       string   `json:"domain"`        // 个性域名
+	LastLogin    string   `json:"last_login"`    // 最近登录时间
+	SupportList  []string `json:"support_list"`  // 允许上传类型
+	MaxSize      string   `json:"max_size"`      // 单个文件大小
+	Verification string   `json:"verification"`  // 安全验证
+	Referer      string   `json:"referer"`       // 网盘主页iframe链接
+}
+
 // Task11Response task=11 设置文件描述响应
 type Task11Response struct {
 	Zt   int    `json:"zt"`

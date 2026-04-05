@@ -146,3 +146,12 @@ func (s *LanZouService) SetFileDescription(userID uint, fileId int, desc string)
 	}
 	return client.Task11(fileId, desc)
 }
+
+// GetProfile 获取用户个人信息
+func (s *LanZouService) GetProfile(userID uint) (*lanzou.ProfileInfo, error) {
+	client, err := s.GetClient(userID)
+	if err != nil {
+		return nil, err
+	}
+	return client.Profile()
+}

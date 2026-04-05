@@ -536,3 +536,17 @@ func (h *LanZouHandler) Move(c *gin.Context) {
 
 	response.Success(c, resp)
 }
+
+// GetProfile 获取用户个人信息
+func (h *LanZouHandler) GetProfile(c *gin.Context) {
+	userID, _ := c.Get("user_id")
+	uid := userID.(uint)
+
+	profile, err := h.lanzouSvc.GetProfile(uid)
+	if err != nil {
+		response.InternalError(c, err.Error())
+		return
+	}
+
+	response.Success(c, profile)
+}

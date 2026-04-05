@@ -1,6 +1,8 @@
 package service
 
 import (
+	"strings"
+
 	"github.com/wenaixi/wenxi-cloud/backend/internal/pkg/lanzou"
 )
 
@@ -23,6 +25,7 @@ func (s *ShareParseService) BatchParseShareLinks(urls []string, pwd string) ([]i
 	errors := make([]string, 0)
 
 	for _, url := range urls {
+		url = strings.TrimSpace(url)
 		if url == "" {
 			continue
 		}

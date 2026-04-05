@@ -401,6 +401,130 @@ func extractDownloadURL(html, referer, pwd string) string {
 	return ""
 }
 
+// doGet 发送GET请求
+func (c *Client) doGet(path string) ([]byte, error) {
+	reqURL := c.baseURL + "/" + path
+	req, err := http.NewRequest("GET", reqURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("User-Agent", c.userAgent)
+	req.Header.Set("Referer", c.baseURL+"/")
+
+	if c.cookie != "" {
+		req.Header.Set("Cookie", c.cookie)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return io.ReadAll(resp.Body)
+}
+
+// Profile 获取用户个人信息
+// 从 mydisk.php 页面解析 iframe referer
+// 从 mydisk.php?item=profile&action=mypower 页面解析用户信息
+func (c *Client) Profile() (*ProfileInfo, error) {
+	// 并发请求两个页面
+	type result struct {
+		data []byte
+		err  error
+	}
+	ch := make(chan result, 2)
+
+	go func() {
+		data, err := c.doGet("mydisk.php")
+		ch <- result{data, err}
+	}()
+
+	go func() {
+		data, err := c.doGet("mydisk.php?item=profile&action=mypower")
+		ch <- result{data, err}
+	}()
+
+	r1 := <-ch
+	r2 := <-ch
+
+	if r1.err != nil {
+		return nil, fmt.Errorf("failed to fetch mydisk.php: %w", r1.err)
+	}
+	if r2.err != nil {
+		return nil, fmt.Errorf("failed to fetch profile page: %w", r2.err)
+	}
+
+	profile := &ProfileInfo{}
+
+	// 解析 profile 页面
+	c.parseProfilePage(string(r2.data), profile)
+
+	// 解析主页面获取 referer
+	profile.Referer = extractRefererFromMainPage(string(r1.data), c.baseURL)
+
+	return profile, nil
+}
+
+// parseProfilePage 从 profile HTML 页面解析用户信息
+func (c *Client) parseProfilePage(html string, profile *ProfileInfo) {
+	// 解析个性域名 - <span id="domaindiynow">xxx</span>
+	domainRe := regexp.MustCompile(`<span[^>]*id=["']domaindiynow["'][^>]*>(.*?)</span>`)
+	if m := domainRe.FindStringSubmatch(html); len(m) > 1 {
+		profile.Domain = strings.TrimSpace(m[1])
+	}
+
+	// 解析最近登录时间 - <span class="mf2">xxx</span> after "最近登录时间"
+	lastLoginRe := regexp.MustCompile(`最近登录时间.*?<span[^>]*class=["'][^"']*mf2[^"']*["'][^>]*>(.*?)</span>`)
+	if m := lastLoginRe.FindStringSubmatch(html); len(m) > 1 {
+		profile.LastLogin = strings.TrimSpace(m[1])
+	}
+
+	// 解析允许上传类型
+	supportRe := regexp.MustCompile(`允许上传类型.*?<span[^>]*class=["'][^"']*mf2[^"']*["'][^>]*>(.*?)</span>`)
+	if m := supportRe.FindStringSubmatch(html); len(m) > 1 {
+		raw := m[1]
+		raw = strings.ReplaceAll(raw, "<br>", ",")
+		raw = strings.ReplaceAll(raw, "<br/>", ",")
+		raw = strings.ReplaceAll(raw, "<br />", ",")
+		parts := strings.Split(raw, ",")
+		for _, p := range parts {
+			p = strings.TrimSpace(p)
+			if p != "" {
+				profile.SupportList = append(profile.SupportList, p)
+			}
+		}
+	}
+
+	// 解析单个文件大小 - <font>xxx</font> after "单个文件大小"
+	maxSizeRe := regexp.MustCompile(`单个文件大小.*?<font[^>]*>(.*?)</font>`)
+	if m := maxSizeRe.FindStringSubmatch(html); len(m) > 1 {
+		profile.MaxSize = strings.TrimSpace(m[1])
+	}
+
+	// 解析安全验证 - <span id="phone_id">xxx</span>
+	verificationRe := regexp.MustCompile(`<span[^>]*id=["']phone_id["'][^>]*>(.*?)</span>`)
+	if m := verificationRe.FindStringSubmatch(html); len(m) > 1 {
+		profile.Verification = strings.TrimSpace(m[1])
+	}
+}
+
+// extractRefererFromMainPage 从主页面提取 iframe src 作为 referer
+func extractRefererFromMainPage(html, baseURL string) string {
+	// 匹配 iframe src
+	re := regexp.MustCompile(`<iframe[^>]+src=["']([^"']+)["']`)
+	m := re.FindStringSubmatch(html)
+	if len(m) > 1 {
+		src := m[1]
+		if !strings.HasPrefix(src, "http") {
+			return baseURL + src
+		}
+		return src
+	}
+	return ""
+}
+
 // Ping 检测连接
 func (c *Client) Ping() error {
 	body := url.Values{"task": {"1"}}

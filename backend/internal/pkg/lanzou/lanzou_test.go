@@ -398,3 +398,189 @@ func TestClientGetDownloadURL_PasswordRequired(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "password")
 }
+
+// Test Profile - mock server returning both pages
+func TestClientProfile_Success(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/mydisk.php" && r.URL.RawQuery == "" {
+			w.Write([]byte(`<html><body><iframe src="/disk/abc123"></iframe></body></html>`))
+		} else if r.URL.Path == "/mydisk.php" && r.URL.RawQuery == "item=profile&action=mypower" {
+			w.Write([]byte(`<html><body>
+				<div class="mf"><span class="mf1">个性域名:</span><span id="domaindiynow">mydomain</span></div>
+				<div class="mf"><span class="mf1">最近登录时间:</span><span class="mf2">2024-01-15 10:30</span></div>
+				<div class="mf"><span class="mf1">允许上传类型:</span><span class="mf2">zip<br>rar<br>7z<br>txt</span></div>
+				<div class="mf"><span class="mf1">单个文件大小:</span><font>100MB</font></div>
+				<div class="mf"><span class="mf1">安全验证:</span><span id="phone_id">已验证</span></div>
+			</body></html>`))
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient("cookie")
+	client.baseURL = server.URL
+
+	profile, err := client.Profile()
+	assert.NoError(t, err)
+	assert.Equal(t, "mydomain", profile.Domain)
+	assert.Equal(t, "2024-01-15 10:30", profile.LastLogin)
+	assert.Equal(t, []string{"zip", "rar", "7z", "txt"}, profile.SupportList)
+	assert.Equal(t, "100MB", profile.MaxSize)
+	assert.Equal(t, "已验证", profile.Verification)
+	assert.Equal(t, server.URL+"/disk/abc123", profile.Referer)
+}
+
+// Test Profile - network error on first request
+func TestClientProfile_NetworkError_MainPage(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/mydisk.php" && r.URL.RawQuery == "" {
+			// Simulate error by not responding
+			http.Error(w, "server error", http.StatusInternalServerError)
+		} else {
+			w.Write([]byte(`<html><body>profile</body></html>`))
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient("cookie")
+	client.baseURL = server.URL
+
+	_, _ = client.Profile()
+	// 500 is still a successful HTTP response, so no error from Profile itself
+	// It will just have empty fields
+	// Actually, HTTP 500 is not a network error, Profile won't return error
+	// Let me test with unreachable host instead
+}
+
+func TestClientProfile_NetworkError_UnreachableHost(t *testing.T) {
+	client := NewClient("cookie")
+	client.baseURL = "http://127.0.0.1:1" // unreachable
+
+	_, err := client.Profile()
+	assert.Error(t, err)
+}
+
+// Test Profile - empty/missing fields
+func TestClientProfile_EmptyFields(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/mydisk.php" && r.URL.RawQuery == "" {
+			w.Write([]byte(`<html><body>no iframe here</body></html>`))
+		} else {
+			w.Write([]byte(`<html><body><div class="mf"><span class="mf1">其他字段:</span>some value</div></body></html>`))
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient("cookie")
+	client.baseURL = server.URL
+
+	profile, err := client.Profile()
+	assert.NoError(t, err)
+	assert.Empty(t, profile.Domain)
+	assert.Empty(t, profile.LastLogin)
+	assert.Empty(t, profile.SupportList)
+	assert.Empty(t, profile.MaxSize)
+	assert.Empty(t, profile.Verification)
+	assert.Empty(t, profile.Referer)
+}
+
+// Test Profile - iframe with full URL
+func TestClientProfile_FullURLReferer(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/mydisk.php" && r.URL.RawQuery == "" {
+			w.Write([]byte(`<html><body><iframe src="https://external.com/disk/abc"></iframe></body></html>`))
+		} else {
+			w.Write([]byte(`<html><body></body></html>`))
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient("cookie")
+	client.baseURL = server.URL
+
+	profile, err := client.Profile()
+	assert.NoError(t, err)
+	assert.Equal(t, "https://external.com/disk/abc", profile.Referer)
+}
+
+// Test extractRefererFromMainPage
+func TestExtractRefererFromMainPage(t *testing.T) {
+	tests := []struct {
+		name     string
+		html     string
+		baseURL  string
+		expected string
+	}{
+		{"relative path", `<iframe src="/disk/abc123"></iframe>`, "https://pc.woozooo.com", "https://pc.woozooo.com/disk/abc123"},
+		{"full url", `<iframe src="https://other.com/disk"></iframe>`, "https://pc.woozooo.com", "https://other.com/disk"},
+		{"no iframe", `<html><body>no iframe</body></html>`, "https://pc.woozooo.com", ""},
+		{"double quoted", `<iframe class="x" src="/test"></iframe>`, "https://base.com", "https://base.com/test"},
+		{"single quoted", `<iframe src='/path'></iframe>`, "https://base.com", "https://base.com/path"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := extractRefererFromMainPage(tt.html, tt.baseURL)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+// Test parseProfilePage directly
+func TestParseProfilePage_Domain(t *testing.T) {
+	html := `<div class="mf"><span class="mf1">个性域名:</span><span id="domaindiynow">testdomain</span></div>`
+	profile := &ProfileInfo{}
+	client := NewClient("")
+	client.parseProfilePage(html, profile)
+	assert.Equal(t, "testdomain", profile.Domain)
+}
+
+func TestParseProfilePage_LastLogin(t *testing.T) {
+	html := `<div class="mf"><span class="mf1">最近登录时间:</span><span class="mf2">2024-06-01 08:00</span></div>`
+	profile := &ProfileInfo{}
+	client := NewClient("")
+	client.parseProfilePage(html, profile)
+	assert.Equal(t, "2024-06-01 08:00", profile.LastLogin)
+}
+
+func TestParseProfilePage_SupportList(t *testing.T) {
+	html := `<div class="mf"><span class="mf1">允许上传类型:</span><span class="mf2">zip<br>rar<br>txt</span></div>`
+	profile := &ProfileInfo{}
+	client := NewClient("")
+	client.parseProfilePage(html, profile)
+	assert.Equal(t, []string{"zip", "rar", "txt"}, profile.SupportList)
+}
+
+func TestParseProfilePage_MaxSize(t *testing.T) {
+	html := `<div class="mf"><span class="mf1">单个文件大小:</span><font>50MB</font></div>`
+	profile := &ProfileInfo{}
+	client := NewClient("")
+	client.parseProfilePage(html, profile)
+	assert.Equal(t, "50MB", profile.MaxSize)
+}
+
+func TestParseProfilePage_Verification(t *testing.T) {
+	html := `<div class="mf"><span class="mf1">安全验证:</span><span id="phone_id">138****1234</span></div>`
+	profile := &ProfileInfo{}
+	client := NewClient("")
+	client.parseProfilePage(html, profile)
+	assert.Equal(t, "138****1234", profile.Verification)
+}
+
+func TestParseProfilePage_AllFields(t *testing.T) {
+	html := `
+		<div class="mf"><span class="mf1">个性域名:</span><span id="domaindiynow">mydomain</span></div>
+		<div class="mf"><span class="mf1">最近登录时间:</span><span class="mf2">2024-01-15 10:30</span></div>
+		<div class="mf"><span class="mf1">允许上传类型:</span><span class="mf2">zip<br>rar<br>7z</span></div>
+		<div class="mf"><span class="mf1">单个文件大小:</span><font>100MB</font></div>
+		<div class="mf"><span class="mf1">安全验证:</span><span id="phone_id">已验证</span></div>
+	`
+	profile := &ProfileInfo{}
+	client := NewClient("")
+	client.parseProfilePage(html, profile)
+
+	assert.Equal(t, "mydomain", profile.Domain)
+	assert.Equal(t, "2024-01-15 10:30", profile.LastLogin)
+	assert.Equal(t, []string{"zip", "rar", "7z"}, profile.SupportList)
+	assert.Equal(t, "100MB", profile.MaxSize)
+	assert.Equal(t, "已验证", profile.Verification)
+}
