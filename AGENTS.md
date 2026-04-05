@@ -56,9 +56,9 @@
 
 **Repository覆盖率: 0% → 90.4%**
 **lanzou覆盖率: 24.6% → 60.4%**
-**总Go测试数: ~540**
+**总Go测试数: ~550**
 
-### 2026-04-05 - Service层深度测试完善 (覆盖率85.2% → 92.1%)
+### 2026-04-05 - Service层深度测试完善 (覆盖率85.2% → 93.1%)
 
 **folder_service_test.go (新增12用例, 总计~32):**
 - CreateFolder空名称、UpdateFolder_NotFound、DeleteFolder_NotFound
@@ -768,7 +768,7 @@ references/lanzouyun-disk/
 | pkg/lanzou | 44 (Client基础5+Task方法18+辅助函数7+GetDownloadURL3+解析27) | ✅ |
 | pkg/response | 15 (5结构+10HTTP) | ✅ |
 | pkg/middleware | 20 (10Auth+4Logger+6CORS) | ✅ |
-| service/auth | 13 (+5 Login) | ✅ |
+| service/auth | 17 (+4 数据库错误/创建失败/NotFound) | ✅ |
 | service/file | 26 (+14 FindByID/FindByLanZouFileID) | ✅ |
 | service/folder | 32 (+10 深层嵌套isDescendant/NotFound/错误路径) | ✅ |
 | service/lanzou | 13 (+4 CreateShare/GetFileURL) | ✅ |
@@ -777,7 +777,7 @@ references/lanzouyun-disk/
 | service/share | 26 (+5 FileNotFound/AccessDenied/DeleteShare) | ✅ |
 | service/download | 6 (+1 getDownloadLink_NoLanZouFileID) | ✅ |
 | service/recycle | 23 (+12 Restore_Folder/错误路径/CreateError) | ✅ |
-| service/file_version | 18 | ✅ |
+| service/file_version | 20 (+2 CreateVersion_RepoError/RestoreVersion_UpdateError) | ✅ |
 | repository | 61 (纯Go glebarez/sqlite, 0→90.4%) | ✅ |
 | handlers/auth | 18 (+10 GetCurrentUser success/Register/Login/构造器) | ✅ |
 | handlers/file | 21 (+2 ListFiles/CreateFileMetadata) | ✅ |
