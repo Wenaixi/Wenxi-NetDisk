@@ -619,4 +619,65 @@ describe('LanZouBrowser.vue', () => {
     expect(mockSetFileDescription).toHaveBeenCalled()
     expect(wrapper.vm.showFileDescModal).toBe(true)
   })
+
+  // Move tests
+  it('should open move modal with current folder', () => {
+    const wrapper = mountComponent()
+    wrapper.vm.currentFolderId = '123'
+    wrapper.vm.selectedItems = ['f1']
+    wrapper.vm.openMoveModal()
+    expect(wrapper.vm.showMoveModal).toBe(true)
+    expect(wrapper.vm.moveTargetId).toBe('123')
+  })
+
+  it('should submit move for single file', async () => {
+    const mockMove = vi.fn().mockResolvedValue({ zt: 1 })
+    const { lanzouAPI: api } = await import('../api/lanzou')
+    api.move = mockMove
+    mockListFiles.mockResolvedValue({ folders: [], files: [] })
+    const wrapper = mountComponent()
+    wrapper.vm.folders = [{ folder_id: 'f1', name: 'Folder1' }]
+    wrapper.vm.files = [{ file_id: 'f2', name: 'File1.zip' }]
+    wrapper.vm.selectedItems = ['f2']
+    wrapper.vm.moveTargetId = '123'
+    await wrapper.vm.submitMove()
+    expect(mockMove).toHaveBeenCalledWith('f2', { type: 'file', target: '123' })
+    expect(wrapper.vm.showMoveModal).toBe(false)
+    expect(wrapper.vm.selectedItems).toHaveLength(0)
+  })
+
+  it('should submit move for multiple items', async () => {
+    const mockMove = vi.fn().mockResolvedValue({ zt: 1 })
+    const { lanzouAPI: api } = await import('../api/lanzou')
+    api.move = mockMove
+    mockListFiles.mockResolvedValue({ folders: [], files: [] })
+    const wrapper = mountComponent()
+    wrapper.vm.folders = [{ folder_id: 'f1', name: 'Folder1' }]
+    wrapper.vm.files = [{ file_id: 'f2', name: 'File1.zip' }]
+    wrapper.vm.selectedItems = ['f1', 'f2']
+    wrapper.vm.moveTargetId = '456'
+    await wrapper.vm.submitMove()
+    expect(mockMove).toHaveBeenCalledTimes(2)
+    expect(wrapper.vm.selectedItems).toHaveLength(0)
+  })
+
+  it('should warn when no target selected for move', async () => {
+    const wrapper = mountComponent()
+    wrapper.vm.moveTargetId = null
+    wrapper.vm.selectedItems = ['f1']
+    wrapper.vm.showMoveModal = true
+    await wrapper.vm.submitMove()
+    expect(wrapper.vm.showMoveModal).toBe(true)
+  })
+
+  it('should have folder select options from breadcrumbs', () => {
+    const wrapper = mountComponent()
+    wrapper.vm.breadcrumbs = [
+      { id: -1, name: '首页' },
+      { id: '123', name: 'SubFolder' }
+    ]
+    expect(wrapper.vm.folderSelectOptions).toHaveLength(2)
+    expect(wrapper.vm.folderSelectOptions[0].value).toBe(-1)
+    expect(wrapper.vm.folderSelectOptions[1].value).toBe('123')
+  })
 })
