@@ -94,7 +94,8 @@ const mountComponent = () => {
         'n-icon': true,
         'n-radio-group': true,
         'n-radio': true,
-        'n-space': true
+        'n-space': true,
+        'n-select': true
       }
     }
   })
