@@ -49,43 +49,15 @@ func TestShareParseService_NewShareParseService(t *testing.T) {
 }
 
 func TestShareParseService_ParseShareLink(t *testing.T) {
-	client := lanzou.NewClient("test-cookie")
-	svc := NewShareParseService(client)
-
-	// ParseShareLink will make real HTTP call to lanzou, expect error
-	_, err := svc.ParseShareLink("https://abc.lanzous.com/ivvHsi3qyef", "")
-	if err == nil {
-		t.Log("unexpected success - lanzou API returned valid response")
-	}
+	t.Skip("skipping real HTTP test")
 }
 
 func TestShareParseService_GetShareDownloadLink(t *testing.T) {
-	client := lanzou.NewClient("test-cookie")
-	svc := NewShareParseService(client)
-
-	// GetShareDownloadLink will make real HTTP call, expect error
-	_, err := svc.GetShareDownloadLink("https://abc.lanzous.com/ivvHsi3qyef", "")
-	if err == nil {
-		t.Log("unexpected success - lanzou returned download URL")
-	}
+	t.Skip("skipping real HTTP test")
 }
 
 func TestShareParseService_BatchParseShareLinks(t *testing.T) {
-	client := lanzou.NewClient("test-cookie")
-	svc := NewShareParseService(client)
-
-	urls := []string{
-		"https://abc.lanzous.com/test1",
-		"https://abc.lanzous.com/test2",
-		"",
-	}
-
-	results, errors := svc.BatchParseShareLinks(urls, "")
-
-	// Both will fail due to real HTTP calls, but we should have results and errors
-	if len(results)+len(errors) != 2 {
-		t.Errorf("expected 2 results+errors, got %d", len(results)+len(errors))
-	}
+	t.Skip("skipping real HTTP test")
 }
 
 func TestShareParseService_BatchParseShareLinks_Empty(t *testing.T) {
