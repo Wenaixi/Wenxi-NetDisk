@@ -32,7 +32,16 @@
 
 ## 开发历史
 
-### 2026-04-05 - ShareHandler深度测试 + Handler覆盖率91.7%
+### 2026-04-05 - UploadHandler深度测试 + Handler覆盖率92.4%
+
+**Handler覆盖率提升至92.4%:**
+- upload_test.go: 添加7+个新测试用例，mockFileVersionRepoForHandler/mockVersionFileRepoForHandler
+  - ListVersions: 成功路径(100%)/文件不存在
+  - RestoreVersion: 成功路径(100%)/文件不存在/版本不存在
+  - GetUploadURL: 成功路径/缺少必填字段/带文件夹ID
+- upload.go覆盖: ListVersions 81.8% → 100%, RestoreVersion 86.7% → 100%
+- Handler总覆盖率: 91.7% → 92.4%
+- 剩余低覆盖率: UploadFile (82.4%需multipart表单), share_parse.go (66.7%需HTTP mock), lanzou.go Connect/ListFiles (80-81%)
 
 **Handler覆盖率提升至91.7%:**
 - share_test.go: 重写完整测试，添加8+个新用例
@@ -825,7 +834,7 @@ references/lanzouyun-disk/
 | handlers/lanzou | 30 (+21 全端点验证+成功路径) | ✅ |
 | handlers/share | 20 (+5 成功路径/错误路径/mock) | ✅ |
 | handlers/share_parse | 12 (+3 成功路径验证) | ✅ |
-| handlers/upload | 18 (+7 ListVersions/GetUploadURL/guessMimeType success) | ✅ |
+| handlers/upload | 25 (+7 ListVersions/RestoreVersion/GetUploadURL 成功+错误路径) | ✅ |
 | handlers/common | 26 (构造器/响应格式) | ✅ |
 
 **Handler覆盖率: 85.5% → 86.7%**
